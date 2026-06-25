@@ -1,0 +1,26 @@
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+body {
+  /* Fallback matches the app gradient start colour */
+  background: #6a3de8;
+}
+
+#root {
+  /* Override Vite scaffold defaults */
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+  min-height: 100svh;
+  border: none;
+  text-align: left;
+}
+
