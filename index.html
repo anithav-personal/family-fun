@@ -88,6 +88,72 @@
           <p class="game-footer">A fresh brain break every day <span aria-hidden="true">♡</span></p>
         </section>
       </div>
+
+      <section class="card family-rewards" aria-labelledby="rewards-heading">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">LITTLE WINS ADD UP</p>
+            <h2 id="rewards-heading">Goals &amp; helping hands</h2>
+          </div>
+          <span class="rewards-mark" aria-hidden="true">★</span>
+        </div>
+        <div id="member-list" class="member-list"></div>
+        <p id="empty-members" class="empty-state">Add your family members to set goals and assign chores or tasks.</p>
+        <form id="member-form" class="member-form">
+          <h3>Add a family member</h3>
+          <div class="member-form-fields">
+            <label>
+              <span>Name</span>
+              <input name="name" maxlength="40" placeholder="Family member name" required>
+            </label>
+            <label>
+              <span>Family role</span>
+              <select name="role">
+                <option value="child">Child</option>
+                <option value="adult">Adult</option>
+              </select>
+            </label>
+            <label>
+              <span>Points goal</span>
+              <input name="goal" type="number" min="1" max="100000" value="100" required>
+            </label>
+            <button class="primary-button" type="submit">Add member</button>
+          </div>
+        </form>
+
+        <div class="assignments">
+          <div class="assignment-heading">
+            <div>
+              <p class="eyebrow">SHARE THE LOAD</p>
+              <h3>Chores &amp; tasks</h3>
+            </div>
+          </div>
+          <p id="empty-assignments" class="empty-state">Add a child, then give them a chore or task to get started.</p>
+          <ul id="assignment-list" class="assignment-list"></ul>
+          <form id="assignment-form" class="assignment-form">
+            <label>
+              <span>Kind</span>
+              <select name="kind">
+                <option value="chore">Chore · earns points</option>
+                <option value="task">Task · earns stars</option>
+              </select>
+            </label>
+            <label class="assignment-title-field">
+              <span>What needs doing?</span>
+              <input name="title" maxlength="80" placeholder="e.g. Feed the cat" required>
+            </label>
+            <label>
+              <span>Assign to</span>
+              <select name="member" id="assignment-member" required></select>
+            </label>
+            <label>
+              <span id="reward-label">Points</span>
+              <input name="reward" type="number" min="1" max="1000" value="10" required>
+            </label>
+            <button class="primary-button" type="submit">Add</button>
+          </form>
+        </div>
+      </section>
       <footer class="page-footer">Made for the moments that make a family.</footer>
     </main>
   </body>

@@ -162,6 +162,42 @@ h2 { margin-bottom: 0; font-size: 20px; letter-spacing: -.55px; }
 .answer-feedback.is-incorrect { color: #ad634e; }
 .game-footer { margin: auto 0 0; padding-top: 22px; color: #98a099; font-size: 10px; text-align: center; }
 .game-footer span { margin-left: 4px; color: #df9e66; }
+.family-rewards { margin-top: 22px; padding: 25px 26px; }
+.rewards-mark { color: #e6a252; font-size: 24px; }
+.member-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(185px, 1fr)); gap: 12px; }
+.member-card { min-width: 0; padding: 15px; border: 1px solid #edf0e9; border-radius: 11px; background: #fbfcf9; }
+.member-heading, .member-heading > div { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.member-heading > div { justify-content: flex-start; min-width: 0; }
+.member-heading h4 { max-width: 145px; margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: Manrope, sans-serif; font-size: 13px; }
+.member-role { padding: 3px 6px; border-radius: 10px; background: #e9f1e9; color: #728075; font-size: 9px; }
+.member-stars { flex: 0 0 auto; color: #c98732; font-size: 11px; font-weight: 700; }
+.goal-score { margin: 15px 0 5px; color: #718078; font-size: 10px; }
+.member-card progress { width: 100%; height: 7px; accent-color: #5b9a78; }
+.goal-form { display: flex; align-items: center; gap: 7px; margin-top: 8px; color: #8a938d; font-size: 10px; }
+.goal-form label { display: flex; align-items: center; gap: 6px; }
+.goal-form input { width: 66px; height: 28px; padding: 0 6px; border: 1px solid #e7eae4; border-radius: 6px; font-size: 10px; }
+.text-button { padding: 5px 7px; border: 0; border-radius: 6px; background: #e9f2eb; color: var(--green); font-size: 10px; font-weight: 600; }
+.member-form { margin-top: 20px; padding: 17px; border-radius: 11px; background: #f7f8f4; }
+.member-form h3, .assignment-heading h3 { margin: 0; font-size: 14px; }
+.member-form-fields { display: grid; grid-template-columns: minmax(140px, 1.3fr) minmax(100px, .8fr) minmax(95px, .7fr) auto; align-items: end; gap: 10px; margin-top: 12px; }
+.member-form-fields label, .assignment-form label { display: grid; gap: 5px; color: #7e8982; font-size: 10px; font-weight: 600; }
+.member-form-fields input, .member-form-fields select, .assignment-form input, .assignment-form select { width: 100%; height: 36px; min-width: 0; padding: 0 9px; border: 1px solid #e3e8e0; border-radius: 7px; background: white; color: var(--ink); font-size: 11px; }
+.primary-button { min-height: 36px; padding: 0 14px; border: 0; border-radius: 7px; background: var(--green); color: white; font-size: 11px; font-weight: 600; }
+.primary-button:hover { background: #1c5d4a; }
+.primary-button:disabled { background: #aab9b0; cursor: not-allowed; }
+.assignments { margin-top: 22px; }
+.assignment-heading { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.assignment-heading .eyebrow { margin-bottom: 4px; }
+.assignment-list { display: grid; gap: 7px; margin: 0; padding: 0; list-style: none; }
+.assignment-row { display: grid; grid-template-columns: minmax(100px, 1fr) minmax(65px, auto) auto auto 22px; align-items: center; gap: 10px; padding: 9px 11px; border: 1px solid #eef0eb; border-radius: 8px; font-size: 11px; }
+.assignment-title { overflow-wrap: anywhere; font-weight: 600; }
+.assignment-assignee { color: #7f8983; }
+.assignment-reward { color: #a87535; font-weight: 700; white-space: nowrap; }
+.is-complete .assignment-title { color: #9aa29c; text-decoration: line-through; }
+.complete-button { padding: 6px 9px; border: 1px solid #dbe8df; border-radius: 6px; background: #edf5ef; color: #347153; font-size: 10px; white-space: nowrap; }
+.complete-button:disabled { background: #f5f6f3; color: #98a099; cursor: default; }
+.assignment-form { display: grid; grid-template-columns: auto minmax(130px, 1fr) minmax(100px, .7fr) 78px auto; align-items: end; gap: 9px; margin-top: 12px; padding-top: 13px; border-top: 1px solid #f0f0eb; }
+.assignment-form select:disabled { color: #9ba39d; }
 .page-footer { padding: 23px 0 30px; color: #9da39d; font-size: 10px; text-align: center; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
 
@@ -175,6 +211,10 @@ h2 { margin-bottom: 0; font-size: 20px; letter-spacing: -.55px; }
   .dashboard { grid-template-columns: 1fr; gap: 15px; }
   .calendar-card { padding: 20px 17px; }
   .game-card { min-height: 360px; }
+  .family-rewards { padding: 20px 17px; }
+  .member-form-fields { grid-template-columns: 1fr 1fr; }
+  .assignment-form { grid-template-columns: 1fr 1fr; }
+  .assignment-title-field { grid-column: 1 / -1; }
 }
 
 @media (max-width: 390px) {
@@ -187,4 +227,7 @@ h2 { margin-bottom: 0; font-size: 20px; letter-spacing: -.55px; }
   .event-form { grid-template-columns: minmax(0, 1fr) 34px; }
   .event-form select { grid-row: 2; grid-column: 1; max-width: none; }
   .add-button { grid-row: 1 / span 2; grid-column: 2; }
+  .assignment-row { grid-template-columns: minmax(70px, 1fr) auto auto 22px; gap: 6px; }
+  .assignment-assignee { display: none; }
+  .complete-button { padding: 6px; }
 }

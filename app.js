@@ -13,6 +13,8 @@ const puzzles = [
 let displayedMonth = new Date(today.getFullYear(), today.getMonth(), 1);
 let selectedDate = todayKey;
 let events = readStoredEvents();
+let members = readStoredArray("family-fun-members", isValidMember);
+let assignments = readStoredArray("family-fun-assignments", isValidAssignment);
 
 function toDateKey(date) {
   const year = date.getFullYear();
@@ -40,6 +42,45 @@ function readStoredEvents() {
     );
   } catch {
     return [];
+  }
+}
+
+function readStoredArray(key, isValid) {
+  try {
+    const stored = JSON.parse(localStorage.getItem(key) || "[]");
+    return Array.isArray(stored) ? stored.filter(isValid) : [];
+  } catch {
+    return [];
+  }
+}
+
+function isValidMember(member) {
+  return member &&
+    typeof member.id === "string" &&
+    typeof member.name === "string" &&
+    (member.role === "child" || member.role === "adult") &&
+    Number.isInteger(member.goal) && member.goal > 0 &&
+    Number.isInteger(member.points) && member.points >= 0 &&
+    Number.isInteger(member.stars) && member.stars >= 0;
+}
+
+function isValidAssignment(assignment) {
+  return assignment &&
+    typeof assignment.id === "string" &&
+    typeof assignment.memberId === "string" &&
+    typeof assignment.title === "string" &&
+    (assignment.kind === "chore" || assignment.kind === "task") &&
+    Number.isInteger(assignment.reward) && assignment.reward > 0 &&
+    typeof assignment.completed === "boolean";
+}
+
+function saveRewards() {
+  try {
+    localStorage.setItem("family-fun-members", JSON.stringify(members));
+    localStorage.setItem("family-fun-assignments", JSON.stringify(assignments));
+  } catch {
+    document.getElementById("empty-assignments").textContent =
+      "Browser storage is unavailable. Your family rewards may not be saved.";
   }
 }
 
@@ -173,6 +214,174 @@ document.getElementById("event-form").addEventListener("submit", (event) => {
   renderAgenda();
 });
 
+function renderRewards() {
+  const memberList = document.getElementById("member-list");
+  memberList.replaceChildren();
+  document.getElementById("empty-members").hidden = members.length > 0;
+  const childMembers = members.filter((member) => member.role === "child");
+  const memberSelect = document.getElementById("assignment-member");
+  memberSelect.replaceChildren();
+  for (const child of childMembers) {
+    const option = document.createElement("option");
+    option.value = child.id;
+    option.textContent = child.name;
+    memberSelect.append(option);
+  }
+  memberSelect.disabled = childMembers.length === 0;
+  document.querySelector("#assignment-form button[type='submit']").disabled = childMembers.length === 0;
+  document.getElementById("empty-assignments").hidden = assignments.length > 0;
+
+  for (const member of members) {
+    const card = document.createElement("article");
+    card.className = "member-card";
+    const heading = document.createElement("div");
+    heading.className = "member-heading";
+    const identity = document.createElement("div");
+    const name = document.createElement("h4");
+    name.textContent = member.name;
+    const role = document.createElement("span");
+    role.className = "member-role";
+    role.textContent = member.role === "child" ? "Kid" : "Adult";
+    identity.append(name, role);
+    const stars = document.createElement("span");
+    stars.className = "member-stars";
+    stars.textContent = `★ ${member.stars}`;
+    stars.setAttribute("aria-label", `${member.stars} stars`);
+    heading.append(identity, stars);
+
+    const score = document.createElement("p");
+    score.className = "goal-score";
+    score.textContent = `${member.points} / ${member.goal} points`;
+    const progress = document.createElement("progress");
+    progress.max = member.goal;
+    progress.value = Math.min(member.points, member.goal);
+    progress.setAttribute("aria-label", `${member.name}'s points goal progress`);
+    const goalForm = document.createElement("form");
+    goalForm.className = "goal-form";
+    const goalLabel = document.createElement("label");
+    goalLabel.textContent = "Goal";
+    const goalInput = document.createElement("input");
+    goalInput.type = "number";
+    goalInput.min = "1";
+    goalInput.max = "100000";
+    goalInput.value = String(member.goal);
+    goalInput.setAttribute("aria-label", `${member.name}'s points goal`);
+    const updateGoal = document.createElement("button");
+    updateGoal.className = "text-button";
+    updateGoal.type = "submit";
+    updateGoal.textContent = "Update";
+    goalLabel.append(goalInput);
+    goalForm.append(goalLabel, updateGoal);
+    goalForm.addEventListener("submit", (submitEvent) => {
+      submitEvent.preventDefault();
+      const newGoal = Number(goalInput.value);
+      if (!Number.isInteger(newGoal) || newGoal < 1 || newGoal > 100000) return;
+      member.goal = newGoal;
+      saveRewards();
+      renderRewards();
+    });
+    card.append(heading, score, progress, goalForm);
+    memberList.append(card);
+  }
+
+  const assignmentList = document.getElementById("assignment-list");
+  assignmentList.replaceChildren();
+  for (const assignment of assignments) {
+    const member = members.find((candidate) => candidate.id === assignment.memberId);
+    if (!member) continue;
+    const row = document.createElement("li");
+    row.className = `assignment-row${assignment.completed ? " is-complete" : ""}`;
+    const title = document.createElement("span");
+    title.className = "assignment-title";
+    title.textContent = assignment.title;
+    const assignee = document.createElement("span");
+    assignee.className = "assignment-assignee";
+    assignee.textContent = member.name;
+    const reward = document.createElement("span");
+    reward.className = "assignment-reward";
+    reward.textContent = assignment.kind === "chore"
+      ? `+${assignment.reward} pts`
+      : `+${assignment.reward} ★`;
+    const complete = document.createElement("button");
+    complete.className = "complete-button";
+    complete.type = "button";
+    complete.disabled = assignment.completed;
+    complete.textContent = assignment.completed ? "Done ✓" : "Complete";
+    complete.setAttribute("aria-label", assignment.completed
+      ? `${assignment.title} completed`
+      : `Mark ${assignment.title} complete`);
+    complete.addEventListener("click", () => {
+      if (assignment.completed) return;
+      assignment.completed = true;
+      if (assignment.kind === "chore") member.points += assignment.reward;
+      else member.stars += assignment.reward;
+      saveRewards();
+      renderRewards();
+    });
+    const remove = document.createElement("button");
+    remove.className = "delete-event";
+    remove.type = "button";
+    remove.textContent = "×";
+    remove.setAttribute("aria-label", `Remove ${assignment.title}`);
+    remove.addEventListener("click", () => {
+      assignments = assignments.filter((item) => item.id !== assignment.id);
+      saveRewards();
+      renderRewards();
+    });
+    row.append(title, assignee, reward, complete, remove);
+    assignmentList.append(row);
+  }
+}
+
+document.getElementById("member-form").addEventListener("submit", (event) => {
+  event.preventDefault();
+  const form = event.currentTarget;
+  const name = form.elements.name.value.trim();
+  const goal = Number(form.elements.goal.value);
+  if (!name || !Number.isInteger(goal) || goal < 1 || goal > 100000) return;
+  members.push({
+    id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+    name,
+    role: form.elements.role.value,
+    goal,
+    points: 0,
+    stars: 0,
+  });
+  saveRewards();
+  form.reset();
+  form.elements.goal.value = "100";
+  renderRewards();
+});
+
+const assignmentForm = document.getElementById("assignment-form");
+assignmentForm.elements.kind.addEventListener("change", () => {
+  const isChore = assignmentForm.elements.kind.value === "chore";
+  document.getElementById("reward-label").textContent = isChore ? "Points" : "Stars";
+  assignmentForm.elements.reward.value = isChore ? "10" : "1";
+});
+
+assignmentForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  const title = assignmentForm.elements.title.value.trim();
+  const member = members.find((candidate) => candidate.id === assignmentForm.elements.member.value);
+  const reward = Number(assignmentForm.elements.reward.value);
+  if (!title || !member || member.role !== "child" ||
+      !Number.isInteger(reward) || reward < 1 || reward > 1000) return;
+  assignments.unshift({
+    id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+    title,
+    memberId: member.id,
+    kind: assignmentForm.elements.kind.value,
+    reward,
+    completed: false,
+  });
+  saveRewards();
+  assignmentForm.reset();
+  document.getElementById("reward-label").textContent = "Points";
+  assignmentForm.elements.reward.value = "10";
+  renderRewards();
+});
+
 const dayNumber = Math.floor((Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()) -
   Date.UTC(today.getFullYear(), 0, 0)) / 86400000);
 const puzzle = puzzles[dayNumber % puzzles.length];
@@ -214,3 +423,4 @@ document.getElementById("answer-form").addEventListener("submit", (event) => {
 
 renderCalendar();
 renderAgenda();
+renderRewards();
