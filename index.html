@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f7f6f1">
+    <title>Family Fun</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="app.js" defer></script>
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="topbar">
+        <a class="brand" href="#" aria-label="Family Fun home">
+          <span class="brand-mark" aria-hidden="true">✳</span>
+          <span>family<span class="brand-accent">fun</span></span>
+        </a>
+        <p class="topbar-note">A little more together, every day.</p>
+      </header>
+
+      <section class="welcome">
+        <div>
+          <p class="eyebrow" id="today-label"></p>
+          <h1>Make today a good one.</h1>
+          <p class="welcome-copy">Your family plans and a little brain boost, all in one place.</p>
+        </div>
+        <span class="welcome-sun" aria-hidden="true">☀</span>
+      </section>
+
+      <div class="dashboard">
+        <section class="card calendar-card" aria-labelledby="calendar-heading">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">OUR PLANS</p>
+              <h2 id="calendar-heading">Family calendar</h2>
+            </div>
+            <div class="month-controls">
+              <button class="icon-button" id="previous-month" type="button" aria-label="Previous month">‹</button>
+              <span id="month-label" aria-live="polite"></span>
+              <button class="icon-button" id="next-month" type="button" aria-label="Next month">›</button>
+            </div>
+          </div>
+          <div class="calendar-grid weekday-row" aria-hidden="true">
+            <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span>
+            <span>Thu</span><span>Fri</span><span>Sat</span>
+          </div>
+          <div class="calendar-grid" id="calendar-days" aria-label="Calendar dates"></div>
+          <div class="day-agenda">
+            <div class="agenda-heading">
+              <h3 id="selected-date-label"></h3>
+              <span id="event-count" class="event-count"></span>
+            </div>
+            <ul id="event-list" class="event-list"></ul>
+            <p id="empty-events" class="empty-state">Nothing on the calendar yet. Add a plan below!</p>
+            <form id="event-form" class="event-form">
+              <label class="sr-only" for="event-title">Event name</label>
+              <input id="event-title" name="title" maxlength="80" placeholder="Add a family plan…" required>
+              <label class="sr-only" for="event-person">Family member</label>
+              <select id="event-person" name="person">
+                <option value="Everyone">Everyone</option>
+                <option value="Me">Me</option>
+                <option value="Partner">Partner</option>
+                <option value="Kids">Kids</option>
+              </select>
+              <button class="add-button" type="submit" aria-label="Add event">＋</button>
+            </form>
+          </div>
+        </section>
+
+        <section class="card game-card" aria-labelledby="game-heading">
+          <div class="game-topline">
+            <p class="eyebrow">TODAY'S LITTLE CHALLENGE</p>
+            <span class="game-icon" aria-hidden="true">✦</span>
+          </div>
+          <h2 id="game-heading">Brain break</h2>
+          <p class="game-intro">A quick puzzle for curious minds of every age.</p>
+          <div class="puzzle">
+            <span class="puzzle-label">NUMBER PATTERN</span>
+            <p id="puzzle-prompt" class="puzzle-prompt"></p>
+            <p id="puzzle-hint" class="puzzle-hint"></p>
+            <form id="answer-form" class="answer-form">
+              <label class="sr-only" for="answer">Your answer</label>
+              <input id="answer" name="answer" type="number" inputmode="numeric" placeholder="Your answer" required>
+              <button id="answer-button" type="submit">Check</button>
+            </form>
+            <p id="answer-feedback" class="answer-feedback" aria-live="polite"></p>
+          </div>
+          <p class="game-footer">A fresh brain break every day <span aria-hidden="true">♡</span></p>
+        </section>
+      </div>
+      <footer class="page-footer">Made for the moments that make a family.</footer>
+    </main>
+  </body>
+</html>
