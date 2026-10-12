@@ -74,7 +74,7 @@ h1 { margin-bottom: 8px; font-size: clamp(27px, 4vw, 38px); letter-spacing: -1.8
 .welcome-copy { margin: 0; color: #68766e; font-size: 14px; }
 .welcome-sun { color: #e5a451; font-size: 99px; line-height: 1; margin-right: 45px; }
 
-.dashboard { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(310px, .85fr); gap: 22px; }
+.dashboard { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(230px, .8fr) minmax(245px, .9fr); gap: 18px; align-items: start; }
 .card { background: #fff; border: 1px solid #eeeee8; border-radius: 16px; box-shadow: 0 5px 20px #29352b08; }
 .calendar-card { padding: 24px 26px 22px; }
 .section-heading, .month-controls, .agenda-heading, .game-topline { display: flex; align-items: center; justify-content: space-between; }
@@ -198,6 +198,33 @@ h2 { margin-bottom: 0; font-size: 20px; letter-spacing: -.55px; }
 .complete-button:disabled { background: #f5f6f3; color: #98a099; cursor: default; }
 .assignment-form { display: grid; grid-template-columns: auto minmax(130px, 1fr) minmax(100px, .7fr) 78px auto; align-items: end; gap: 9px; margin-top: 12px; padding-top: 13px; border-top: 1px solid #f0f0eb; }
 .assignment-form select:disabled { color: #9ba39d; }
+.todo-card { min-width: 0; padding: 22px 18px 16px; }
+.todo-card .section-heading { margin-bottom: 14px; }
+.todo-card h2 { font-size: 18px; }
+.todo-count { color: #859188; font-size: 10px; white-space: nowrap; }
+.todo-list { display: grid; max-height: 300px; gap: 8px; overflow-y: auto; margin: 0; padding: 0; list-style: none; }
+.todo-row { display: grid; grid-template-columns: 20px minmax(0, 1fr) 18px; align-items: start; gap: 8px; padding: 10px 8px; border: 1px solid #edf0e9; border-radius: 9px; background: #fbfcf9; }
+.todo-check { width: 19px; height: 19px; padding: 0; border: 1px solid #cbdacf; border-radius: 6px; background: white; color: var(--green); font-size: 12px; line-height: 16px; }
+.todo-check:disabled { background: #e8f1e9; cursor: default; }
+.todo-detail { display: grid; min-width: 0; gap: 4px; }
+.todo-detail strong { overflow-wrap: anywhere; font-size: 11px; line-height: 1.4; }
+.todo-assignees, .todo-deadline, .todo-reminder { color: #818c85; font-size: 9px; line-height: 1.4; }
+.todo-reminder { color: #9b703b; }
+.todo-row .delete-event { font-size: 14px; }
+.todo-row.is-complete .todo-detail strong { color: #9aa29c; text-decoration: line-through; }
+.todo-form { display: grid; gap: 10px; margin-top: 12px; padding-top: 12px; border-top: 1px solid #f0f0eb; }
+.todo-form label:not(.reminder-toggle) { display: grid; gap: 5px; color: #7e8982; font-size: 10px; font-weight: 600; }
+.todo-form input:not([type="checkbox"]), .todo-form select { width: 100%; min-width: 0; padding: 7px 8px; border: 1px solid #e3e8e0; border-radius: 7px; background: white; color: var(--ink); font-size: 10px; }
+.todo-form input:not([type="checkbox"]) { height: 34px; }
+.todo-form select[multiple] { min-height: 72px; }
+.todo-form select option { padding: 3px; }
+.todo-form small { color: #959e97; font-size: 9px; font-weight: 400; line-height: 1.4; }
+.optional-label { color: #a0a69f; font-size: 9px; font-weight: 400; }
+.reminder-toggle { display: flex; align-items: center; gap: 7px; color: #65756c; font-size: 10px; }
+.reminder-toggle input { accent-color: var(--green); }
+.reminder-time-label[hidden] { display: none !important; }
+.reminder-note, .todo-feedback { margin: 9px 0 0; color: #9aa19b; font-size: 9px; line-height: 1.4; }
+.todo-feedback { min-height: 12px; color: var(--green); }
 .page-footer { padding: 23px 0 30px; color: #9da39d; font-size: 10px; text-align: center; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
 
@@ -215,6 +242,15 @@ h2 { margin-bottom: 0; font-size: 20px; letter-spacing: -.55px; }
   .member-form-fields { grid-template-columns: 1fr 1fr; }
   .assignment-form { grid-template-columns: 1fr 1fr; }
   .assignment-title-field { grid-column: 1 / -1; }
+  .todo-card { padding: 20px 17px; }
+  .todo-list { max-height: 260px; }
+}
+
+@media (min-width: 761px) and (max-width: 980px) {
+  .dashboard { grid-template-columns: minmax(0, 1.3fr) minmax(225px, .8fr); }
+  .todo-card { grid-column: 1 / -1; }
+  .todo-form { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: end; }
+  .todo-form > .primary-button { grid-column: 2; }
 }
 
 @media (max-width: 390px) {

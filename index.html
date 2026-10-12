@@ -87,6 +87,44 @@
           </div>
           <p class="game-footer">A fresh brain break every day <span aria-hidden="true">♡</span></p>
         </section>
+
+        <aside class="card todo-card" aria-labelledby="todo-heading">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">KEEP IT MOVING</p>
+              <h2 id="todo-heading">Family to-do</h2>
+            </div>
+            <span class="todo-count" id="todo-count"></span>
+          </div>
+          <ul id="todo-list" class="todo-list"></ul>
+          <p id="empty-todos" class="empty-state">Add a to-do and share it with your family.</p>
+          <form id="todo-form" class="todo-form">
+            <label>
+              <span>To-do</span>
+              <input name="title" maxlength="100" placeholder="What needs doing?" required>
+            </label>
+            <label>
+              <span>Family members</span>
+              <select name="members" id="todo-members" multiple size="3" required aria-describedby="todo-member-help"></select>
+              <small id="todo-member-help">Select one or more people (Ctrl/Cmd-click to select multiple).</small>
+            </label>
+            <label>
+              <span>Deadline <span class="optional-label">(optional)</span></span>
+              <input name="deadline" type="datetime-local">
+            </label>
+            <label class="reminder-toggle">
+              <input name="reminderEnabled" type="checkbox">
+              <span>Set a reminder</span>
+            </label>
+            <label id="reminder-time-label" class="reminder-time-label" hidden>
+              <span>Remind me at</span>
+              <input name="reminderAt" type="datetime-local" disabled>
+            </label>
+            <button class="primary-button" type="submit">Add to-do</button>
+          </form>
+          <p class="reminder-note">Reminders show while this page is open. Browser notifications require permission.</p>
+          <p id="todo-feedback" class="todo-feedback" aria-live="polite"></p>
+        </aside>
       </div>
 
       <section class="card family-rewards" aria-labelledby="rewards-heading">

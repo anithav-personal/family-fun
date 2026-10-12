@@ -15,6 +15,7 @@ let selectedDate = todayKey;
 let events = readStoredEvents();
 let members = readStoredArray("family-fun-members", isValidMember);
 let assignments = readStoredArray("family-fun-assignments", isValidAssignment);
+let todos = readStoredArray("family-fun-todos", isValidTodo);
 
 function toDateKey(date) {
   const year = date.getFullYear();
@@ -74,13 +75,35 @@ function isValidAssignment(assignment) {
     typeof assignment.completed === "boolean";
 }
 
+function isValidTodo(todo) {
+  return todo &&
+    typeof todo.id === "string" &&
+    typeof todo.title === "string" &&
+    Array.isArray(todo.memberIds) &&
+    todo.memberIds.every((id) => typeof id === "string") &&
+    (todo.deadline === "" || typeof todo.deadline === "string") &&
+    (todo.reminderAt === "" || typeof todo.reminderAt === "string") &&
+    typeof todo.reminded === "boolean" &&
+    typeof todo.completed === "boolean";
+}
+
 function saveRewards() {
   try {
     localStorage.setItem("family-fun-members", JSON.stringify(members));
     localStorage.setItem("family-fun-assignments", JSON.stringify(assignments));
+    localStorage.setItem("family-fun-todos", JSON.stringify(todos));
   } catch {
     document.getElementById("empty-assignments").textContent =
       "Browser storage is unavailable. Your family rewards may not be saved.";
+  }
+}
+
+function saveTodos() {
+  try {
+    localStorage.setItem("family-fun-todos", JSON.stringify(todos));
+  } catch {
+    document.getElementById("todo-feedback").textContent =
+      "Browser storage is unavailable. Your to-dos may not be saved.";
   }
 }
 
@@ -227,6 +250,7 @@ function renderRewards() {
     option.textContent = child.name;
     memberSelect.append(option);
   }
+  renderTodos();
   memberSelect.disabled = childMembers.length === 0;
   document.querySelector("#assignment-form button[type='submit']").disabled = childMembers.length === 0;
   document.getElementById("empty-assignments").hidden = assignments.length > 0;
@@ -382,6 +406,151 @@ assignmentForm.addEventListener("submit", (event) => {
   renderRewards();
 });
 
+function renderTodos() {
+  const memberSelect = document.getElementById("todo-members");
+  const selectedMembers = new Set([...memberSelect.selectedOptions].map((option) => option.value));
+  memberSelect.replaceChildren();
+  for (const member of members) {
+    const option = document.createElement("option");
+    option.value = member.id;
+    option.textContent = member.name;
+    option.selected = selectedMembers.has(member.id);
+    memberSelect.append(option);
+  }
+  memberSelect.disabled = members.length === 0;
+  const form = document.getElementById("todo-form");
+  form.querySelector("button[type='submit']").disabled = members.length === 0;
+
+  const list = document.getElementById("todo-list");
+  list.replaceChildren();
+  document.getElementById("empty-todos").hidden = todos.length > 0;
+  const incomplete = todos.filter((todo) => !todo.completed).length;
+  document.getElementById("todo-count").textContent = `${incomplete} open`;
+
+  for (const todo of todos) {
+    const row = document.createElement("li");
+    row.className = `todo-row${todo.completed ? " is-complete" : ""}`;
+    const complete = document.createElement("button");
+    complete.className = "todo-check";
+    complete.type = "button";
+    complete.textContent = todo.completed ? "✓" : "";
+    complete.disabled = todo.completed;
+    complete.setAttribute("aria-label", todo.completed ? `${todo.title} completed` : `Complete ${todo.title}`);
+    complete.addEventListener("click", () => {
+      todo.completed = true;
+      saveTodos();
+      renderTodos();
+    });
+    const detail = document.createElement("div");
+    detail.className = "todo-detail";
+    const title = document.createElement("strong");
+    title.textContent = todo.title;
+    const assignees = todo.memberIds
+      .map((id) => members.find((member) => member.id === id)?.name)
+      .filter(Boolean)
+      .join(", ");
+    const people = document.createElement("span");
+    people.className = "todo-assignees";
+    people.textContent = assignees || "Family member";
+    detail.append(title, people);
+    if (todo.deadline) {
+      const deadline = document.createElement("span");
+      deadline.className = "todo-deadline";
+      deadline.textContent = `Due ${new Date(todo.deadline).toLocaleString(undefined, {
+        month: "short",
+        day: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+      })}`;
+      detail.append(deadline);
+    }
+    if (todo.reminderAt) {
+      const reminder = document.createElement("span");
+      reminder.className = "todo-reminder";
+      reminder.textContent = "Reminder set";
+      detail.append(reminder);
+    }
+    const remove = document.createElement("button");
+    remove.className = "delete-event";
+    remove.type = "button";
+    remove.textContent = "×";
+    remove.setAttribute("aria-label", `Remove ${todo.title}`);
+    remove.addEventListener("click", () => {
+      todos = todos.filter((item) => item.id !== todo.id);
+      saveTodos();
+      renderTodos();
+    });
+    row.append(complete, detail, remove);
+    list.append(row);
+  }
+}
+
+function checkTodoReminders() {
+  const now = Date.now();
+  const dueTodos = todos.filter((todo) =>
+    !todo.completed && !todo.reminded && todo.reminderAt &&
+    new Date(todo.reminderAt).getTime() <= now
+  );
+  if (!dueTodos.length) return;
+  for (const todo of dueTodos) {
+    todo.reminded = true;
+    const message = `Reminder: ${todo.title}`;
+    document.getElementById("todo-feedback").textContent = message;
+    if ("Notification" in window && Notification.permission === "granted") {
+      new Notification("Family Fun to-do", { body: message });
+    }
+  }
+  saveTodos();
+}
+
+const todoForm = document.getElementById("todo-form");
+const reminderToggle = todoForm.elements.reminderEnabled;
+const reminderTimeLabel = document.getElementById("reminder-time-label");
+const reminderTimeInput = todoForm.elements.reminderAt;
+reminderToggle.addEventListener("change", () => {
+  reminderTimeLabel.hidden = !reminderToggle.checked;
+  reminderTimeInput.disabled = !reminderToggle.checked;
+  reminderTimeInput.required = reminderToggle.checked;
+});
+
+todoForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const title = todoForm.elements.title.value.trim();
+  const memberIds = [...todoForm.elements.members.selectedOptions].map((option) => option.value);
+  const deadline = todoForm.elements.deadline.value;
+  const reminderAt = reminderToggle.checked ? reminderTimeInput.value : "";
+  if (!title || !memberIds.length ||
+      memberIds.some((id) => !members.some((member) => member.id === id))) return;
+  if (reminderAt && (!Number.isFinite(new Date(reminderAt).getTime()) ||
+      new Date(reminderAt).getTime() <= Date.now())) {
+    document.getElementById("todo-feedback").textContent = "Choose a reminder time in the future.";
+    return;
+  }
+  if (deadline && reminderAt && new Date(reminderAt) > new Date(deadline)) {
+    document.getElementById("todo-feedback").textContent = "Set the reminder before the deadline.";
+    return;
+  }
+  if (reminderAt && "Notification" in window && Notification.permission === "default") {
+    await Notification.requestPermission();
+  }
+  todos.unshift({
+    id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+    title,
+    memberIds,
+    deadline,
+    reminderAt,
+    reminded: false,
+    completed: false,
+  });
+  saveTodos();
+  todoForm.reset();
+  reminderTimeLabel.hidden = true;
+  reminderTimeInput.disabled = true;
+  reminderTimeInput.required = false;
+  document.getElementById("todo-feedback").textContent = "";
+  renderTodos();
+});
+
 const dayNumber = Math.floor((Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()) -
   Date.UTC(today.getFullYear(), 0, 0)) / 86400000);
 const puzzle = puzzles[dayNumber % puzzles.length];
@@ -424,3 +593,5 @@ document.getElementById("answer-form").addEventListener("submit", (event) => {
 renderCalendar();
 renderAgenda();
 renderRewards();
+checkTodoReminders();
+window.setInterval(checkTodoReminders, 30000);
