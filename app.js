@@ -492,10 +492,12 @@ function checkTodoReminders() {
     new Date(todo.reminderAt).getTime() <= now
   );
   if (!dueTodos.length) return;
+  const titles = dueTodos.map((todo) => todo.title);
+  document.getElementById("todo-feedback").textContent =
+    `${titles.length === 1 ? "Reminder" : "Reminders"}: ${titles.join(", ")}`;
   for (const todo of dueTodos) {
     todo.reminded = true;
     const message = `Reminder: ${todo.title}`;
-    document.getElementById("todo-feedback").textContent = message;
     if ("Notification" in window && Notification.permission === "granted") {
       new Notification("Family Fun to-do", { body: message });
     }
@@ -526,12 +528,20 @@ todoForm.addEventListener("submit", async (event) => {
     document.getElementById("todo-feedback").textContent = "Choose a reminder time in the future.";
     return;
   }
+  if (deadline && !Number.isFinite(new Date(deadline).getTime())) {
+    document.getElementById("todo-feedback").textContent = "Choose a valid deadline.";
+    return;
+  }
   if (deadline && reminderAt && new Date(reminderAt) > new Date(deadline)) {
     document.getElementById("todo-feedback").textContent = "Set the reminder before the deadline.";
     return;
   }
   if (reminderAt && "Notification" in window && Notification.permission === "default") {
-    await Notification.requestPermission();
+    try {
+      await Notification.requestPermission();
+    } catch {
+      // In-page reminders remain available if notification permission cannot be requested.
+    }
   }
   todos.unshift({
     id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
