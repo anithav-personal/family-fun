@@ -127,6 +127,92 @@
         </aside>
       </div>
 
+      <section class="meal-section" aria-label="Family meal planning and food inventory">
+        <section class="card meal-card" aria-labelledby="meal-heading">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">WHAT'S FOR DINNER?</p>
+              <h2 id="meal-heading">Meal plan</h2>
+            </div>
+            <span class="meal-icon" aria-hidden="true">♨</span>
+          </div>
+          <ul id="meal-list" class="meal-list"></ul>
+          <p id="empty-meals" class="empty-state">No meals planned yet. Add one for the family.</p>
+          <form id="meal-form" class="meal-form">
+            <label>
+              <span>Date</span>
+              <input name="date" type="date" required>
+            </label>
+            <label>
+              <span>Meal</span>
+              <select name="type">
+                <option value="Breakfast">Breakfast</option>
+                <option value="Lunch">Lunch</option>
+                <option value="Dinner" selected>Dinner</option>
+                <option value="Snack">Snack</option>
+              </select>
+            </label>
+            <label class="meal-name-field">
+              <span>Plan</span>
+              <input name="name" maxlength="100" placeholder="e.g. Veggie tacos" required>
+            </label>
+            <button class="primary-button" type="submit">Add meal</button>
+          </form>
+          <p id="meal-feedback" class="meal-feedback" aria-live="polite"></p>
+        </section>
+
+        <section class="card pantry-card" aria-labelledby="pantry-heading">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">KNOW WHAT YOU HAVE</p>
+              <h2 id="pantry-heading">Fridge &amp; freezer</h2>
+            </div>
+            <span class="meal-icon" aria-hidden="true">❄</span>
+          </div>
+          <form id="pantry-form" class="pantry-form">
+            <label class="pantry-item-field">
+              <span>Food item</span>
+              <input name="name" maxlength="80" placeholder="e.g. Strawberries" required>
+            </label>
+            <label>
+              <span>Quantity</span>
+              <input name="quantity" maxlength="40" placeholder="e.g. 1 carton" required>
+            </label>
+            <label>
+              <span>Keep in</span>
+              <select name="location">
+                <option value="fridge">Fridge</option>
+                <option value="freezer">Freezer</option>
+              </select>
+            </label>
+            <label>
+              <span>Use by <span class="optional-label">(optional)</span></span>
+              <input name="expires" type="date">
+            </label>
+            <button class="primary-button" type="submit">Add item</button>
+          </form>
+          <p id="pantry-feedback" class="meal-feedback" aria-live="polite"></p>
+          <div class="pantry-columns">
+            <section aria-labelledby="fridge-heading">
+              <div class="pantry-subheading">
+                <h3 id="fridge-heading"><span aria-hidden="true">🧊</span> Fridge</h3>
+                <span id="fridge-count" class="todo-count"></span>
+              </div>
+              <ul id="fridge-list" class="pantry-list"></ul>
+              <p id="empty-fridge" class="empty-state">Your fridge list is empty.</p>
+            </section>
+            <section aria-labelledby="freezer-heading">
+              <div class="pantry-subheading">
+                <h3 id="freezer-heading"><span aria-hidden="true">❄</span> Freezer</h3>
+                <span id="freezer-count" class="todo-count"></span>
+              </div>
+              <ul id="freezer-list" class="pantry-list"></ul>
+              <p id="empty-freezer" class="empty-state">Your freezer list is empty.</p>
+            </section>
+          </div>
+        </section>
+      </section>
+
       <section class="card family-rewards" aria-labelledby="rewards-heading">
         <div class="section-heading">
           <div>

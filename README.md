@@ -9,13 +9,15 @@ daily brain-game exercises everyone can enjoy.
   the selected day.
 - A side-panel to-do list with multi-member assignments, optional deadlines,
   and optional reminders.
+- A meal planner for dated breakfasts, lunches, dinners, and snacks, plus
+  separate fridge and freezer inventory lists with quantities and use-by dates.
 - Add family events with a title and family member; events appear on the
   calendar and can be removed.
 - A daily number puzzle with answer feedback and a completed-for-today state.
 - Add family members, set each member's points goal, assign chores and tasks to
   kids, and track earned points and stars.
 - Save calendar events, game completion, family members, assignments, and
-  rewards in the current browser.
+  rewards, meal plans, and food inventory in the current browser.
 
 This first version is a browser prototype. Data is stored locally on one
 browser, so family members do not yet share updates across devices. Chores award

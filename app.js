@@ -16,6 +16,8 @@ let events = readStoredEvents();
 let members = readStoredArray("family-fun-members", isValidMember);
 let assignments = readStoredArray("family-fun-assignments", isValidAssignment);
 let todos = readStoredArray("family-fun-todos", isValidTodo);
+let meals = readStoredArray("family-fun-meals", isValidMeal);
+let pantryItems = readStoredArray("family-fun-pantry", isValidPantryItem);
 
 function toDateKey(date) {
   const year = date.getFullYear();
@@ -85,6 +87,42 @@ function isValidTodo(todo) {
     (todo.reminderAt === "" || typeof todo.reminderAt === "string") &&
     typeof todo.reminded === "boolean" &&
     typeof todo.completed === "boolean";
+}
+
+function isValidMeal(meal) {
+  return meal &&
+    typeof meal.id === "string" &&
+    typeof meal.date === "string" &&
+    /^\d{4}-\d{2}-\d{2}$/.test(meal.date) &&
+    typeof meal.type === "string" &&
+    typeof meal.name === "string";
+}
+
+function isValidPantryItem(item) {
+  return item &&
+    typeof item.id === "string" &&
+    typeof item.name === "string" &&
+    typeof item.quantity === "string" &&
+    (item.location === "fridge" || item.location === "freezer") &&
+    (item.expires === "" || typeof item.expires === "string");
+}
+
+function saveMeals() {
+  try {
+    localStorage.setItem("family-fun-meals", JSON.stringify(meals));
+  } catch {
+    document.getElementById("meal-feedback").textContent =
+      "Browser storage is unavailable. Your meal plan may not be saved.";
+  }
+}
+
+function savePantry() {
+  try {
+    localStorage.setItem("family-fun-pantry", JSON.stringify(pantryItems));
+  } catch {
+    document.getElementById("pantry-feedback").textContent =
+      "Browser storage is unavailable. Your food list may not be saved.";
+  }
 }
 
 function saveRewards() {
@@ -561,6 +599,249 @@ todoForm.addEventListener("submit", async (event) => {
   renderTodos();
 });
 
+function renderMeals() {
+  const list = document.getElementById("meal-list");
+  list.replaceChildren();
+  document.getElementById("empty-meals").hidden = meals.length > 0;
+  const sortedMeals = [...meals].sort((left, right) =>
+    left.date.localeCompare(right.date) ||
+    ["Breakfast", "Lunch", "Dinner", "Snack"].indexOf(left.type) -
+      ["Breakfast", "Lunch", "Dinner", "Snack"].indexOf(right.type)
+  );
+
+  for (const meal of sortedMeals) {
+    const row = document.createElement("li");
+    row.className = "meal-row";
+    row.dataset.mealId = meal.id;
+    const date = document.createElement("span");
+    date.className = "meal-date";
+    date.textContent = dateFromKey(meal.date).toLocaleDateString(undefined, {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+    });
+    const type = document.createElement("span");
+    type.className = "meal-type";
+    type.textContent = meal.type;
+    const name = document.createElement("span");
+    name.className = "meal-name";
+    name.textContent = meal.name;
+    const edit = document.createElement("button");
+    edit.className = "text-button";
+    edit.type = "button";
+    edit.textContent = "Edit";
+    edit.setAttribute("aria-label", `Edit ${meal.type}: ${meal.name}`);
+    edit.addEventListener("click", () => editMeal(meal));
+    const remove = document.createElement("button");
+    remove.className = "delete-event";
+    remove.type = "button";
+    remove.textContent = "×";
+    remove.setAttribute("aria-label", `Remove ${meal.type}: ${meal.name}`);
+    remove.addEventListener("click", () => {
+      meals = meals.filter((item) => item.id !== meal.id);
+      saveMeals();
+      renderMeals();
+    });
+    row.append(date, type, name, edit, remove);
+    list.append(row);
+  }
+}
+
+function editMeal(meal) {
+  const list = document.getElementById("meal-list");
+  const row = [...list.children].find((child) => child.dataset.mealId === meal.id);
+  if (!row) return;
+  row.replaceChildren();
+  row.className = "meal-edit-row";
+  const form = document.createElement("form");
+  form.className = "meal-edit-form";
+  const date = document.createElement("input");
+  date.type = "date";
+  date.value = meal.date;
+  date.required = true;
+  date.setAttribute("aria-label", "Meal date");
+  const type = document.createElement("select");
+  type.setAttribute("aria-label", "Meal type");
+  for (const optionText of ["Breakfast", "Lunch", "Dinner", "Snack"]) {
+    const option = document.createElement("option");
+    option.value = optionText;
+    option.textContent = optionText;
+    option.selected = meal.type === optionText;
+    type.append(option);
+  }
+  const name = document.createElement("input");
+  name.value = meal.name;
+  name.maxLength = 100;
+  name.required = true;
+  name.setAttribute("aria-label", "Meal plan");
+  const save = document.createElement("button");
+  save.className = "text-button";
+  save.type = "submit";
+  save.textContent = "Save";
+  const cancel = document.createElement("button");
+  cancel.className = "text-button";
+  cancel.type = "button";
+  cancel.textContent = "Cancel";
+  cancel.addEventListener("click", renderMeals);
+  form.append(date, type, name, save, cancel);
+  form.addEventListener("submit", (event) => {
+    event.preventDefault();
+    if (!date.value || !name.value.trim()) return;
+    meal.date = date.value;
+    meal.type = type.value;
+    meal.name = name.value.trim();
+    saveMeals();
+    renderMeals();
+  });
+  row.append(form);
+}
+
+function renderPantry() {
+  for (const location of ["fridge", "freezer"]) {
+    const items = pantryItems.filter((item) => item.location === location);
+    const list = document.getElementById(`${location}-list`);
+    list.replaceChildren();
+    document.getElementById(`empty-${location}`).hidden = items.length > 0;
+    document.getElementById(`${location}-count`).textContent =
+      `${items.length} ${items.length === 1 ? "item" : "items"}`;
+    for (const item of items) {
+      const row = document.createElement("li");
+      row.className = "pantry-row";
+      row.dataset.itemId = item.id;
+      const detail = document.createElement("div");
+      detail.className = "pantry-item-detail";
+      const name = document.createElement("strong");
+      name.textContent = item.name;
+      const quantity = document.createElement("span");
+      quantity.textContent = item.quantity;
+      detail.append(name, quantity);
+      if (item.expires) {
+        const expiration = document.createElement("span");
+        expiration.className = "pantry-expiration";
+        expiration.textContent = `Use by ${dateFromKey(item.expires).toLocaleDateString(undefined, {
+          month: "short",
+          day: "numeric",
+        })}`;
+        detail.append(expiration);
+      }
+      const edit = document.createElement("button");
+      edit.className = "text-button";
+      edit.type = "button";
+      edit.textContent = "Edit";
+      edit.setAttribute("aria-label", `Edit ${item.name}`);
+      edit.addEventListener("click", () => editPantryItem(item));
+      const remove = document.createElement("button");
+      remove.className = "delete-event";
+      remove.type = "button";
+      remove.textContent = "×";
+      remove.setAttribute("aria-label", `Remove ${item.name}`);
+      remove.addEventListener("click", () => {
+        pantryItems = pantryItems.filter((candidate) => candidate.id !== item.id);
+        savePantry();
+        renderPantry();
+      });
+      row.append(detail, edit, remove);
+      list.append(row);
+    }
+  }
+}
+
+function editPantryItem(item) {
+  const row = document.querySelector(`[data-item-id="${CSS.escape(item.id)}"]`);
+  if (!row) return;
+  row.replaceChildren();
+  row.className = "pantry-edit-row";
+  const form = document.createElement("form");
+  form.className = "pantry-edit-form";
+  const name = document.createElement("input");
+  name.value = item.name;
+  name.maxLength = 80;
+  name.required = true;
+  name.setAttribute("aria-label", "Food item");
+  const quantity = document.createElement("input");
+  quantity.value = item.quantity;
+  quantity.maxLength = 40;
+  quantity.required = true;
+  quantity.setAttribute("aria-label", "Quantity");
+  const location = document.createElement("select");
+  location.setAttribute("aria-label", "Storage location");
+  for (const value of ["fridge", "freezer"]) {
+    const option = document.createElement("option");
+    option.value = value;
+    option.textContent = value === "fridge" ? "Fridge" : "Freezer";
+    option.selected = item.location === value;
+    location.append(option);
+  }
+  const expires = document.createElement("input");
+  expires.type = "date";
+  expires.value = item.expires;
+  expires.setAttribute("aria-label", "Use by date");
+  const save = document.createElement("button");
+  save.className = "text-button";
+  save.type = "submit";
+  save.textContent = "Save";
+  const cancel = document.createElement("button");
+  cancel.className = "text-button";
+  cancel.type = "button";
+  cancel.textContent = "Cancel";
+  cancel.addEventListener("click", renderPantry);
+  form.append(name, quantity, location, expires, save, cancel);
+  form.addEventListener("submit", (event) => {
+    event.preventDefault();
+    if (!name.value.trim() || !quantity.value.trim()) return;
+    item.name = name.value.trim();
+    item.quantity = quantity.value.trim();
+    item.location = location.value;
+    item.expires = expires.value;
+    savePantry();
+    renderPantry();
+  });
+  row.append(form);
+}
+
+const mealForm = document.getElementById("meal-form");
+mealForm.elements.date.value = todayKey;
+mealForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  const name = mealForm.elements.name.value.trim();
+  const date = mealForm.elements.date.value;
+  if (!name || !date || !Number.isFinite(dateFromKey(date).getTime()) ||
+      toDateKey(dateFromKey(date)) !== date) return;
+  meals.push({
+    id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+    date,
+    type: mealForm.elements.type.value,
+    name,
+  });
+  saveMeals();
+  mealForm.elements.name.value = "";
+  renderMeals();
+});
+
+const pantryForm = document.getElementById("pantry-form");
+pantryForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  const name = pantryForm.elements.name.value.trim();
+  const quantity = pantryForm.elements.quantity.value.trim();
+  const expires = pantryForm.elements.expires.value;
+  if (!name || !quantity) return;
+  if (expires && toDateKey(dateFromKey(expires)) !== expires) {
+    document.getElementById("pantry-feedback").textContent = "Choose a valid use-by date.";
+    return;
+  }
+  pantryItems.push({
+    id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+    name,
+    quantity,
+    location: pantryForm.elements.location.value,
+    expires,
+  });
+  savePantry();
+  pantryForm.reset();
+  document.getElementById("pantry-feedback").textContent = "";
+  renderPantry();
+});
+
 const dayNumber = Math.floor((Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()) -
   Date.UTC(today.getFullYear(), 0, 0)) / 86400000);
 const puzzle = puzzles[dayNumber % puzzles.length];
@@ -603,5 +884,7 @@ document.getElementById("answer-form").addEventListener("submit", (event) => {
 renderCalendar();
 renderAgenda();
 renderRewards();
+renderMeals();
+renderPantry();
 checkTodoReminders();
 window.setInterval(checkTodoReminders, 30000);
