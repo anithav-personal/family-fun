@@ -265,11 +265,17 @@ function readHealthyQuest() {
   }
 }
 
+function getHealthyPoints(items) {
+  return items.reduce((total, item) => total + (item.points ?? 1), 0);
+}
+
 function isValidHealthyQuest(quest) {
   const isValidFood = (food) =>
     typeof food === "string" ||
     (food &&
-      typeof food.name === "string" &&
+      (food.points === undefined
+        ? typeof food.name === "string"
+        : Number.isSafeInteger(food.points) && food.points > 0) &&
       typeof food.occasion === "string");
   return quest &&
     typeof quest === "object" &&
@@ -283,12 +289,15 @@ function isValidHealthyQuest(quest) {
         entry &&
         Array.isArray(entry.plants) &&
         entry.plants.every(isValidFood) &&
+        Number.isSafeInteger(getHealthyPoints(entry.plants)) &&
         (entry.proteins === undefined ||
           (Array.isArray(entry.proteins) &&
-            entry.proteins.every(isValidFood))) &&
+            entry.proteins.every(isValidFood) &&
+            Number.isSafeInteger(getHealthyPoints(entry.proteins)))) &&
         (entry.fats === undefined ||
           (Array.isArray(entry.fats) &&
-            entry.fats.every(isValidFood))) &&
+            entry.fats.every(isValidFood) &&
+            Number.isSafeInteger(getHealthyPoints(entry.fats)))) &&
         Number.isInteger(entry.water) &&
         entry.water >= 0 &&
         entry.water <= 30 &&
@@ -1572,17 +1581,17 @@ function saveVirtualPets() {
 
 function getLifetimePlantPoints(memberId) {
   return Object.values(healthyQuest[memberId] || {})
-    .reduce((total, entry) => total + entry.plants.length, 0);
+    .reduce((total, entry) => total + getHealthyPoints(entry.plants), 0);
 }
 
 function getPetFeedingStreak(memberId) {
   const entries = healthyQuest[memberId] || {};
   let cursor = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-  if ((entries[toDateKey(cursor)]?.plants.length || 0) < petDailyPlantGoal) {
+  if (getHealthyPoints(entries[toDateKey(cursor)]?.plants || []) < petDailyPlantGoal) {
     cursor.setDate(cursor.getDate() - 1);
   }
   let streak = 0;
-  while ((entries[toDateKey(cursor)]?.plants.length || 0) >= petDailyPlantGoal) {
+  while (getHealthyPoints(entries[toDateKey(cursor)]?.plants || []) >= petDailyPlantGoal) {
     streak += 1;
     cursor.setDate(cursor.getDate() - 1);
   }
@@ -1608,7 +1617,7 @@ function renderVirtualPet(member) {
   form.hidden = true;
   display.hidden = false;
   const totalPlants = getLifetimePlantPoints(member.id);
-  const todayPlants = getHealthyEntry(member.id).plants.length;
+  const todayPlants = getHealthyPoints(getHealthyEntry(member.id).plants);
   const stageIndex = petGrowthStages.findLastIndex((stage) => totalPlants >= stage.minimum);
   const stage = petGrowthStages[Math.max(stageIndex, 0)];
   const nextStage = petGrowthStages[stageIndex + 1];
@@ -1644,9 +1653,9 @@ function renderVirtualPet(member) {
 
 function awardHealthyQuestIfComplete(member, entry) {
   if (entry.rewarded ||
-      entry.plants.length < plantPointGoal ||
-      entry.proteins.length < proteinPointGoal ||
-      entry.fats.length < healthyFatPointGoal ||
+      getHealthyPoints(entry.plants) < plantPointGoal ||
+      getHealthyPoints(entry.proteins) < proteinPointGoal ||
+      getHealthyPoints(entry.fats) < healthyFatPointGoal ||
       entry.water < waterCupGoal) return false;
   entry.rewarded = true;
   member.stars += 1;
@@ -1672,17 +1681,20 @@ function renderHealthyQuest(member) {
   const entry = member
     ? getHealthyEntry(member.id)
     : { plants: [], proteins: [], fats: [], water: 0, rewarded: false };
+  const plants = getHealthyPoints(entry.plants);
+  const proteins = getHealthyPoints(entry.proteins);
+  const fats = getHealthyPoints(entry.fats);
   document.getElementById("plant-point-count").textContent =
-    `${entry.plants.length} / ${plantPointGoal}`;
-  document.getElementById("plant-progress").value = Math.min(entry.plants.length, plantPointGoal);
+    `${plants} / ${plantPointGoal}`;
+  document.getElementById("plant-progress").value = Math.min(plants, plantPointGoal);
   document.getElementById("protein-point-count").textContent =
-    `${entry.proteins.length} / ${proteinPointGoal}`;
+    `${proteins} / ${proteinPointGoal}`;
   document.getElementById("protein-progress").value =
-    Math.min(entry.proteins.length, proteinPointGoal);
+    Math.min(proteins, proteinPointGoal);
   document.getElementById("fat-point-count").textContent =
-    `${entry.fats.length} / ${healthyFatPointGoal}`;
+    `${fats} / ${healthyFatPointGoal}`;
   document.getElementById("fat-progress").value =
-    Math.min(entry.fats.length, healthyFatPointGoal);
+    Math.min(fats, healthyFatPointGoal);
   document.getElementById("water-cup-count").textContent =
     `${entry.water} / ${waterCupGoal}`;
   document.getElementById("water-progress").value = Math.min(entry.water, waterCupGoal);
@@ -1703,11 +1715,13 @@ function renderHealthyQuest(member) {
       const chip = document.createElement("span");
       chip.className = `plant-chip ${group.key}`;
       const label = document.createElement("span");
-      label.textContent = `${food.occasion} · ${group.label}: ${food.name}`;
+      const points = food.points ?? 1;
+      const description = `${points} ${points === 1 ? "point" : "points"}${food.name ? ` (${food.name})` : ""}`;
+      label.textContent = `${food.occasion} · ${group.label}: ${description}`;
       const remove = document.createElement("button");
       remove.type = "button";
       remove.textContent = "×";
-      remove.setAttribute("aria-label", `Remove ${food.name} from ${food.occasion}`);
+      remove.setAttribute("aria-label", `Remove ${group.label.toLowerCase()} ${description} from ${food.occasion}`);
       remove.addEventListener("click", () => {
         entry[group.key] = entry[group.key].filter((_, index) => index !== foodIndex);
         saveHealthyQuest();
@@ -1719,15 +1733,15 @@ function renderHealthyQuest(member) {
   }
 
   const badgeDefinitions = [
-    { earned: entry.plants.length >= 1, icon: "🌱", name: "First Plant" },
-    { earned: entry.plants.length >= plantPointGoal, icon: "🌈", name: "Plant Power" },
-    { earned: entry.proteins.length >= proteinPointGoal, icon: "💪", name: "Protein Power" },
-    { earned: entry.fats.length >= healthyFatPointGoal, icon: "🥑", name: "Good Fats" },
+    { earned: plants >= 1, icon: "🌱", name: "First Plant" },
+    { earned: plants >= plantPointGoal, icon: "🌈", name: "Plant Power" },
+    { earned: proteins >= proteinPointGoal, icon: "💪", name: "Protein Power" },
+    { earned: fats >= healthyFatPointGoal, icon: "🥑", name: "Good Fats" },
     { earned: entry.water >= waterCupGoal, icon: "💧", name: "Water Hero" },
     {
-      earned: entry.plants.length >= plantPointGoal &&
-        entry.proteins.length >= proteinPointGoal &&
-        entry.fats.length >= healthyFatPointGoal &&
+      earned: plants >= plantPointGoal &&
+        proteins >= proteinPointGoal &&
+        fats >= healthyFatPointGoal &&
         entry.water >= waterCupGoal,
       icon: "🏆",
       name: "Healthy Hero",
@@ -1794,30 +1808,35 @@ document.getElementById("healthy-food-form").addEventListener("submit", (event) 
   const member = members.find((candidate) => candidate.id === activeMemberId);
   if (!member) return;
   const form = event.currentTarget;
-  const food = form.elements.food.value.trim();
+  const points = form.elements.points.valueAsNumber;
   const category = form.elements.category.value;
   const occasion = form.elements.occasion.value;
   const entry = getHealthyEntry(member.id);
-  const plantsAtThisMeal = entry.plants.filter((item) => item.occasion === occasion).length;
-  if (!food || !occasion || !["plants", "proteins", "fats"].includes(category)) return;
-  if (entry[category].some((item) =>
-    item.name.toLowerCase() === food.toLowerCase() && item.occasion === occasion)) {
+  if (!Number.isSafeInteger(points) || points < 1 || !occasion ||
+      !["plants", "proteins", "fats"].includes(category)) {
     document.getElementById("healthy-feedback").textContent =
-      `${food} is already counted for ${occasion}. Add it under another meal or snack if eaten again.`;
+      "Choose a category and meal, and enter a positive whole number of points.";
     return;
   }
-  entry[category].push({ name: food, occasion });
+  const previousPoints = getHealthyPoints(entry[category]);
+  if (!Number.isSafeInteger(previousPoints + points)) {
+    document.getElementById("healthy-feedback").textContent =
+      "That total is too large. Enter fewer points.";
+    return;
+  }
+  const plantsAtThisMeal = getHealthyPoints(entry.plants.filter((item) => item.occasion === occasion));
+  entry[category].push({ points, occasion });
   saveHealthyQuest();
   form.reset();
   document.getElementById("healthy-feedback").textContent =
-    `Food point added for ${member.name}!`;
+    `${points} ${points === 1 ? "point" : "points"} added for ${member.name}!`;
   const badgeTargets = {
     plants: { count: plantPointGoal, icon: "🌈", name: "Plant Power" },
     proteins: { count: proteinPointGoal, icon: "💪", name: "Protein Power" },
     fats: { count: healthyFatPointGoal, icon: "🥑", name: "Good Fats" },
   };
   const badge = badgeTargets[category];
-  if (entry[category].length === badge.count) {
+  if (previousPoints < badge.count && previousPoints + points >= badge.count) {
     showCelebration({
       icon: badge.icon,
       title: `${badge.name} badge unlocked!`,
@@ -1825,7 +1844,7 @@ document.getElementById("healthy-food-form").addEventListener("submit", (event) 
       target: document.querySelector(".healthy-quest"),
     });
   }
-  if (category === "plants" && plantsAtThisMeal === 5) {
+  if (category === "plants" && plantsAtThisMeal < 6 && plantsAtThisMeal + points >= 6) {
     showCelebration({
       icon: "🌿",
       title: `Six plant points at ${occasion}!`,

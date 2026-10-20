@@ -199,7 +199,7 @@
               </div>
             </div>
             <form id="healthy-food-form" class="healthy-food-form">
-              <label class="sr-only" for="food-category">Food category</label>
+              <label class="sr-only" for="food-category">Points category</label>
               <select id="food-category" name="category">
                 <option value="plants">Plant</option>
                 <option value="proteins">Protein</option>
@@ -214,10 +214,10 @@
                 <option>Dinner</option>
                 <option>Evening snack</option>
               </select>
-              <label class="sr-only" for="food-name">Food</label>
-              <input id="food-name" name="food" maxlength="40"
-                placeholder="Add a food…" required>
-              <button type="submit">+ Food point</button>
+              <label class="sr-only" for="healthy-points">Number of points</label>
+              <input id="healthy-points" name="points" type="number" min="1" step="1"
+                max="9007199254740991" placeholder="Points" required>
+              <button type="submit">+ Points</button>
             </form>
             <div class="water-controls">
               <span>Log water</span>
@@ -225,7 +225,7 @@
               <strong id="water-control-count">0 cups</strong>
               <button id="add-water" type="button" aria-label="Add one cup of water">＋</button>
             </div>
-            <div id="plant-list" class="plant-list" aria-label="Healthy foods eaten today"></div>
+            <div id="plant-list" class="plant-list" aria-label="Healthy points logged today"></div>
             <div id="healthy-badges" class="healthy-badges"></div>
             <p id="healthy-feedback" class="answer-feedback" aria-live="polite"></p>
             <p class="healthy-note">Family game goals only—not personalized nutrition or medical guidance.</p>
