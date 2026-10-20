@@ -21,6 +21,55 @@ daily brain-game exercises everyone can enjoy.
 - Save calendar events, game completion, family members, assignments, and
   rewards in the current browser.
 
+## Profiles & play
+
+Use **Manage profiles** beside the profile selector to add family members.
+Each member card in Teamwork lets you update their age. Newly added profiles
+are selected automatically. Names and ages are browser data, not published
+website content; keep exported backups private.
+
+Kid profiles can choose **Block World**, an original Minecraft-inspired
+grass-and-block design, or **Cube Puzzle**, a colorful cube-puzzle design.
+Set the theme when adding a profile or change it on the child's member card.
+Existing kid profiles default to Block World; Classic remains available.
+Themes follow the active profile, support day/night mode, and are included
+in backups. Adult profiles retain the standard design. No game artwork,
+logos, or branded assets are used.
+
+Play Time now includes:
+
+- **Brain arcade:** word scrambles, riddles, odd-one-out, visual patterns,
+  memory pairs, and quick math, alongside the original number patterns.
+  Difficulty adapts to ages 6 and under, 7-9, 10-12, and teens/adults.
+  Children without an age use the gentle 7-9 band; adults default to the
+  teen/adult band. Younger players may need help reading. Each arcade game
+  awards children one star and one brain star per day. Extra questions and
+  memory replays are practice, not extra rewards.
+- **Pet shop:** buy hats, scenes, and toys using earned stars. Equip or remove
+  owned items for free. Create a Plant Pal first.
+- **Family bingo:** a shared nine-square board changes each Monday. The child
+  completing the week's first row, column, or diagonal earns one bonus star.
+- **Mystery quests:** reveal a profile-specific daily activity and mark it
+  complete. Children earn one star once per day.
+- **Reward shop:** adult profiles define rewards and prices. Requests reserve
+  stars; adults approve and mark rewards delivered. Canceling a pending or
+  approved request refunds its stars exactly once. Removing a shop reward
+  does not remove outstanding requests.
+- **Adventure map:** completed puzzles, arcade games, bingo squares, mystery
+  quests, chores/tasks, and Healthy Hero completions unlock six story chapters.
+  Progress starts when these features are first used; past activities are not
+  retroactively counted.
+- **Dinner spinner:** in What's Cooking, randomly pick an existing planned meal
+  or a family helper. An adult should choose safe, age-appropriate kitchen jobs.
+- **Celebration wall:** automatically collect milestones and badges, or add
+  your own little wins. The latest 40 appear on screen; backups keep all wins.
+
+All play progress, purchases, requests, and milestones are saved locally and
+included in Export data / Import data. Older backups still import with empty
+extra-play progress. Profiles are not accounts: choosing an adult profile is a
+household convention, **not an authentication or parental-control boundary**.
+Shared activities are shared only inside this browser, not across devices.
+
 This first version is a browser prototype. Data is stored locally on one
 browser, so family members do not yet share updates across devices. Chores award
 points toward a member's goal; tasks award stars. To-do reminders are checked
