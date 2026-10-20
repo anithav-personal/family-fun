@@ -284,9 +284,15 @@ h2 { margin-bottom: 0; font-size: 20px; letter-spacing: -.55px; }
 .inventory-form label, .meal-form label { display: grid; gap: 5px; color: #7e8982; font-size: 10px; font-weight: 600; }
 .inventory-form input, .inventory-form select, .meal-form input, .meal-form select { width: 100%; height: 36px; min-width: 0; padding: 0 9px; border: 1px solid #e3e8e0; border-radius: 7px; background: white; color: var(--ink); font-size: 10px; }
 .meal-list { max-height: 203px; overflow-y: auto; }
-.meal-row { display: grid; grid-template-columns: 35px minmax(0, 1fr) 18px; align-items: center; gap: 9px; padding: 9px; border: 1px solid #edf0e9; border-radius: 8px; background: #fbfcf9; }
+.meal-row { display: grid; grid-template-columns: minmax(75px, 100px) minmax(0, 1fr) 18px; align-items: center; gap: 9px; padding: 9px; border: 1px solid #edf0e9; border-radius: 8px; background: #fbfcf9; }
 .meal-day { color: var(--green); font-size: 9px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; }
 .meal-name-field { grid-column: 2; }
+.meal-date-form { display: grid; grid-column: 1 / -1; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 6px; margin-top: 6px; }
+.meal-date-form[hidden] { display: none; }
+.meal-date-form label, .spinner-date-label { display: grid; min-width: 0; gap: 5px; font-size: 11px; }
+.meal-date-form input, .spinner-date-label input { width: 100%; min-width: 0; min-height: 36px; padding: 6px; border: 1px solid var(--border); border-radius: 6px; background: white; color: var(--ink); }
+.meal-detail > .text-button { justify-self: start; margin-top: 4px; }
+.spinner-actions { align-items: end; }
 .alerts-card { padding: 25px 26px; }
 .alerts-mark { color: #d68f3d; font-size: 25px; }
 .alerts-layout { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(280px, .9fr); gap: 25px; }

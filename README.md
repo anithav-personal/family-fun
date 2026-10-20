@@ -59,8 +59,9 @@ Play Time now includes:
   quests, chores/tasks, and Healthy Hero completions unlock six story chapters.
   Progress starts when these features are first used; past activities are not
   retroactively counted.
-- **Dinner spinner:** in What's Cooking, randomly pick an existing planned meal
-  or a family helper. An adult should choose safe, age-appropriate kitchen jobs.
+- **Dinner spinner:** in What's Cooking, choose a dinner date and randomly pick
+  only from meals planned for that date, or pick a family helper. An adult
+  should choose safe, age-appropriate kitchen jobs.
 - **Celebration wall:** automatically collect milestones and badges, or add
   your own little wins. The latest 40 appear on screen; backups keep all wins.
 
@@ -69,6 +70,19 @@ included in Export data / Import data. Older backups still import with empty
 extra-play progress. Profiles are not accounts: choosing an adult profile is a
 household convention, **not an authentication or parental-control boundary**.
 Shared activities are shared only inside this browser, not across devices.
+
+## Dated meal planning
+
+In **What's Cooking**, choose a calendar date when adding a meal. Meals show
+their full dates and are sorted chronologically, including across weeks,
+months, and years. Use **Change date** on a meal to reschedule it. Inventory
+links are kept when dates change. Dated meals are saved locally and included
+in backups.
+
+Older weekday-only plans and backups remain supported. They appear after dated
+meals with **date not set** and a date field; assign their intended dates
+explicitly rather than having the app guess a week. Undated meals are not
+included in the dinner spinner until a date is assigned.
 
 This first version is a browser prototype. Data is stored locally on one
 browser, so family members do not yet share updates across devices. Chores award
