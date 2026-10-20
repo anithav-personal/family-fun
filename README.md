@@ -14,6 +14,10 @@ daily brain-game exercises everyone can enjoy.
 - A daily number puzzle with answer feedback and a completed-for-today state.
 - Add family members, set each member's points goal, assign chores and tasks to
   kids, and track earned points and stars.
+- In Play Time, log a positive whole number of plant, protein, or healthy-fat
+  points for a meal or snack instead of entering food names. Points count toward
+  Healthy Hero badges and rewards; plant points also grow your virtual pet.
+  Previously saved food entries still count as one point each.
 - Save calendar events, game completion, family members, assignments, and
   rewards in the current browser.
 
