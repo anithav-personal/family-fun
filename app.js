@@ -162,7 +162,10 @@ function pickQuote(quotes) {
   return quotes[Math.floor(Math.random() * quotes.length)];
 }
 
-function showCelebration({ icon, title, quote, target }) {
+function showCelebration({ icon, title, quote, target, activity = "celebration", record = true }) {
+  if (record && typeof recordFunActivity === "function") {
+    recordFunActivity(activeMemberId, activity, title);
+  }
   window.clearTimeout(celebrationTimeout);
   const celebration = document.getElementById("celebration");
   const confetti = document.getElementById("celebration-confetti");
@@ -331,6 +334,7 @@ function isValidMember(member) {
     typeof member.id === "string" &&
     typeof member.name === "string" &&
     (member.role === "child" || member.role === "adult") &&
+    (member.playTheme === undefined || ["classic", "blocks", "cube"].includes(member.playTheme)) &&
     (member.relationship === undefined || typeof member.relationship === "string") &&
     (member.age === undefined || member.age === null ||
       (Number.isInteger(member.age) && member.age > 0 && member.age <= 120)) &&
@@ -405,9 +409,11 @@ function saveRewards() {
     localStorage.setItem("family-fun-members", JSON.stringify(members));
     localStorage.setItem("family-fun-assignments", JSON.stringify(assignments));
     localStorage.setItem("family-fun-todos", JSON.stringify(todos));
+    return true;
   } catch {
     document.getElementById("empty-assignments").textContent =
       "Browser storage is unavailable. Your family rewards may not be saved.";
+    return false;
   }
 }
 
@@ -471,6 +477,7 @@ function createDataExport() {
       gameAchievements,
       healthyQuest,
       virtualPets,
+      funState,
       gameCompleted,
     },
   };
@@ -527,6 +534,7 @@ function validateImportedData(backup) {
     Object.fromEntries(Object.entries(importedGameProgress).map(([memberId, date]) => [memberId, [date]]));
   const importedHealthyQuest = data.healthyQuest ?? {};
   const importedVirtualPets = data.virtualPets ?? {};
+  const importedFunState = data.funState ?? createDefaultFunState();
   const collections = [
     [data.events, isValidEvent],
     [data.members, isValidMember],
@@ -543,6 +551,7 @@ function validateImportedData(backup) {
   if (!isValidGameAchievements(importedGameAchievements)) return null;
   if (!isValidHealthyQuest(importedHealthyQuest)) return null;
   if (!isValidVirtualPets(importedVirtualPets)) return null;
+  if (!isValidFunState(importedFunState, data.members)) return null;
   return {
     ...data,
     alerts: importedAlerts,
@@ -550,6 +559,7 @@ function validateImportedData(backup) {
     gameAchievements: importedGameAchievements,
     healthyQuest: importedHealthyQuest,
     virtualPets: importedVirtualPets,
+    funState: importedFunState,
   };
 }
 
@@ -566,6 +576,7 @@ function importData(data) {
     "family-fun-game-achievements": data.gameAchievements,
     "family-fun-healthy-quest": data.healthyQuest,
     "family-fun-virtual-pets": data.virtualPets,
+    "family-fun-extra-fun": data.funState,
   };
   for (const [key, value] of Object.entries(values)) {
     localStorage.setItem(key, JSON.stringify(value));
@@ -586,6 +597,9 @@ function importData(data) {
   gameAchievements = data.gameAchievements;
   healthyQuest = data.healthyQuest;
   virtualPets = data.virtualPets;
+  funState = data.funState;
+  funStorageBlocked = false;
+  resetMemoryGame();
   renderCalendar();
   renderAgenda();
   renderRewards();
@@ -622,6 +636,7 @@ document.getElementById("import-file").addEventListener("change", async (event) 
 });
 
 function renderMealPlanner() {
+  if (typeof renderDinnerSpinner === "function") renderDinnerSpinner();
   const fridgeItems = inventory.filter((item) => item.location === "fridge");
   const freezerItems = inventory.filter((item) => item.location === "freezer");
   renderInventoryList("fridge-list", "empty-fridge", fridgeItems);
@@ -1085,7 +1100,65 @@ function renderRewards() {
       saveRewards();
       renderRewards();
     });
-    card.append(heading, score, progress, goalForm);
+    const ageForm = document.createElement("form");
+    ageForm.className = "goal-form";
+    const ageLabel = document.createElement("label");
+    ageLabel.textContent = "Age";
+    const ageInput = document.createElement("input");
+    ageInput.type = "number";
+    ageInput.min = "1";
+    ageInput.max = "120";
+    ageInput.step = "1";
+    ageInput.value = member.age ? String(member.age) : "";
+    ageInput.setAttribute("aria-label", `${member.name}'s age`);
+    const saveAge = document.createElement("button");
+    saveAge.className = "text-button";
+    saveAge.type = "submit";
+    saveAge.textContent = "Update age";
+    ageLabel.append(ageInput);
+    ageForm.append(ageLabel, saveAge);
+    ageForm.addEventListener("submit", (submitEvent) => {
+      submitEvent.preventDefault();
+      const age = ageInput.value ? Number(ageInput.value) : null;
+      if (age !== null && (!Number.isInteger(age) || age < 1 || age > 120)) {
+        document.getElementById("profile-feedback").textContent = "Use a whole-number age between 1 and 120, or leave it blank.";
+        return;
+      }
+      member.age = age;
+      const saved = saveRewards();
+      if (typeof resetMemoryGame === "function") resetMemoryGame();
+      renderRewards();
+      renderGameForProfile();
+      document.getElementById("profile-feedback").textContent = saved
+        ? `${member.name}'s age updated. Game difficulty now matches their profile.`
+        : `${member.name}'s age changed for this visit, but could not be saved. Check browser storage.`;
+    });
+    card.append(heading, score, progress, goalForm, ageForm);
+    if (member.role === "child") {
+      const themeLabel = document.createElement("label");
+      themeLabel.className = "profile-theme-field";
+      themeLabel.textContent = "Play theme";
+      const themeSelect = document.createElement("select");
+      themeSelect.setAttribute("aria-label", `${member.name}'s play theme`);
+      for (const [value, title] of [["blocks", "Block World"], ["cube", "Cube Puzzle"], ["classic", "Classic"]]) {
+        const option = document.createElement("option");
+        option.value = value;
+        option.textContent = title;
+        themeSelect.append(option);
+      }
+      themeSelect.value = member.playTheme || "blocks";
+      themeSelect.addEventListener("change", () => {
+        member.playTheme = themeSelect.value;
+        const saved = saveRewards();
+        renderRewards();
+        renderGameForProfile();
+        document.getElementById("profile-feedback").textContent = saved
+          ? `${member.name}'s play theme updated.`
+          : "Theme changed for this visit, but could not be saved. Check browser storage.";
+      });
+      themeLabel.append(themeSelect);
+      card.append(themeLabel);
+    }
     memberList.append(card);
   }
 
@@ -1121,6 +1194,9 @@ function renderRewards() {
       if (assignment.kind === "chore") member.points += assignment.reward;
       else member.stars += assignment.reward;
       saveRewards();
+      if (typeof recordFunActivity === "function") {
+        recordFunActivity(member.id, "chore", `Completed: ${assignment.title}`);
+      }
       renderRewards();
     });
     const remove = document.createElement("button");
@@ -1136,6 +1212,7 @@ function renderRewards() {
     row.append(title, assignee, reward, complete, remove);
     assignmentList.append(row);
   }
+  if (typeof renderFunHub === "function") renderFunHub();
 }
 
 function renderProfileSelector() {
@@ -1176,6 +1253,9 @@ function renderProfileSelector() {
     eventPerson.append(option);
   }
   const activeMember = members.find((member) => member.id === activeMemberId);
+  document.documentElement.dataset.playTheme = activeMember?.role === "child"
+    ? activeMember.playTheme || "blocks"
+    : "classic";
   const eventPersonExists = [...eventPerson.options]
     .some((option) => option.value === selectedEventPerson);
   eventPerson.value = eventPersonExists
@@ -1200,6 +1280,12 @@ document.getElementById("active-profile").addEventListener("change", (event) => 
   renderGameForProfile();
 });
 
+document.getElementById("manage-profiles").addEventListener("click", () => {
+  activateTheme("tasks");
+  document.getElementById("member-form").scrollIntoView({ block: "center" });
+  document.querySelector("#member-form input[name=name]").focus({ preventScroll: true });
+});
+
 document.getElementById("member-form").addEventListener("submit", (event) => {
   event.preventDefault();
   const form = event.currentTarget;
@@ -1207,14 +1293,18 @@ document.getElementById("member-form").addEventListener("submit", (event) => {
   const goal = Number(form.elements.goal.value);
   const age = form.elements.age.value ? Number(form.elements.age.value) : null;
   const relationship = form.elements.relationship.value;
+  const playTheme = form.elements.playTheme.value;
   if (!name || !["Kid", "Mom", "Dad", "Adult"].includes(relationship) ||
+      !["blocks", "cube", "classic"].includes(playTheme) ||
       (age !== null && (!Number.isInteger(age) || age < 1 || age > 120)) ||
       !Number.isInteger(goal) || goal < 1 || goal > 100000) return;
+  const memberId = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
   members.push({
-    id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+    id: memberId,
     name,
     role: relationship === "Kid" ? "child" : "adult",
     relationship,
+    playTheme: relationship === "Kid" ? playTheme : "classic",
     age,
     goal,
     points: 0,
@@ -1222,10 +1312,23 @@ document.getElementById("member-form").addEventListener("submit", (event) => {
     gameMinutes: 0,
     brainStars: 0,
   });
-  saveRewards();
+  activeMemberId = memberId;
+  let selectedProfileSaved = true;
+  try {
+    localStorage.setItem("family-fun-active-profile", memberId);
+  } catch {
+    selectedProfileSaved = false;
+  }
+  const profileSaved = saveRewards();
   form.reset();
   form.elements.goal.value = "100";
   renderRewards();
+  renderAlerts();
+  document.getElementById("alert-member").value = memberId;
+  renderGameForProfile();
+  document.getElementById("profile-feedback").textContent = profileSaved && selectedProfileSaved
+    ? `Profile added for ${name}. Select Play Time to start playing.`
+    : `Profile added for this visit, but could not be fully saved. Check browser storage before closing the page.`;
 });
 
 const assignmentForm = document.getElementById("assignment-form");
@@ -1423,6 +1526,17 @@ function getPuzzleForProfile(memberId) {
   const profileSeed = [...memberId].reduce((total, character) => total + character.charCodeAt(0), 0);
   const solvedCount = gameAchievements[memberId]?.length || 0;
   const seed = dayNumber + profileSeed + solvedCount;
+  const member = members.find((candidate) => candidate.id === memberId);
+  const puzzleAge = member?.age || (member?.role === "adult" ? 18 : 8);
+  if (puzzleAge <= 9) {
+    const step = puzzleAge <= 6 ? 1 : 2 + seed % 4;
+    const start = 1 + seed % (puzzleAge <= 6 ? 3 : 10);
+    return {
+      sequence: `${Array.from({ length: 4 }, (_, index) => start + step * index).join(", ")}, ?`,
+      hint: `Count forward by ${step}.`,
+      answer: start + step * 4,
+    };
+  }
   const pattern = seed % 5;
   if (pattern === 0) {
     const start = 1 + (seed % 8);
@@ -1476,7 +1590,8 @@ function getPuzzleForProfile(memberId) {
 
 function calculateGameStreak(dates) {
   const completed = new Set(dates);
-  let cursor = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const cursor = new Date();
+  cursor.setHours(0, 0, 0, 0);
   if (!completed.has(toDateKey(cursor))) cursor.setDate(cursor.getDate() - 1);
   let streak = 0;
   while (completed.has(toDateKey(cursor))) {
@@ -1497,8 +1612,12 @@ function renderGameRewards(member) {
     container.append(note);
     return;
   }
-  const dates = [...new Set(gameAchievements[member.id] || [])].sort();
-  const earnedCount = dates.length;
+  const arcadeDates = typeof getArcadeCompletionDates === "function"
+    ? getArcadeCompletionDates(member.id)
+    : [];
+  const completedDates = [...(gameAchievements[member.id] || []), ...arcadeDates];
+  const dates = [...new Set(completedDates)].sort();
+  const earnedCount = completedDates.length;
   const streak = calculateGameStreak(dates);
   const brainStars = member.brainStars || 0;
   const summary = document.createElement("div");
@@ -1635,6 +1754,7 @@ function renderVirtualPet(member) {
     `🌿 ${Math.min(todayPlants, petDailyPlantGoal)} / ${petDailyPlantGoal} fed`;
   document.getElementById("pet-streak").textContent = `🔥 ${streak} day streak`;
   document.getElementById("pet-total-plants").textContent = `✨ ${totalPlants} growth points`;
+  if (typeof decoratePet === "function") decoratePet(member);
 
   const progress = document.getElementById("pet-growth-progress");
   if (nextStage) {
@@ -1669,6 +1789,7 @@ function awardHealthyQuestIfComplete(member, entry) {
     title: `${member.name} is a Healthy Hero!`,
     quote: pickQuote(badgeQuotes),
     target: document.querySelector(".healthy-quest"),
+    activity: "healthy",
   });
   return true;
 }
@@ -1756,6 +1877,7 @@ function renderHealthyQuest(member) {
     badges.append(item);
   }
   renderVirtualPet(member);
+  if (typeof renderFunHub === "function") renderFunHub();
 }
 
 function renderGameForProfile() {
@@ -1789,6 +1911,7 @@ document.getElementById("pet-form").addEventListener("submit", (event) => {
   virtualPets[member.id] = { name, type };
   saveVirtualPets();
   renderVirtualPet(member);
+  if (typeof renderFunHub === "function") renderFunHub();
   document.getElementById("healthy-feedback").textContent =
     `${name} joined ${member.name}'s Healthy Hero Quest!`;
 });
@@ -1924,6 +2047,7 @@ document.getElementById("answer-form").addEventListener("submit", (event) => {
         : `${member.name} solved it!`,
       quote: pickQuote(earnedBrainBadge ? badgeQuotes : puzzleQuotes),
       target: document.querySelector(".puzzle"),
+      activity: "brain",
     });
     renderGameRewards(member);
     activePuzzle = getPuzzleForProfile(member.id);

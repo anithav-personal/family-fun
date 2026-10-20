@@ -5,8 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#f7f6f1">
     <title>Family Fun</title>
-    <link rel="stylesheet" href="styles.css">
-    <script src="app.js?v=numeric-points-1" defer></script>
+    <link rel="stylesheet" href="styles.css?v=family-play-2">
+    <link rel="stylesheet" href="fun.css?v=family-play-2">
+    <script src="app.js?v=family-play-2" defer></script>
+    <script src="fun.js?v=family-play-2" defer></script>
   </head>
   <body>
     <main class="app-shell">
@@ -21,6 +23,7 @@
             <span>Profile</span>
             <select id="active-profile" aria-label="Active family profile"></select>
           </label>
+          <button class="data-button" id="manage-profiles" type="button">Manage profiles</button>
           <div class="data-actions" aria-label="Data backup">
             <button class="theme-toggle" id="theme-toggle" type="button" aria-pressed="false">
               <span id="theme-icon" aria-hidden="true">☾</span>
@@ -124,6 +127,35 @@
             </form>
             <p id="answer-feedback" class="answer-feedback" aria-live="polite"></p>
           </div>
+          <details class="fun-card brain-arcade" id="brain-arcade" open>
+            <summary>Daily brain arcade</summary>
+            <p class="fun-note">Play word scrambles, riddles, odd-one-out, visual patterns, memory pairs, and quick math. Difficulty follows your profile age. Kids earn one star and one brain star per game each day; replays are for practice.</p>
+            <label class="fun-field">Game
+              <select id="arcade-game">
+                <option value="word">Word scramble</option>
+                <option value="math">Quick math</option>
+                <option value="memory">Memory pairs</option>
+                <option value="riddle">Riddles</option>
+                <option value="odd">Odd one out</option>
+                <option value="pattern">Visual patterns</option>
+              </select>
+            </label>
+            <p id="arcade-status"></p>
+            <form id="arcade-form" class="fun-form">
+              <p id="arcade-prompt"></p>
+              <div id="arcade-options" class="arcade-options"></div>
+              <label class="fun-field">Your answer
+                <input name="answer" id="arcade-answer" maxlength="40" autocomplete="off" required>
+              </label>
+              <button class="primary-button" type="submit">Check answer</button>
+            </form>
+            <button id="arcade-practice" class="text-button" type="button">Try another question</button>
+            <div id="memory-game" hidden>
+              <div id="memory-board" class="memory-board" aria-label="Memory pairs"></div>
+              <button id="memory-restart" class="text-button" type="button">New practice round</button>
+            </div>
+            <p id="arcade-feedback" class="fun-feedback" role="status"></p>
+          </details>
           <div id="game-rewards" class="game-rewards"></div>
           <section class="healthy-quest" aria-labelledby="healthy-quest-heading">
             <div class="healthy-heading">
@@ -230,6 +262,73 @@
             <p id="healthy-feedback" class="answer-feedback" aria-live="polite"></p>
             <p class="healthy-note">Family game goals only—not personalized nutrition or medical guidance.</p>
           </section>
+          <section class="fun-hub" aria-labelledby="fun-hub-heading">
+            <div class="section-heading">
+              <div>
+                <p class="eyebrow">LITTLE ADVENTURES, BIG SMILES</p>
+                <h3 id="fun-hub-heading">More ways to play</h3>
+              </div>
+              <strong id="fun-wallet"></strong>
+            </div>
+            <p id="fun-profile-note" class="fun-note"></p>
+            <p id="fun-feedback" class="fun-feedback" role="status"></p>
+            <div class="fun-grid">
+              <details class="fun-card" open>
+                <summary>Family adventure map</summary>
+                <p class="fun-note">Quests, bingo squares, puzzles, chores, and Healthy Hero completions move your family forward.</p>
+                <p id="adventure-progress"></p>
+                <ol id="adventure-map" class="adventure-map"></ol>
+                <p id="adventure-story" class="adventure-story"></p>
+              </details>
+              <details class="fun-card">
+                <summary>Family bingo</summary>
+                <p class="fun-note">A new shared board each Monday. Choose your profile, then mark an activity you did. Finish a row, column, or diagonal for one star!</p>
+                <p id="bingo-week"></p>
+                <div id="bingo-board" class="bingo-board" aria-label="Weekly family bingo"></div>
+                <p id="bingo-status"></p>
+              </details>
+              <details class="fun-card">
+                <summary>Mystery quest</summary>
+                <p class="fun-note">Reveal your daily mission. Complete it for one star and an adventure step.</p>
+                <p id="mystery-mission"></p>
+                <button id="quest-reveal" class="primary-button" type="button">Reveal my mission</button>
+                <button id="quest-complete" class="primary-button" type="button" hidden>Mission complete!</button>
+              </details>
+              <details class="fun-card">
+                <summary>Pet shop</summary>
+                <p class="fun-note">Create a Plant Pal above, then spend stars on hats, scenes, and toys. Owned items can be equipped for free.</p>
+                <div id="pet-shop" class="shop-grid"></div>
+              </details>
+              <details class="fun-card">
+                <summary>Reward shop</summary>
+                <p class="fun-note">An adult defines the treats and star prices. Request a reward with your stars; an adult approves and marks it delivered. Canceling refunds stars.</p>
+                <p class="fun-note">Adult profiles are a household convention, not a password lock.</p>
+                <form id="reward-shop-form" class="fun-form">
+                  <label class="fun-field">Reward
+                    <input name="title" maxlength="60" placeholder="Choose movie night" required>
+                  </label>
+                  <label class="fun-field">Star price
+                    <input name="cost" type="number" min="1" max="10000" step="1" value="5" required>
+                  </label>
+                  <button class="primary-button" type="submit">Add reward (adult)</button>
+                </form>
+                <div id="reward-shop" class="shop-grid"></div>
+                <h4>Reward requests</h4>
+                <ul id="reward-requests" class="fun-list"></ul>
+              </details>
+              <details class="fun-card fun-wide">
+                <summary>Celebration wall</summary>
+                <p class="fun-note">Your family's milestones, badges, and little wins stay in this browser and your exported backup.</p>
+                <form id="celebration-form" class="fun-form">
+                  <label class="fun-field">Celebrate a win
+                    <input name="title" maxlength="100" placeholder="Learned something new!" required>
+                  </label>
+                  <button class="primary-button" type="submit">Add to the wall</button>
+                </form>
+                <ul id="celebration-wall" class="fun-list celebration-wall"></ul>
+              </details>
+            </div>
+          </section>
           <p class="game-footer">Keep playing—every solved puzzle earns a brain star <span aria-hidden="true">♡</span></p>
         </section>
 
@@ -282,6 +381,17 @@
           </div>
           <span class="meal-mark" aria-hidden="true">⌂</span>
         </div>
+        <section class="dinner-spinner" aria-labelledby="spinner-heading">
+          <div>
+            <h3 id="spinner-heading">Dinner spinner</h3>
+            <p class="fun-note">Pick a surprise from your planned meals, or choose a kitchen helper. Ask an adult about age-appropriate cooking jobs.</p>
+          </div>
+          <div class="spinner-actions">
+            <button id="spin-dinner" class="primary-button" type="button">Spin for dinner</button>
+            <button id="spin-helper" class="text-button" type="button">Pick a helper</button>
+          </div>
+          <p id="spinner-result" role="status"></p>
+        </section>
         <div class="meal-layout">
           <div class="inventory-panel">
             <div class="inventory-heading">
@@ -418,7 +528,8 @@
         <div id="member-list" class="member-list"></div>
         <p id="empty-members" class="empty-state">Add your family members to set goals and assign chores or tasks.</p>
         <form id="member-form" class="member-form">
-          <h3>Add a family member</h3>
+          <h3>Add a family profile</h3>
+          <p class="fun-note">Profiles and ages stay in this browser, not in the public website files. Age helps match game difficulty; grown-ups can help younger players read clues.</p>
           <div class="member-form-fields">
             <label>
               <span>Name</span>
@@ -441,9 +552,18 @@
               <span>Points goal</span>
               <input name="goal" type="number" min="1" max="100000" value="100" required>
             </label>
-            <button class="primary-button" type="submit">Add member</button>
+            <label>
+              <span>Kid's play theme</span>
+              <select name="playTheme">
+                <option value="blocks">Block World</option>
+                <option value="cube">Cube Puzzle</option>
+                <option value="classic">Classic</option>
+              </select>
+            </label>
+            <button class="primary-button" type="submit">Add profile</button>
           </div>
         </form>
+        <p id="profile-feedback" class="fun-feedback" role="status"></p>
 
         <div class="assignments">
           <div class="assignment-heading">
