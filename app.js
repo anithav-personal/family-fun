@@ -158,6 +158,18 @@ function toDateKey(date) {
   return `${year}-${month}-${day}`;
 }
 
+function isValidDateKey(value) {
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const date = dateFromKey(value);
+  return Number.isFinite(date.getTime()) && toDateKey(date) === value;
+}
+
+function formatMealDate(date) {
+  return dateFromKey(date).toLocaleDateString(undefined, {
+    weekday: "short", month: "short", day: "numeric", year: "numeric",
+  });
+}
+
 function pickQuote(quotes) {
   return quotes[Math.floor(Math.random() * quotes.length)];
 }
@@ -389,7 +401,9 @@ function isValidInventoryItem(item) {
 function isValidMeal(meal) {
   return meal &&
     typeof meal.id === "string" &&
-    typeof meal.day === "string" &&
+    (meal.date !== undefined
+      ? isValidDateKey(meal.date)
+      : ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].includes(meal.day)) &&
     typeof meal.name === "string" &&
     typeof meal.inventoryItemId === "string";
 }
@@ -439,9 +453,11 @@ function saveMealPlanner() {
   try {
     localStorage.setItem("family-fun-inventory", JSON.stringify(inventory));
     localStorage.setItem("family-fun-meals", JSON.stringify(meals));
+    return true;
   } catch {
     document.getElementById("meal-feedback").textContent =
       "Browser storage is unavailable. Your meal plan may not be saved.";
+    return false;
   }
 }
 
@@ -663,13 +679,22 @@ function renderMealPlanner() {
   mealList.replaceChildren();
   document.getElementById("empty-meals").hidden = meals.length > 0;
   const dayOrder = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
-  const sortedMeals = [...meals].sort((a, b) => dayOrder.indexOf(a.day) - dayOrder.indexOf(b.day));
+  const sortedMeals = [...meals].sort((a, b) => {
+    if (a.date && b.date) return a.date.localeCompare(b.date);
+    if (a.date || b.date) return a.date ? -1 : 1;
+    return dayOrder.indexOf(a.day) - dayOrder.indexOf(b.day);
+  });
   for (const meal of sortedMeals) {
     const row = document.createElement("li");
     row.className = "meal-row";
-    const day = document.createElement("span");
+    const day = document.createElement(meal.date ? "time" : "span");
     day.className = "meal-day";
-    day.textContent = meal.day.slice(0, 3);
+    if (meal.date) {
+      day.dateTime = meal.date;
+      day.textContent = formatMealDate(meal.date);
+    } else {
+      day.textContent = `${meal.day} (date not set)`;
+    }
     const detail = document.createElement("div");
     detail.className = "meal-detail";
     const name = document.createElement("strong");
@@ -681,12 +706,54 @@ function renderMealPlanner() {
       using.textContent = `Using ${item.name} from the ${item.location}`;
       detail.append(using);
     }
+    const dateForm = document.createElement("form");
+    dateForm.className = "meal-date-form";
+    dateForm.hidden = Boolean(meal.date);
+    const dateLabel = document.createElement("label");
+    dateLabel.textContent = "Meal date";
+    const dateInput = document.createElement("input");
+    dateInput.type = "date";
+    dateInput.required = true;
+    dateInput.value = meal.date || "";
+    dateInput.setAttribute("aria-label", `Date for ${meal.name}`);
+    dateLabel.append(dateInput);
+    const saveDate = document.createElement("button");
+    saveDate.className = "text-button";
+    saveDate.type = "submit";
+    saveDate.textContent = "Save date";
+    dateForm.append(dateLabel, saveDate);
+    dateForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      if (!isValidDateKey(dateInput.value)) {
+        document.getElementById("meal-feedback").textContent = "Choose a valid calendar date for this meal.";
+        return;
+      }
+      meal.date = dateInput.value;
+      delete meal.day;
+      const saved = saveMealPlanner();
+      document.getElementById("meal-feedback").textContent = saved
+        ? `${meal.name} planned for ${formatMealDate(meal.date)}.`
+        : "Meal date changed for this visit, but could not be saved. Check browser storage.";
+      renderMealPlanner();
+    });
+    if (meal.date) {
+      const changeDate = document.createElement("button");
+      changeDate.type = "button";
+      changeDate.className = "text-button";
+      changeDate.textContent = "Change date";
+      changeDate.setAttribute("aria-label", `Change date for ${meal.name}`);
+      changeDate.addEventListener("click", () => {
+        dateForm.hidden = !dateForm.hidden;
+        if (!dateForm.hidden) dateInput.focus();
+      });
+      detail.append(changeDate);
+    }
     const remove = createMealPlannerRemoveButton(`Remove ${meal.name}`, () => {
       meals = meals.filter((item) => item.id !== meal.id);
       saveMealPlanner();
       renderMealPlanner();
     });
-    row.append(day, detail, remove);
+    row.append(day, detail, remove, dateForm);
     mealList.append(row);
   }
 }
@@ -885,23 +952,33 @@ document.getElementById("inventory-form").addEventListener("submit", (event) => 
   renderMealPlanner();
 });
 
+document.getElementById("meal-date").value = toDateKey(new Date());
 document.getElementById("meal-form").addEventListener("submit", (event) => {
   event.preventDefault();
   const form = event.currentTarget;
   const name = form.elements.name.value.trim();
-  const day = form.elements.day.value;
+  const date = form.elements.date.value;
   const inventoryItemId = form.elements.inventoryItem.value;
-  if (!name || !["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].includes(day)) return;
-  if (inventoryItemId && !inventory.some((item) => item.id === inventoryItemId)) return;
+  if (!name || !isValidDateKey(date)) {
+    document.getElementById("meal-feedback").textContent = "Enter a meal name and a valid calendar date.";
+    return;
+  }
+  if (inventoryItemId && !inventory.some((item) => item.id === inventoryItemId)) {
+    document.getElementById("meal-feedback").textContent = "Choose an inventory item that is still available.";
+    return;
+  }
   meals.push({
     id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
-    day,
+    date,
     name,
     inventoryItemId,
   });
-  saveMealPlanner();
+  const saved = saveMealPlanner();
   form.reset();
-  document.getElementById("meal-feedback").textContent = "";
+  form.elements.date.value = date;
+  document.getElementById("meal-feedback").textContent = saved
+    ? `${name} planned for ${formatMealDate(date)}.`
+    : "Meal added for this visit, but could not be saved. Check browser storage.";
   renderMealPlanner();
 });
 

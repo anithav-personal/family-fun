@@ -5,10 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#f7f6f1">
     <title>Family Fun</title>
-    <link rel="stylesheet" href="styles.css?v=family-play-2">
-    <link rel="stylesheet" href="fun.css?v=family-play-2">
-    <script src="app.js?v=family-play-2" defer></script>
-    <script src="fun.js?v=family-play-2" defer></script>
+    <link rel="stylesheet" href="styles.css?v=dated-meals-1">
+    <link rel="stylesheet" href="fun.css?v=dated-meals-1">
+    <script src="app.js?v=dated-meals-1" defer></script>
+    <script src="fun.js?v=dated-meals-1" defer></script>
   </head>
   <body>
     <main class="app-shell">
@@ -384,9 +384,12 @@
         <section class="dinner-spinner" aria-labelledby="spinner-heading">
           <div>
             <h3 id="spinner-heading">Dinner spinner</h3>
-            <p class="fun-note">Pick a surprise from your planned meals, or choose a kitchen helper. Ask an adult about age-appropriate cooking jobs.</p>
+            <p class="fun-note">Pick a surprise from meals planned for your selected date, or choose a kitchen helper. Ask an adult about age-appropriate cooking jobs.</p>
           </div>
           <div class="spinner-actions">
+            <label class="spinner-date-label">Dinner date
+              <input id="spinner-date" type="date" required>
+            </label>
             <button id="spin-dinner" class="primary-button" type="button">Spin for dinner</button>
             <button id="spin-helper" class="text-button" type="button">Pick a helper</button>
           </div>
@@ -443,19 +446,15 @@
             <div class="inventory-heading">
               <div>
                 <h3>Meal plan</h3>
-                <p>Plan the week around food you already have.</p>
+                <p>Plan meals for specific dates around food you already have.</p>
               </div>
             </div>
             <ul id="meal-list" class="meal-list"></ul>
             <p id="empty-meals" class="empty-state">No meals planned yet.</p>
             <form id="meal-form" class="meal-form">
               <label>
-                <span>Day</span>
-                <select name="day">
-                  <option>Monday</option><option>Tuesday</option><option>Wednesday</option>
-                  <option>Thursday</option><option>Friday</option><option>Saturday</option>
-                  <option>Sunday</option>
-                </select>
+                <span>Date</span>
+                <input id="meal-date" name="date" type="date" required>
               </label>
               <label class="meal-name-field">
                 <span>Meal</span>
@@ -469,6 +468,7 @@
               </label>
               <button class="primary-button" type="submit">Plan meal</button>
             </form>
+            <p class="fun-note">Older weekday-only meals stay marked "date not set" until you assign a date. Use Change date to reschedule a meal.</p>
           </div>
         </div>
         <p id="meal-feedback" class="todo-feedback" aria-live="polite"></p>

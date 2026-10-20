@@ -49,9 +49,7 @@ function isFunText(value, max = 200) {
 }
 
 function isFunDate(value) {
-  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
-  const date = dateFromKey(value);
-  return Number.isFinite(date.getTime()) && toDateKey(date) === value;
+  return isValidDateKey(value);
 }
 
 function isValidFunState(state, family = members) {
@@ -685,10 +683,23 @@ function renderWall() {
   if (funState.wall.length > 40) wall.append(funElement("li", "Showing the latest 40 wins. All wins are included in your backup."));
 }
 
+function getDinnerChoices() {
+  const date = document.getElementById("spinner-date").value;
+  return isValidDateKey(date)
+    ? [...new Set(meals.filter((meal) => meal.date === date).map((meal) => meal.name))]
+    : [];
+}
+
 function renderDinnerSpinner() {
-  document.getElementById("spin-dinner").disabled = meals.length === 0;
+  const date = document.getElementById("spinner-date").value;
+  const choices = getDinnerChoices();
+  document.getElementById("spin-dinner").disabled = choices.length === 0;
   document.getElementById("spin-helper").disabled = members.length === 0;
-  if (!meals.length && !members.length) document.getElementById("spinner-result").textContent = "Add planned meals and family profiles to get spinning.";
+  document.getElementById("spinner-result").textContent = !isValidDateKey(date)
+    ? "Choose a valid dinner date."
+    : choices.length
+      ? `${choices.length} ${choices.length === 1 ? "meal" : "meals"} planned for ${formatMealDate(date)}. Ready to spin!`
+      : `No meals planned for ${formatMealDate(date)}. Add a dated meal below.`;
 }
 
 function renderFunHub() {
@@ -759,10 +770,11 @@ document.getElementById("celebration-form").addEventListener("submit", (event) =
   if (commitFunChange(() => addWallWin(member.id, title, "manual"), "Your little win is on the wall!")) form.reset();
 });
 document.getElementById("spin-dinner").addEventListener("click", () => {
-  const choices = [...new Set(meals.map((meal) => meal.name))];
+  const choices = getDinnerChoices();
+  const date = document.getElementById("spinner-date").value;
   document.getElementById("spinner-result").textContent = choices.length
-    ? `Tonight's lucky pick: ${choices[Math.floor(Math.random() * choices.length)]}!`
-    : "Add a meal to your weekly plan first.";
+    ? `Dinner for ${formatMealDate(date)}: ${choices[Math.floor(Math.random() * choices.length)]}!`
+    : "Add a meal for the selected date first.";
 });
 document.getElementById("spin-helper").addEventListener("click", () => {
   document.getElementById("spinner-result").textContent = members.length
@@ -770,5 +782,7 @@ document.getElementById("spin-helper").addEventListener("click", () => {
     : "Add a family profile in Teamwork first.";
 });
 
+document.getElementById("spinner-date").value = toDateKey(new Date());
+document.getElementById("spinner-date").addEventListener("change", renderDinnerSpinner);
 renderFunHub();
 renderGameRewards(getFunMember());
