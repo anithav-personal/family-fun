@@ -15,20 +15,61 @@
           <span class="brand-mark" aria-hidden="true">✳</span>
           <span>family<span class="brand-accent">fun</span></span>
         </a>
-        <p class="topbar-note">A little more together, every day.</p>
+        <div class="topbar-actions">
+          <p class="topbar-note">A little more together, every day.</p>
+          <label class="profile-switcher">
+            <span>Profile</span>
+            <select id="active-profile" aria-label="Active family profile"></select>
+          </label>
+          <div class="data-actions" aria-label="Data backup">
+            <button class="theme-toggle" id="theme-toggle" type="button" aria-pressed="false">
+              <span id="theme-icon" aria-hidden="true">☾</span>
+              <span id="theme-label">Night</span>
+            </button>
+            <button class="data-button" id="export-data" type="button">Export data</button>
+            <button class="data-button" id="import-data" type="button">Import data</button>
+            <input id="import-file" type="file" accept="application/json,.json" hidden>
+          </div>
+        </div>
       </header>
+      <p id="data-feedback" class="data-feedback" aria-live="polite"></p>
+      <p id="alarm-banner" class="alarm-banner" aria-live="assertive" hidden></p>
 
       <section class="welcome">
         <div>
           <p class="eyebrow" id="today-label"></p>
-          <h1>Make today a good one.</h1>
+          <h1 id="welcome-heading">Make today a good one.</h1>
           <p class="welcome-copy">Your family plans and a little brain boost, all in one place.</p>
         </div>
         <span class="welcome-sun" aria-hidden="true">☀</span>
       </section>
 
+      <nav class="theme-tabs" aria-label="Family Fun sections" role="tablist">
+        <button class="theme-tab is-active" id="calendar-tab" type="button" role="tab"
+          aria-selected="true" aria-controls="calendar-panel" data-theme-tab="calendar">
+          <span aria-hidden="true">▦</span> Plan Together
+        </button>
+        <button class="theme-tab" id="meals-tab" type="button" role="tab"
+          aria-selected="false" aria-controls="meals-panel" data-theme-tab="meals" tabindex="-1">
+          <span aria-hidden="true">⌂</span> What's Cooking?
+        </button>
+        <button class="theme-tab" id="tasks-tab" type="button" role="tab"
+          aria-selected="false" aria-controls="tasks-panel" data-theme-tab="tasks" tabindex="-1">
+          <span aria-hidden="true">✓</span> Teamwork
+        </button>
+        <button class="theme-tab" id="alerts-tab" type="button" role="tab"
+          aria-selected="false" aria-controls="alerts-panel" data-theme-tab="alerts" tabindex="-1">
+          <span aria-hidden="true">♬</span> Ring-a-Ding
+        </button>
+        <button class="theme-tab" id="fun-tab" type="button" role="tab"
+          aria-selected="false" aria-controls="fun-panel" data-theme-tab="fun" tabindex="-1">
+          <span aria-hidden="true">✦</span> Play Time
+        </button>
+      </nav>
+
       <div class="dashboard">
-        <section class="card calendar-card" aria-labelledby="calendar-heading">
+        <section class="card calendar-card theme-panel" id="calendar-panel" role="tabpanel"
+          aria-labelledby="calendar-tab" data-theme-panel="calendar">
           <div class="section-heading">
             <div>
               <p class="eyebrow">OUR PLANS</p>
@@ -58,22 +99,20 @@
               <label class="sr-only" for="event-person">Family member</label>
               <select id="event-person" name="person">
                 <option value="Everyone">Everyone</option>
-                <option value="Me">Me</option>
-                <option value="Partner">Partner</option>
-                <option value="Kids">Kids</option>
               </select>
               <button class="add-button" type="submit" aria-label="Add event">＋</button>
             </form>
           </div>
         </section>
 
-        <section class="card game-card" aria-labelledby="game-heading">
+        <section class="card game-card theme-panel" id="fun-panel" role="tabpanel"
+          aria-labelledby="fun-tab" data-theme-panel="fun" hidden>
           <div class="game-topline">
             <p class="eyebrow">TODAY'S LITTLE CHALLENGE</p>
             <span class="game-icon" aria-hidden="true">✦</span>
           </div>
           <h2 id="game-heading">Brain break</h2>
-          <p class="game-intro">A quick puzzle for curious minds of every age.</p>
+          <p id="game-intro" class="game-intro">A quick puzzle for curious minds of every age.</p>
           <div class="puzzle">
             <span class="puzzle-label">NUMBER PATTERN</span>
             <p id="puzzle-prompt" class="puzzle-prompt"></p>
@@ -85,10 +124,117 @@
             </form>
             <p id="answer-feedback" class="answer-feedback" aria-live="polite"></p>
           </div>
-          <p class="game-footer">A fresh brain break every day <span aria-hidden="true">♡</span></p>
+          <div id="game-rewards" class="game-rewards"></div>
+          <section class="healthy-quest" aria-labelledby="healthy-quest-heading">
+            <div class="healthy-heading">
+              <div>
+                <p class="eyebrow">HEALTHY HERO QUEST</p>
+                <h3 id="healthy-quest-heading">Balanced food &amp; water</h3>
+              </div>
+              <span aria-hidden="true">🌱</span>
+            </div>
+            <section class="virtual-pet" aria-labelledby="virtual-pet-heading">
+              <div id="pet-display" class="pet-display" hidden>
+                <div id="pet-avatar" class="pet-avatar" aria-hidden="true">🥚</div>
+                <div class="pet-details">
+                  <div class="pet-title-row">
+                    <div>
+                      <span id="pet-stage" class="pet-stage">Egg</span>
+                      <h4 id="virtual-pet-heading">Virtual pet</h4>
+                    </div>
+                    <button id="customize-pet" class="text-button" type="button">Customize</button>
+                  </div>
+                  <p id="pet-message" class="pet-message"></p>
+                  <div class="pet-stats">
+                    <span id="pet-fed-status"></span>
+                    <span id="pet-streak"></span>
+                    <span id="pet-total-plants"></span>
+                  </div>
+                  <progress id="pet-growth-progress" max="1" value="0"></progress>
+                  <small id="pet-growth-message"></small>
+                </div>
+              </div>
+              <form id="pet-form" class="pet-form">
+                <div>
+                  <p class="eyebrow">PICK A PLANT PAL</p>
+                  <h4>Choose and name a virtual pet</h4>
+                </div>
+                <label>
+                  <span>Pet</span>
+                  <select name="type">
+                    <option value="dragon">🐉 Dragon</option>
+                    <option value="fox">🦊 Fox</option>
+                    <option value="bunny">🐰 Bunny</option>
+                    <option value="puppy">🐶 Puppy</option>
+                    <option value="kitty">🐱 Kitty</option>
+                  </select>
+                </label>
+                <label>
+                  <span>Name</span>
+                  <input name="name" maxlength="24" placeholder="Pet name" required>
+                </label>
+                <button class="primary-button" type="submit">Save pet</button>
+              </form>
+            </section>
+            <div class="healthy-meters">
+              <div class="healthy-meter">
+                <span>Plant points</span>
+                <strong id="plant-point-count">0 / 5</strong>
+                <progress id="plant-progress" max="5" value="0"></progress>
+              </div>
+              <div class="healthy-meter protein-meter">
+                <span>Protein points</span>
+                <strong id="protein-point-count">0 / 3</strong>
+                <progress id="protein-progress" max="3" value="0"></progress>
+              </div>
+              <div class="healthy-meter fat-meter">
+                <span>Healthy-fat points</span>
+                <strong id="fat-point-count">0 / 2</strong>
+                <progress id="fat-progress" max="2" value="0"></progress>
+              </div>
+              <div class="healthy-meter water-meter">
+                <span>Water cups</span>
+                <strong id="water-cup-count">0 / 6</strong>
+                <progress id="water-progress" max="6" value="0"></progress>
+              </div>
+            </div>
+            <form id="healthy-food-form" class="healthy-food-form">
+              <label class="sr-only" for="food-category">Food category</label>
+              <select id="food-category" name="category">
+                <option value="plants">Plant</option>
+                <option value="proteins">Protein</option>
+                <option value="fats">Healthy fat</option>
+              </select>
+              <label class="sr-only" for="food-occasion">Meal or snack</label>
+              <select id="food-occasion" name="occasion">
+                <option>Breakfast</option>
+                <option>Morning snack</option>
+                <option>Lunch</option>
+                <option>Afternoon snack</option>
+                <option>Dinner</option>
+                <option>Evening snack</option>
+              </select>
+              <label class="sr-only" for="food-name">Food</label>
+              <input id="food-name" name="food" maxlength="40"
+                placeholder="Add a food…" required>
+              <button type="submit">+ Food point</button>
+            </form>
+            <div class="water-controls">
+              <span>Log water</span>
+              <button id="remove-water" type="button" aria-label="Remove one cup of water">−</button>
+              <strong id="water-control-count">0 cups</strong>
+              <button id="add-water" type="button" aria-label="Add one cup of water">＋</button>
+            </div>
+            <div id="plant-list" class="plant-list" aria-label="Healthy foods eaten today"></div>
+            <div id="healthy-badges" class="healthy-badges"></div>
+            <p id="healthy-feedback" class="answer-feedback" aria-live="polite"></p>
+            <p class="healthy-note">Family game goals only—not personalized nutrition or medical guidance.</p>
+          </section>
+          <p class="game-footer">Keep playing—every solved puzzle earns a brain star <span aria-hidden="true">♡</span></p>
         </section>
 
-        <aside class="card todo-card" aria-labelledby="todo-heading">
+        <aside class="card todo-card theme-panel" id="tasks-panel" role="tabpanel"
+          aria-labelledby="tasks-tab" data-theme-panel="tasks" hidden>
           <div class="section-heading">
             <div>
               <p class="eyebrow">KEEP IT MOVING</p>
@@ -127,7 +273,141 @@
         </aside>
       </div>
 
-      <section class="card family-rewards" aria-labelledby="rewards-heading">
+      <section class="card meal-planner theme-panel" id="meals-panel" role="tabpanel"
+        aria-labelledby="meals-tab" data-theme-panel="meals" hidden>
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">WHAT'S FOR DINNER?</p>
+            <h2 id="meal-heading">Meals &amp; kitchen inventory</h2>
+          </div>
+          <span class="meal-mark" aria-hidden="true">⌂</span>
+        </div>
+        <div class="meal-layout">
+          <div class="inventory-panel">
+            <div class="inventory-heading">
+              <div>
+                <h3>Fridge &amp; freezer</h3>
+                <p>Keep a quick list of what you have on hand.</p>
+              </div>
+              <span id="inventory-count" class="inventory-count"></span>
+            </div>
+            <div class="storage-columns">
+              <section class="storage-section" aria-labelledby="fridge-heading">
+                <div class="storage-heading">
+                  <span class="storage-icon" aria-hidden="true">◫</span>
+                  <h4 id="fridge-heading">Fridge</h4>
+                </div>
+                <ul id="fridge-list" class="inventory-list"></ul>
+                <p id="empty-fridge" class="empty-state">Your fridge list is empty.</p>
+              </section>
+              <section class="storage-section freezer-section" aria-labelledby="freezer-heading">
+                <div class="storage-heading">
+                  <span class="storage-icon freezer-icon" aria-hidden="true">❄</span>
+                  <h4 id="freezer-heading">Freezer</h4>
+                </div>
+                <ul id="freezer-list" class="inventory-list"></ul>
+                <p id="empty-freezer" class="empty-state">Your freezer list is empty.</p>
+              </section>
+            </div>
+            <form id="inventory-form" class="inventory-form">
+              <label class="inventory-item-field">
+                <span>Item</span>
+                <input name="name" maxlength="60" placeholder="e.g. Chicken thighs" required>
+              </label>
+              <label>
+                <span>Amount</span>
+                <input name="amount" maxlength="30" placeholder="e.g. 2 packs">
+              </label>
+              <label>
+                <span>Stored in</span>
+                <select name="location">
+                  <option value="fridge">Fridge</option>
+                  <option value="freezer">Freezer</option>
+                </select>
+              </label>
+              <button class="primary-button" type="submit">Add item</button>
+            </form>
+          </div>
+
+          <div class="meal-plan-panel">
+            <div class="inventory-heading">
+              <div>
+                <h3>Meal plan</h3>
+                <p>Plan the week around food you already have.</p>
+              </div>
+            </div>
+            <ul id="meal-list" class="meal-list"></ul>
+            <p id="empty-meals" class="empty-state">No meals planned yet.</p>
+            <form id="meal-form" class="meal-form">
+              <label>
+                <span>Day</span>
+                <select name="day">
+                  <option>Monday</option><option>Tuesday</option><option>Wednesday</option>
+                  <option>Thursday</option><option>Friday</option><option>Saturday</option>
+                  <option>Sunday</option>
+                </select>
+              </label>
+              <label class="meal-name-field">
+                <span>Meal</span>
+                <input name="name" maxlength="80" placeholder="e.g. Chicken tacos" required>
+              </label>
+              <label>
+                <span>Use what we have <span class="optional-label">(optional)</span></span>
+                <select name="inventoryItem" id="meal-inventory-item">
+                  <option value="">No item selected</option>
+                </select>
+              </label>
+              <button class="primary-button" type="submit">Plan meal</button>
+            </form>
+          </div>
+        </div>
+        <p id="meal-feedback" class="todo-feedback" aria-live="polite"></p>
+      </section>
+
+      <section class="card alerts-card theme-panel" id="alerts-panel" role="tabpanel"
+        aria-labelledby="alerts-tab" data-theme-panel="alerts" hidden>
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">DON'T MISS A THING</p>
+            <h2>Reminders &amp; alarms</h2>
+          </div>
+          <span class="alerts-mark" aria-hidden="true">♬</span>
+        </div>
+        <div class="alerts-layout">
+          <div>
+            <h3>Coming up</h3>
+            <ul id="alert-list" class="alert-list"></ul>
+            <p id="empty-alerts" class="empty-state">No reminders or alarms set yet.</p>
+          </div>
+          <form id="alert-form" class="alert-form">
+            <label>
+              <span>Title</span>
+              <input name="title" maxlength="80" placeholder="e.g. Leave for soccer" required>
+            </label>
+            <label>
+              <span>For</span>
+              <select name="member" id="alert-member" required></select>
+            </label>
+            <label>
+              <span>When</span>
+              <input name="at" type="datetime-local" required>
+            </label>
+            <label>
+              <span>Alert style</span>
+              <select name="kind">
+                <option value="reminder">Reminder · notification</option>
+                <option value="alarm">Alarm · sound + notification</option>
+              </select>
+            </label>
+            <button class="primary-button" type="submit">Set alert</button>
+            <p class="reminder-note">Alerts work while this page is open. Allow browser notifications for background notices.</p>
+            <p id="alert-feedback" class="todo-feedback" aria-live="polite"></p>
+          </form>
+        </div>
+      </section>
+
+      <section class="card family-rewards theme-panel" aria-labelledby="rewards-heading"
+        data-theme-panel="tasks" hidden>
         <div class="section-heading">
           <div>
             <p class="eyebrow">LITTLE WINS ADD UP</p>
@@ -145,11 +425,17 @@
               <input name="name" maxlength="40" placeholder="Family member name" required>
             </label>
             <label>
-              <span>Family role</span>
-              <select name="role">
-                <option value="child">Child</option>
-                <option value="adult">Adult</option>
+              <span>Profile</span>
+              <select name="relationship">
+                <option value="Kid">Kid</option>
+                <option value="Mom">Mom</option>
+                <option value="Dad">Dad</option>
+                <option value="Adult">Adult</option>
               </select>
+            </label>
+            <label>
+              <span>Age <span class="optional-label">(optional)</span></span>
+              <input name="age" type="number" min="1" max="120" placeholder="Age">
             </label>
             <label>
               <span>Points goal</span>
@@ -192,6 +478,14 @@
           </form>
         </div>
       </section>
+      <div id="celebration" class="celebration" role="status" aria-live="polite" hidden>
+        <div id="celebration-confetti" class="celebration-confetti" aria-hidden="true"></div>
+        <div class="celebration-card">
+          <span id="celebration-icon" class="celebration-icon" aria-hidden="true">🎉</span>
+          <h2 id="celebration-title">Amazing work!</h2>
+          <p id="celebration-quote"></p>
+        </div>
+      </div>
       <footer class="page-footer">Made for the moments that make a family.</footer>
     </main>
   </body>
