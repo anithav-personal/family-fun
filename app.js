@@ -832,15 +832,18 @@ function renderDailyRoutine() {
     heading.className = "daily-period-heading";
     const title = document.createElement("h4");
     title.textContent = label;
-    heading.append(title);
+    const count = document.createElement("span");
+    count.className = "daily-period-count";
+    count.textContent = `${block.filter((item) => isAssignmentComplete(item, date)).length} / ${block.length} done`;
+    heading.append(title, count);
     list.append(heading);
-    for (const item of block) list.append(createRoutineEntry(item, date));
+    for (const item of block) list.append(createRoutineEntry(item, date, true));
   }
-  for (const item of optional) optionalList.append(createRoutineEntry(item, date));
+  for (const item of optional) optionalList.append(createRoutineEntry(item, date, true));
   document.getElementById("daily-optional-quests").hidden = !optional.length;
 }
 
-function createRoutineEntry(assignment, date) {
+function createRoutineEntry(assignment, date, daily = false) {
   const row = document.createElement("li");
   row.className = `routine-entry${isAssignmentComplete(assignment, date) ? " is-complete" : ""}`;
   const detail = document.createElement("div");
@@ -854,16 +857,24 @@ function createRoutineEntry(assignment, date) {
   time.className = "routine-time-note";
   const meta = document.createElement("span");
   const member = members.find((item) => item.id === assignment.memberId);
-  meta.textContent = `${member.name} · ${assignment.kind === "chore" ? "Chore" : "Task"}`;
+  meta.textContent = `${daily ? "" : `${member.name} · `}${assignment.kind === "chore" ? "Chore" : "Task"}`;
   if (assignment.notification) meta.textContent += ` · ${assignment.notification.kind} ${assignment.notification.minutesBefore ? `${assignment.notification.minutesBefore} min before` : "at start"}`;
   const reward = document.createElement("span");
   reward.className = `routine-reward-badge ${assignment.kind === "task" ? "routine-star-coins" : "routine-game-minutes"}`;
   reward.textContent = assignment.kind === "task"
-    ? `\u2605 ${assignment.reward ? "+" : ""}${assignment.reward} Reward stars`
-    : `\u{1F3AE} ${assignment.reward ? "+" : ""}${assignment.reward} game minutes`;
+    ? `\u2605 ${assignment.reward ? "+" : ""}${assignment.reward} ${daily ? assignment.reward === 1 ? "coin" : "coins" : "Reward stars"}`
+    : `${daily ? "" : "\u{1F3AE} "}${assignment.reward ? "+" : ""}${assignment.reward} ${daily ? "min" : "game minutes"}`;
+  reward.setAttribute("aria-label", `${assignment.reward} ${assignment.kind === "task" ? "reward stars (coins)" : "game minutes"} per completion`);
   reward.title = assignment.reward ? "Earned once when this occurrence is completed."
     : "No reward assigned. An unlocked parent can set a reward in Calendar using Edit schedule & rewards.";
-  detail.append(title, time, meta, reward);
+  if (daily) {
+    const secondary = document.createElement("div");
+    secondary.className = "routine-secondary";
+    secondary.append(meta, reward);
+    detail.append(title);
+    if (assignment.time) detail.append(time);
+    detail.append(secondary);
+  } else detail.append(title, time, meta, reward);
   row.append(detail, createAssignmentCompleteButton(assignment, date));
   return row;
 }

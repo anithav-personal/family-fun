@@ -156,6 +156,10 @@ included in the dinner spinner until a date is assigned.
 one earned game-time balance and reward stars. Today is selected by
 default; other dates can be viewed without allowing future tasks to be completed.
 Optional quests are separate and do not count toward daily checklist progress.
+The daily list uses simple divided rows with bold task names, scheduled times
+as quieter sub-bullets, compact coin/minute badges, and one-tap completion.
+Each time-of-day heading shows its own completion count. Untimed daily items
+omit repetitive "Any time" labels; Calendar keeps the full family details.
 Choose **Optional quest** when creating an assignment in Calendar.
 Use **Routine block** to group responsibilities into morning, afternoon,
 evening, or any time. Imported routines can preserve their checklist order
