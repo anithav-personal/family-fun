@@ -5,10 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#f7f6f1">
     <title>Family Fun</title>
-    <link rel="stylesheet" href="styles.css?v=wish-piggy-1">
-    <link rel="stylesheet" href="fun.css?v=wish-piggy-1">
-    <script src="app.js?v=wish-piggy-1" defer></script>
-    <script src="fun.js?v=wish-piggy-1" defer></script>
+    <link rel="stylesheet" href="styles.css?v=cute-piggy-1">
+    <link rel="stylesheet" href="fun.css?v=cute-piggy-1">
+    <script src="app.js?v=cute-piggy-1" defer></script>
+    <script src="fun.js?v=cute-piggy-1" defer></script>
   </head>
   <body>
     <a class="skip-link" href="#section-guide">Skip to this section</a>
@@ -135,28 +135,44 @@
             <svg class="piggy-art" viewBox="0 0 280 230" role="img" aria-label="A cheerful piggy bank filling up as you save reward stars">
               <defs>
                 <clipPath id="piggy-body-clip"><ellipse cx="126" cy="126" rx="84" ry="62"/></clipPath>
-                <linearGradient id="piggy-gold" x2="0" y2="1"><stop stop-color="#ffe36d"/><stop offset="1" stop-color="#ffbb42"/></linearGradient>
+                <radialGradient id="piggy-halo" cx="40%" cy="30%" r="75%"><stop stop-color="#fffafd"/><stop offset="1" stop-color="#e9dcff"/></radialGradient>
+                <radialGradient id="piggy-pink" cx="35%" cy="20%" r="85%"><stop stop-color="#fff0f7"/><stop offset=".55" stop-color="#ffd0e3"/><stop offset="1" stop-color="#f4a6c8"/></radialGradient>
+                <linearGradient id="piggy-snout" x2="0" y2="1"><stop stop-color="#ffc8df"/><stop offset="1" stop-color="#f696bb"/></linearGradient>
+                <linearGradient id="piggy-gold" x2="0" y2="1"><stop stop-color="#ffe983"/><stop offset=".45" stop-color="#ffd457"/><stop offset="1" stop-color="#f4b63c"/></linearGradient>
               </defs>
-              <circle cx="140" cy="115" r="103" fill="#e1ddff"/>
-              <path d="M25 111c-26-22-22 25-7 12 11-10-6-18-12-7" fill="none" stroke="#d9488a" stroke-width="6" stroke-linecap="round"/>
-              <path d="m75 173-4 26h23l4-20m53-1 4 21h23l-5-29" fill="#f27fab" stroke="#90365f" stroke-width="4" stroke-linejoin="round"/>
-              <ellipse cx="126" cy="126" rx="84" ry="62" fill="#ffd4e6"/>
+              <circle cx="140" cy="115" r="103" fill="url(#piggy-halo)"/>
+              <ellipse cx="137" cy="208" rx="88" ry="8" fill="#8163a0" opacity=".13"/>
+              <ellipse cx="137" cy="208" rx="63" ry="4" fill="#8163a0" opacity=".12"/>
+              <path d="M44 126c-15-8-32-5-30 6 2 12 18 6 12-3-4-6-12-3-13 0" fill="none" stroke="#d47ba2" stroke-width="5" stroke-linecap="round"/>
+              <path d="m78 173-4 23q-1 7 6 7h12q5 0 6-6l3-18m48 0 4 18q1 6 6 6h12q7 0 6-7l-5-23" fill="#efa7c6" stroke="#a35a7c" stroke-width="3" stroke-linejoin="round"/>
+              <path d="m81 198h12m66 0h12" stroke="#d57da5" stroke-width="2" stroke-linecap="round"/>
+              <ellipse cx="126" cy="126" rx="84" ry="62" fill="url(#piggy-pink)"/>
               <g clip-path="url(#piggy-body-clip)"><rect id="piggy-fill" x="35" y="188" width="185" height="0" fill="url(#piggy-gold)"/></g>
-              <ellipse cx="126" cy="126" rx="84" ry="62" fill="none" stroke="#90365f" stroke-width="4"/>
-              <path d="m164 77 5-31 28 25" fill="#f27fab" stroke="#90365f" stroke-width="4" stroke-linejoin="round"/>
-              <ellipse cx="207" cy="132" rx="31" ry="25" fill="#ff97bd" stroke="#90365f" stroke-width="4"/>
-              <ellipse cx="198" cy="132" rx="4" ry="7" fill="#90365f"/><ellipse cx="215" cy="132" rx="4" ry="7" fill="#90365f"/>
-              <circle cx="172" cy="106" r="5" fill="#452d4f"/><circle cx="174" cy="104" r="1.5" fill="white"/>
-              <path d="M165 139q8 9 14 0" fill="none" stroke="#90365f" stroke-width="3" stroke-linecap="round"/>
-              <circle cx="155" cy="130" r="9" fill="#ff8db9" opacity=".7"/>
-              <path d="M101 73h41" stroke="#90365f" stroke-width="6" stroke-linecap="round"/>
+              <ellipse cx="126" cy="126" rx="84" ry="62" fill="none" stroke="#a35a7c" stroke-width="3"/>
+              <path d="M60 109q12-29 42-31" fill="none" stroke="#fffafd" stroke-width="7" stroke-linecap="round" opacity=".65"/>
+              <ellipse cx="72" cy="123" rx="4" ry="6" fill="white" opacity=".45"/>
+              <path d="M163 80q-1-19 7-29 4-5 9 0l18 19q3 4-3 6l-23 9" fill="url(#piggy-snout)" stroke="#a35a7c" stroke-width="3" stroke-linejoin="round"/>
+              <path d="m174 59-4 17 15-4" fill="#e787af" opacity=".7"/>
+              <ellipse cx="165" cy="132" rx="12" ry="9" fill="#ef8eb3" opacity=".6"/>
+              <circle cx="169" cy="108" r="8" fill="#50334f"/>
+              <circle cx="166.5" cy="105" r="2.8" fill="white"/>
+              <circle cx="172" cy="111" r="1.3" fill="#dca7cc"/>
+              <path d="M170 143q9 8 16-1" fill="none" stroke="#a35a7c" stroke-width="2.5" stroke-linecap="round"/>
+              <ellipse cx="211" cy="134" rx="31" ry="25" fill="url(#piggy-snout)" stroke="#a35a7c" stroke-width="3"/>
+              <path d="M191 125q12-12 28-7" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" opacity=".5"/>
+              <ellipse cx="202" cy="136" rx="3.5" ry="6" fill="#a5577b"/><ellipse cx="219" cy="136" rx="3.5" ry="6" fill="#a5577b"/>
+              <path d="M103 76q18-4 36 0" fill="none" stroke="#a35a7c" stroke-width="5" stroke-linecap="round"/>
+              <path d="M106 72q16-3 30 0" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" opacity=".6"/>
               <g class="piggy-coin">
-                <circle cx="122" cy="35" r="22" fill="#ffcf47" stroke="#b36d16" stroke-width="3"/>
-                <path d="m122 20 4 10 11 1-8 7 2 11-9-6-10 6 2-11-8-7 12-1z" fill="#fff6b7"/>
+                <circle cx="122" cy="35" r="22" fill="url(#piggy-gold)" stroke="#c68f32" stroke-width="2.5"/>
+                <circle cx="122" cy="35" r="17.5" fill="none" stroke="#fff3b1" stroke-width="1.5"/>
+                <path d="m122 22 3.8 8 9 .9-6.5 6 1.8 9-8.1-4.5-8.1 4.5 1.8-9-6.5-6 9-.9z" fill="#fff9d9"/>
+                <path d="M110 25q3-4 7-5" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" opacity=".75"/>
               </g>
-              <path d="m244 54 4 11 12 3-12 4-4 11-4-11-11-4 11-3z" fill="#42b9bb"/>
-              <path d="m40 46 3 8 9 3-9 3-3 8-3-8-8-3 8-3z" fill="#ff9270"/>
-              <ellipse cx="136" cy="210" rx="95" ry="7" fill="#6b579f" opacity=".15"/>
+              <path d="m244 60 3 8 9 3-9 3-3 8-3-8-8-3 8-3z" fill="#69c6c1"/>
+              <path d="m41 55 2.5 6 6.5 2.5-6.5 2.5-2.5 6-2.5-6-6.5-2.5 6.5-2.5z" fill="#efa4b9"/>
+              <path d="M225 38c-7-9-17 3 0 13 17-10 7-22 0-13z" fill="#eda5c6"/>
+              <circle cx="48" cy="174" r="3" fill="#bba4dd"/><circle cx="248" cy="103" r="2.5" fill="#dfbe69"/>
             </svg>
             <div class="piggy-copy">
               <p class="goal-kicker">MY CURRENT REWARD GOAL</p>
