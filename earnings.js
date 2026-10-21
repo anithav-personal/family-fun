@@ -1,4 +1,116 @@
 let earningsTimeout;
+const rewardSoundKey = "family-fun-reward-sounds";
+let rewardSoundsEnabled = false;
+let rewardSoundGeneration = 0;
+const rewardSoundNodes = new Set();
+try {
+  rewardSoundsEnabled = localStorage.getItem(rewardSoundKey) === "on";
+} catch {
+  document.getElementById("data-feedback").textContent = "Reward sound preferences could not be loaded. Sounds are off for now.";
+}
+
+function renderRewardSoundControl() {
+  const button = document.getElementById("reward-sound-toggle");
+  button.setAttribute("aria-pressed", String(rewardSoundsEnabled));
+  button.textContent = rewardSoundsEnabled ? "\u{1F50A} Reward sounds on" : "\u{1F507} Reward sounds off";
+  button.title = rewardSoundsEnabled ? "Mute reward sounds. Calendar alarms are separate."
+    : "Enable gentle coin and game-time sounds. Calendar alarms are separate.";
+}
+
+function stopRewardSounds() {
+  rewardSoundGeneration += 1;
+  for (const { oscillator, gain } of rewardSoundNodes) {
+    oscillator.onended = null;
+    oscillator.stop();
+    oscillator.disconnect();
+    gain.disconnect();
+  }
+  rewardSoundNodes.clear();
+}
+
+async function playEarningSound(stars, gameMinutes) {
+  if (!rewardSoundsEnabled || (stars <= 0 && gameMinutes <= 0)) return;
+  stopRewardSounds();
+  const generation = rewardSoundGeneration;
+  try {
+    alarmAudioContext ||= new AudioContext();
+    if (alarmAudioContext.state !== "running") await alarmAudioContext.resume();
+    if (!rewardSoundsEnabled || generation !== rewardSoundGeneration) return;
+    if (alarmAudioContext.state !== "running") throw new Error("Reward audio is blocked");
+    const start = alarmAudioContext.currentTime + 0.02;
+    const notes = [];
+    if (stars > 0) {
+      for (const [index, frequency] of [1046.5, 1318.5, 1568].entries()) {
+        notes.push({ frequency, offset: index * 0.18, type: "sine", duration: 0.2 });
+      }
+    }
+    if (gameMinutes > 0) {
+      const offset = stars > 0 ? 0.62 : 0;
+      for (const [index, frequency] of [523.25, 659.25, 783.99, 1046.5].entries()) {
+        notes.push({ frequency, offset: offset + index * 0.12, type: "triangle", duration: 0.16 });
+      }
+    }
+    for (const note of notes) {
+      const oscillator = alarmAudioContext.createOscillator();
+      const gain = alarmAudioContext.createGain();
+      const node = { oscillator, gain };
+      oscillator.onended = () => {
+        oscillator.disconnect();
+        gain.disconnect();
+        rewardSoundNodes.delete(node);
+      };
+      oscillator.type = note.type;
+      oscillator.frequency.value = note.frequency;
+      const at = start + note.offset;
+      gain.gain.setValueAtTime(0.0001, at);
+      gain.gain.exponentialRampToValueAtTime(0.07, at + 0.012);
+      gain.gain.exponentialRampToValueAtTime(0.0001, at + note.duration);
+      oscillator.connect(gain);
+      gain.connect(alarmAudioContext.destination);
+      oscillator.start(at);
+      rewardSoundNodes.add(node);
+      oscillator.stop(at + note.duration + 0.02);
+    }
+  } catch {
+    stopRewardSounds();
+    setDataFeedback("Reward sound could not play. Toggle Reward sounds off and on to enable audio in this browser. Your earned rewards are saved.", true);
+  }
+}
+
+document.getElementById("reward-sound-toggle").addEventListener("click", async (event) => {
+  const button = event.currentTarget;
+  button.disabled = true;
+  try {
+    const enable = !rewardSoundsEnabled;
+    if (enable) {
+      alarmAudioContext ||= new AudioContext();
+      await alarmAudioContext.resume();
+      if (alarmAudioContext.state !== "running") throw new Error("Reward audio is blocked");
+    }
+    rewardSoundsEnabled = enable;
+    if (!enable) stopRewardSounds();
+    renderRewardSoundControl();
+    try {
+      localStorage.setItem(rewardSoundKey, enable ? "on" : "off");
+      setDataFeedback(enable ? "Reward sounds enabled. Calendar alarms are unchanged." : "Reward sounds muted. Calendar alarms are unchanged.");
+    } catch {
+      setDataFeedback("Sound preference changed for this visit but could not be saved. Check browser storage.", true);
+    }
+    if (enable) await playEarningSound(1, 0);
+  } catch {
+    setDataFeedback("Audio could not be enabled. Your browser may not support sound or may be blocking it.", true);
+  } finally {
+    button.disabled = false;
+  }
+});
+window.addEventListener("storage", (event) => {
+  if (event.key === rewardSoundKey || event.key === null) {
+    rewardSoundsEnabled = event.key !== null && event.newValue === "on";
+    if (!rewardSoundsEnabled) stopRewardSounds();
+    renderRewardSoundControl();
+  }
+});
+renderRewardSoundControl();
 
 function celebrateEarnings(memberId, stars = 0, gameMinutes = 0) {
   if (stars <= 0 && gameMinutes <= 0) return;
@@ -47,5 +159,6 @@ function celebrateEarnings(memberId, stars = 0, gameMinutes = 0) {
     popup.append(row);
   }
   popup.hidden = false;
+  void playEarningSound(stars, gameMinutes);
   earningsTimeout = setTimeout(() => { popup.hidden = true; popup.replaceChildren(); }, 4200);
 }

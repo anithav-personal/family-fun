@@ -46,7 +46,7 @@ button { cursor: pointer; }
 .brand-mark { color: #e99f54; font-size: 26px; }
 .brand-accent { color: var(--green); }
 .topbar-note { color: var(--muted); font-size: 13px; }
-.topbar-actions { display: flex; align-items: center; gap: 18px; }
+.topbar-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 18px; }
 .topbar-actions .topbar-note { margin: 0; }
 .profile-switcher { display: flex; align-items: center; gap: 7px; color: #7e8982; font-size: 10px; font-weight: 700; }
 .profile-switcher select { min-width: 100px; height: 32px; padding: 0 27px 0 9px; border: 1px solid #dce4dd; border-radius: 7px; background: #fff; color: var(--ink); font-size: 10px; font-weight: 600; }
