@@ -5,12 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#f7f6f1">
     <title>Family Fun</title>
-    <link rel="stylesheet" href="styles.css?v=dated-meals-1">
-    <link rel="stylesheet" href="fun.css?v=dated-meals-1">
-    <script src="app.js?v=dated-meals-1" defer></script>
-    <script src="fun.js?v=dated-meals-1" defer></script>
+    <link rel="stylesheet" href="styles.css?v=routines-1">
+    <link rel="stylesheet" href="fun.css?v=routines-1">
+    <script src="app.js?v=routines-1" defer></script>
+    <script src="fun.js?v=routines-1" defer></script>
   </head>
   <body>
+    <a class="skip-link" href="#section-guide">Skip to this section</a>
     <main class="app-shell">
       <header class="topbar">
         <a class="brand" href="#" aria-label="Family Fun home">
@@ -19,20 +20,8 @@
         </a>
         <div class="topbar-actions">
           <p class="topbar-note">A little more together, every day.</p>
-          <label class="profile-switcher">
-            <span>Profile</span>
-            <select id="active-profile" aria-label="Active family profile"></select>
-          </label>
-          <button class="data-button" id="manage-profiles" type="button">Manage profiles</button>
-          <div class="data-actions" aria-label="Data backup">
-            <button class="theme-toggle" id="theme-toggle" type="button" aria-pressed="false">
-              <span id="theme-icon" aria-hidden="true">☾</span>
-              <span id="theme-label">Night</span>
-            </button>
-            <button class="data-button" id="export-data" type="button">Export data</button>
-            <button class="data-button" id="import-data" type="button">Import data</button>
-            <input id="import-file" type="file" accept="application/json,.json" hidden>
-          </div>
+          <span id="active-person-badge" class="current-person">Family space</span>
+          <button class="data-button" id="manage-profiles" type="button">Settings</button>
         </div>
       </header>
       <p id="data-feedback" class="data-feedback" aria-live="polite"></p>
@@ -42,7 +31,11 @@
         <div>
           <p class="eyebrow" id="today-label"></p>
           <h1 id="welcome-heading">Make today a good one.</h1>
-          <p class="welcome-copy">Your family plans and a little brain boost, all in one place.</p>
+          <p class="welcome-copy">Little routines. Big adventures. A happy place for your family's day.</p>
+          <div class="welcome-shortcuts">
+            <button class="primary-button" id="open-today" type="button">Today's plans</button>
+            <button class="data-button" id="open-routine" type="button">My routine chart</button>
+          </div>
         </div>
         <span class="welcome-sun" aria-hidden="true">☀</span>
       </section>
@@ -50,25 +43,22 @@
       <nav class="theme-tabs" aria-label="Family Fun sections" role="tablist">
         <button class="theme-tab is-active" id="calendar-tab" type="button" role="tab"
           aria-selected="true" aria-controls="calendar-panel" data-theme-tab="calendar">
-          <span aria-hidden="true">▦</span> Plan Together
+          <span class="tab-icon" aria-hidden="true">▦</span><span class="tab-label">Calendar<small>Plans &amp; routines</small></span>
         </button>
         <button class="theme-tab" id="meals-tab" type="button" role="tab"
           aria-selected="false" aria-controls="meals-panel" data-theme-tab="meals" tabindex="-1">
-          <span aria-hidden="true">⌂</span> What's Cooking?
-        </button>
-        <button class="theme-tab" id="tasks-tab" type="button" role="tab"
-          aria-selected="false" aria-controls="tasks-panel" data-theme-tab="tasks" tabindex="-1">
-          <span aria-hidden="true">✓</span> Teamwork
-        </button>
-        <button class="theme-tab" id="alerts-tab" type="button" role="tab"
-          aria-selected="false" aria-controls="alerts-panel" data-theme-tab="alerts" tabindex="-1">
-          <span aria-hidden="true">♬</span> Ring-a-Ding
+          <span class="tab-icon" aria-hidden="true">⌂</span><span class="tab-label">Meals<small>Plan &amp; pick dinner</small></span>
         </button>
         <button class="theme-tab" id="fun-tab" type="button" role="tab"
           aria-selected="false" aria-controls="fun-panel" data-theme-tab="fun" tabindex="-1">
-          <span aria-hidden="true">✦</span> Play Time
+          <span class="tab-icon" aria-hidden="true">✦</span><span class="tab-label">Play Time<small>Games &amp; rewards</small></span>
+        </button>
+        <button class="theme-tab" id="settings-tab" type="button" role="tab"
+          aria-selected="false" aria-controls="settings-panel" data-theme-tab="settings" tabindex="-1">
+          <span class="tab-icon" aria-hidden="true">⚙</span><span class="tab-label">Settings<small>Profiles &amp; preferences</small></span>
         </button>
       </nav>
+      <p id="section-guide" class="section-guide" tabindex="-1" role="status"></p>
 
       <div class="dashboard">
         <section class="card calendar-card theme-panel" id="calendar-panel" role="tabpanel"
@@ -95,16 +85,9 @@
               <span id="event-count" class="event-count"></span>
             </div>
             <ul id="event-list" class="event-list"></ul>
+            <p id="calendar-feedback" class="fun-feedback" role="status"></p>
             <p id="empty-events" class="empty-state">Nothing on the calendar yet. Add a plan below!</p>
-            <form id="event-form" class="event-form">
-              <label class="sr-only" for="event-title">Event name</label>
-              <input id="event-title" name="title" maxlength="80" placeholder="Add a family plan…" required>
-              <label class="sr-only" for="event-person">Family member</label>
-              <select id="event-person" name="person">
-                <option value="Everyone">Everyone</option>
-              </select>
-              <button class="add-button" type="submit" aria-label="Add event">＋</button>
-            </form>
+            <button id="open-plan-form" class="primary-button" type="button">Create event, task or routine</button>
           </div>
         </section>
 
@@ -332,8 +315,10 @@
           <p class="game-footer">Keep playing—every solved puzzle earns a brain star <span aria-hidden="true">♡</span></p>
         </section>
 
-        <aside class="card todo-card theme-panel" id="tasks-panel" role="tabpanel"
-          aria-labelledby="tasks-tab" data-theme-panel="tasks" hidden>
+        <aside class="card todo-card theme-panel" id="shared-checklist"
+          aria-labelledby="todo-heading" data-theme-panel="calendar">
+          <details class="calendar-extra">
+          <summary>Shared family checklist</summary>
           <div class="section-heading">
             <div>
               <p class="eyebrow">KEEP IT MOVING</p>
@@ -369,6 +354,7 @@
           </form>
           <p class="reminder-note">Reminders show while this page is open. Browser notifications require permission.</p>
           <p id="todo-feedback" class="todo-feedback" aria-live="polite"></p>
+          </details>
         </aside>
       </div>
 
@@ -474,8 +460,10 @@
         <p id="meal-feedback" class="todo-feedback" aria-live="polite"></p>
       </section>
 
-      <section class="card alerts-card theme-panel" id="alerts-panel" role="tabpanel"
-        aria-labelledby="alerts-tab" data-theme-panel="alerts" hidden>
+      <section class="card alerts-card theme-panel" id="alerts-panel"
+        aria-label="Standalone reminders and alarms" data-theme-panel="calendar">
+        <details class="calendar-extra">
+        <summary>Standalone reminders &amp; alarms</summary>
         <div class="section-heading">
           <div>
             <p class="eyebrow">DON'T MISS A THING</p>
@@ -514,14 +502,29 @@
             <p id="alert-feedback" class="todo-feedback" aria-live="polite"></p>
           </form>
         </div>
+        </details>
       </section>
 
-      <section class="card family-rewards theme-panel" aria-labelledby="rewards-heading"
-        data-theme-panel="tasks" hidden>
+      <section class="card family-rewards theme-panel" id="settings-panel" role="tabpanel"
+        aria-labelledby="settings-tab" data-theme-panel="settings" hidden>
         <div class="section-heading">
           <div>
-            <p class="eyebrow">LITTLE WINS ADD UP</p>
-            <h2 id="rewards-heading">Goals &amp; helping hands</h2>
+            <p class="eyebrow">MAKE IT YOURS</p>
+            <h2 id="settings-heading" tabindex="-1">Family settings</h2>
+          </div>
+          <p class="fun-note">Manage profiles, ages, points goals, play themes, and who is playing here.</p>
+          <label class="profile-switcher settings-profile-switcher">
+            <span>Active family member</span>
+            <select id="active-profile" aria-label="Active family profile"></select>
+          </label>
+          <div class="data-actions" aria-label="Appearance and data backup">
+            <button class="theme-toggle" id="theme-toggle" type="button" aria-pressed="false">
+              <span id="theme-icon" aria-hidden="true">☾</span>
+              <span id="theme-label">Night</span>
+            </button>
+            <button class="data-button" id="export-data" type="button">Export data</button>
+            <button class="data-button" id="import-data" type="button">Import data</button>
+            <input id="import-file" type="file" accept="application/json,.json" hidden>
           </div>
           <span class="rewards-mark" aria-hidden="true">★</span>
         </div>
@@ -564,38 +567,98 @@
           </div>
         </form>
         <p id="profile-feedback" class="fun-feedback" role="status"></p>
-
+      </section>
+      <section class="card family-rewards theme-panel" id="calendar-plans"
+        aria-labelledby="plan-heading" data-theme-panel="calendar">
         <div class="assignments">
           <div class="assignment-heading">
             <div>
               <p class="eyebrow">SHARE THE LOAD</p>
-              <h3>Chores &amp; tasks</h3>
+              <h2 id="plan-heading" tabindex="-1">Create a family plan</h2>
             </div>
           </div>
-          <p id="empty-assignments" class="empty-state">Add a child, then give them a chore or task to get started.</p>
-          <ul id="assignment-list" class="assignment-list"></ul>
           <form id="assignment-form" class="assignment-form">
             <label>
               <span>Kind</span>
               <select name="kind">
+                <option value="event">Family event</option>
                 <option value="chore">Chore · earns points</option>
                 <option value="task">Task · earns stars</option>
               </select>
             </label>
             <label class="assignment-title-field">
-              <span>What needs doing?</span>
-              <input name="title" maxlength="80" placeholder="e.g. Feed the cat" required>
+              <span>What's the plan?</span>
+              <input name="title" maxlength="80" placeholder="e.g. Family walk or feed the cat" required>
             </label>
             <label>
               <span>Assign to</span>
-              <select name="member" id="assignment-member" required></select>
+              <select name="member" id="assignment-member"></select>
             </label>
-            <label>
+            <label id="plan-reward-field" hidden>
               <span id="reward-label">Points</span>
               <input name="reward" type="number" min="1" max="1000" value="10" required>
             </label>
-            <button class="primary-button" type="submit">Add</button>
+            <label>
+              <span>Start date</span>
+              <input name="startDate" type="date" required>
+            </label>
+            <label>
+              <span>Time <span class="optional-label">(optional)</span></span>
+              <input name="time" type="time">
+            </label>
+            <label>
+              <span>Repeat</span>
+              <select name="recurrence">
+                <option value="none">Does not repeat</option>
+                <option value="daily">Daily</option>
+                <option value="weekly">Weekly</option>
+                <option value="monthly">Monthly</option>
+              </select>
+            </label>
+            <label>
+              <span>Reminder or alarm</span>
+              <select name="notificationKind">
+                <option value="none">No alert</option>
+                <option value="reminder">Reminder</option>
+                <option value="alarm">Alarm with sound</option>
+              </select>
+            </label>
+            <label>
+              <span>Alert timing</span>
+              <select name="minutesBefore">
+                <option value="0">At the scheduled time</option>
+                <option value="5">5 minutes before</option>
+                <option value="15">15 minutes before</option>
+                <option value="30">30 minutes before</option>
+                <option value="60">1 hour before</option>
+              </select>
+            </label>
+            <button class="primary-button" type="submit">Create plan</button>
           </form>
+          <p class="fun-note">Choose a time to add an optional reminder or alarm. Alerts work only while this page is open; sound and browser notifications may need permission. Weekly repeats use the start date's weekday; monthly repeats use its day, or the last day of a shorter month.</p>
+          <button id="enable-calendar-alerts" class="data-button" type="button">Enable sound &amp; notifications</button>
+          <p id="assignment-feedback" class="fun-feedback" role="status"></p>
+          <h3>Family responsibilities</h3>
+          <p id="empty-assignments" class="empty-state">Create a chore or task for any family member. Add profiles in Settings first.</p>
+          <ul id="assignment-list" class="assignment-list"></ul>
+        </div>
+        <div class="routine-chart" aria-labelledby="routine-heading">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">SMALL STEPS, HAPPY DAYS</p>
+              <h3 id="routine-heading" tabindex="-1">Routine chart</h3>
+            </div>
+            <div class="routine-controls">
+              <label>Responsibilities for <select id="routine-member" aria-label="Whose responsibilities to show"></select></label>
+              <button id="routine-previous" class="data-button" type="button" aria-label="Previous routine week">Previous</button>
+              <label>Week containing <input id="routine-week" type="date" required></label>
+              <button id="routine-next" class="data-button" type="button" aria-label="Next routine week">Next</button>
+              <button id="routine-today" class="data-button" type="button">This week</button>
+            </div>
+          </div>
+          <p class="fun-note">Everyone has a part to play. Choose any family member to see their responsibilities and shared events, or choose the whole family. Each chore or task tracks that person's completion separately. Older undated assignments stay in the list above until you edit their schedule.</p>
+          <p id="routine-summary" class="fun-feedback" aria-live="polite"></p>
+          <div id="routine-days" class="routine-days"></div>
         </div>
       </section>
       <div id="celebration" class="celebration" role="status" aria-live="polite" hidden>
