@@ -96,9 +96,24 @@ included in the dinner spinner until a date is assigned.
 
 ## Chores, tasks & routines
 
+**Routine** is the daily home for children and adults. Choose a person with
+**Playing as...**, then check off their dated responsibilities and see their
+game points, reward stars, and earned game minutes. Today is selected by
+default; other dates can be viewed without allowing future tasks to be completed.
+Optional quests are separate and do not count toward daily checklist progress.
+Choose **Optional quest** when creating an assignment in Calendar.
+Use **Routine block** to group responsibilities into morning, afternoon,
+evening, or any time. Imported routines can preserve their checklist order
+without inventing exact times for untimed steps.
+The reward shop lives in Routine, with a shortcut from Play Time. It shows
+which rewards are affordable and how many more reward stars are needed.
+Adults can define rewards, approve requests, and mark rewards delivered there.
+Calendar remains available for planning and the whole-family weekly chart.
+
 In **Calendar**, use **Create event, task or routine** to add a family event,
 chore, or task for any family member. Give it a start date, an optional local time, and
-choose **Does not repeat**, **Daily**, **Weekly**, or **Monthly**. Weekly routines
+choose **Does not repeat**, **Daily**, **Weekdays (Mon-Fri)**, **Weekly**, or
+**Monthly**. Weekday routines skip Saturdays and Sundays. Weekly routines
 repeat on the start date's weekday. Monthly routines keep the original day of
 the month, using the last day of shorter months (January 31 repeats on February
 28 or 29, then March 31). Dates before the start date are never included.
@@ -114,20 +129,21 @@ the chart filter can also be changed without switching who is playing.
 Browse other weeks or use **My routine chart** to return to this week.
 
 Each occurrence can be completed once, on its date or later, earning game points
-for chores or redeemable reward stars for tasks. Every 100 chore game points unlock
-10 earned game-time minutes, separately from the brain-star rewards. Profiles
-and Play Time show progress toward the next 10-minute reward. Points are
-cumulative and are not spent in the shops. Existing points and minutes are
-preserved; older completed chores do not receive retroactive minutes. New
-completions award minutes when the cumulative points cross each 100-point
-milestone, including multiple milestones from one chore. Points and minutes
-are saved together with completion history, so a failed save earns neither.
+for chores or redeemable reward stars for tasks. **1 chore game point earns
+1 game-time minute**, separately from the brain-star rewards. A 5-point chore
+earns 5 minutes; a 20-point chore earns 20 minutes. Profiles and Play Time
+explain this rule. Points are cumulative and are not spent in the shops.
+Existing points and minutes are preserved; older completed chores do not
+receive retroactive minutes or a recalculation of previously earned rewards.
+Set a chore or task's reward to **0** for a routine checklist step that can be
+completed without awarding points, stars, or minutes. Points and minutes are
+saved together with completion history, so a failed save earns neither.
 Future occurrences cannot be completed early. Past
 missed occurrences stay on their original dates; they do not roll into today.
 Completion history is retained separately for each occurrence. **Edit schedule**
 lets you add dates to older unfinished assignments or adjust a new routine.
 After the first completion, start dates and repeats are fixed to preserve reward
-history; times and alerts remain editable. Remove and recreate a routine to replace its
+history; times, routine blocks, checklist type, and alerts remain editable. Remove and recreate a routine to replace its
 schedule; removing it does not remove earned rewards.
 
 Existing undated assignments and older backups remain supported without guessed
