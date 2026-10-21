@@ -32,6 +32,7 @@ const adventureChapters = [
 ];
 const arcadeGames = ["word", "math", "memory", "riddle", "odd", "pattern"];
 const wishIcons = { gift: "\u{1F381}", toy: "\u{1F9F8}", book: "\u{1F4DA}", adventure: "\u{1F680}", game: "\u{1F3AE}" };
+const greenlightReward = Object.freeze({ id: "greenlight-one-dollar", title: "$1 to Greenlight debit card", cost: 100 });
 const funStorageKey = "family-fun-extra-fun";
 let funStorageBlocked = false;
 let funState = readFunState();
@@ -158,7 +159,7 @@ function addAdventureStep(memberId, title, kind) {
   if (chapter) addWallWin(memberId, `Family unlocked ${chapter.name}!`, "adventure");
 }
 
-function commitFunChange(change, message = "", feedbackTarget = "fun-feedback") {
+function commitFunChange(change, message = "", feedbackTarget = "fun-feedback", celebrate = false) {
   if (funStorageBlocked) {
     funMessage("Extra play storage could not be loaded safely. Recover a valid backup before saving new play progress.", true, feedbackTarget);
     return false;
@@ -196,6 +197,12 @@ function commitFunChange(change, message = "", feedbackTarget = "fun-feedback") 
   if (message) funMessage(message, false, feedbackTarget);
   renderRewards();
   renderGameRewards(getFunMember());
+  if (celebrate) {
+    for (const { member, value } of oldMembers) {
+      celebrateEarnings(member.id, Math.max(0, member.stars - value.stars),
+        Math.max(0, (member.gameMinutes || 0) - (value.gameMinutes || 0)));
+    }
+  }
   return true;
 }
 
@@ -442,7 +449,7 @@ function finishArcade(game) {
       }
     }
     addAdventureStep(member.id, `Completed ${document.querySelector(`#arcade-game option[value="${game}"]`).textContent}`, "arcade");
-  });
+  }, "", "fun-feedback", true);
   if (!success) {
     if (game === "memory") resetMemoryGame();
     renderArcade(member);
@@ -486,7 +493,7 @@ function completeBingo(index) {
       if (member.role === "child") member.stars += 1;
       addWallWin(member.id, "Family bingo! A full line completed.", "badge");
     }
-  }, "Bingo square completed! A first full line earns its completing child one reward star.");
+  }, "Bingo square completed! A first full line earns its completing child one reward star.", "fun-feedback", true);
 }
 
 function renderBingo(member) {
@@ -526,7 +533,7 @@ function changeQuest(complete) {
       if (member.role === "child") member.stars += 1;
       addAdventureStep(member.id, "Daily mystery mission completed!", "quest");
     }
-  }, complete ? "Mission complete! Your adventure moves forward." : "Your mission is revealed. Have fun!");
+  }, complete ? "Mission complete! Your adventure moves forward." : "Your mission is revealed. Have fun!", "fun-feedback", complete);
 }
 
 function renderQuest(member) {
@@ -603,9 +610,13 @@ function renderPetShop(member) {
   }
 }
 
+function getShopRewards() {
+  return [greenlightReward, ...funState.rewards.filter((reward) => reward.id !== greenlightReward.id)];
+}
+
 function requestReward(rewardId, fromWishlist = false) {
   const member = getFunMember();
-  const reward = (fromWishlist ? funState.wishes || [] : funState.rewards).find((item) => item.id === rewardId);
+  const reward = (fromWishlist ? funState.wishes || [] : getShopRewards()).find((item) => item.id === rewardId);
   if (!member || !reward || (fromWishlist && reward.memberId !== member.id) || !Number.isInteger(reward.cost)) {
     funMessage("Choose your own priced wish or a shop reward before redeeming.", true, "reward-feedback");
     return;
@@ -633,7 +644,7 @@ function changeRewardRequest(id, action) {
   const member = getFunMember();
   const request = funState.requests.find((item) => item.id === id);
   if (!member || !request || ["delivered", "canceled"].includes(request.status)) return;
-  const adult = member.role === "adult";
+  const adult = isUnlockedParent(member);
   if ((action === "cancel" && !adult && member.id !== request.memberId) ||
       (action !== "cancel" && !adult)) {
     funMessage("Choose an adult profile to approve or deliver rewards.", true, "reward-feedback");
@@ -665,7 +676,7 @@ function getWishGoal(member) {
 
 function priceWish(wishId, cost) {
   const wish = (funState.wishes || []).find((item) => item.id === wishId);
-  if (getFunMember()?.role !== "adult" || !wish || !Number.isInteger(cost) || cost < 1 || cost > 10000) {
+  if (!isUnlockedParent(getFunMember()) || !wish || !Number.isInteger(cost) || cost < 1 || cost > 10000) {
     funMessage("A grown-up must set a whole-number price from 1 to 10,000 reward stars.", true, "reward-feedback");
     return;
   }
@@ -679,7 +690,7 @@ function priceWish(wishId, cost) {
 function chooseWishGoal(wishId) {
   const member = getFunMember();
   const wish = (funState.wishes || []).find((item) => item.id === wishId);
-  if (!member || !wish || !wish.cost || (member.role !== "adult" && wish.memberId !== member.id)) {
+  if (!member || !wish || !wish.cost || (!isUnlockedParent(member) && wish.memberId !== member.id)) {
     funMessage("Choose your own wish after a grown-up sets its price.", true, "reward-feedback");
     return;
   }
@@ -691,7 +702,7 @@ function chooseWishGoal(wishId) {
 function removeWish(wishId) {
   const member = getFunMember();
   const wish = (funState.wishes || []).find((item) => item.id === wishId);
-  if (!member || !wish || (member.role !== "adult" && wish.memberId !== member.id)) {
+  if (!member || !wish || (!isUnlockedParent(member) && wish.memberId !== member.id)) {
     funMessage("Choose your own wish to remove, or ask a grown-up.", true, "reward-feedback");
     return;
   }
@@ -708,7 +719,7 @@ function renderWishlist(member) {
   const list = document.getElementById("wishlist");
   list.replaceChildren();
   const wishes = (funState.wishes || []).filter((wish) => member &&
-    (member.role === "adult" || wish.memberId === member.id));
+    (isUnlockedParent(member) || wish.memberId === member.id));
   if (!wishes.length) list.append(funElement("p", "Dream it, add it, then ask a grown-up to set its reward-star price.", "fun-note"));
   for (const wish of wishes) {
     const owner = members.find((candidate) => candidate.id === wish.memberId);
@@ -720,7 +731,7 @@ function renderWishlist(member) {
       funElement("strong", wish.cost ? `${wish.cost} reward stars` : "Waiting for a grown-up's price"));
     const current = getFunProfile(owner.id).goalWishId === wish.id;
     if (current) card.append(funElement("span", "Current saving goal", "wish-goal-label"));
-    if (member.role === "adult") {
+    if (isUnlockedParent(member)) {
       const form = funElement("form", undefined, "fun-form wish-price-form");
       const label = funElement("label", "Price in reward stars", "fun-field");
       const input = document.createElement("input");
@@ -791,7 +802,7 @@ function renderRoutineRewardPreview(member) {
   const list = document.getElementById("routine-reward-preview");
   list.replaceChildren();
   const available = member ? [
-    ...funState.rewards.map((reward) => ({ ...reward, fromWishlist: false })),
+    ...getShopRewards().map((reward) => ({ ...reward, fromWishlist: false })),
     ...(funState.wishes || []).filter((wish) => wish.memberId === member.id && wish.cost &&
       !funState.requests.some((request) => request.wishId === wish.id &&
         request.memberId === member.id && ["pending", "approved"].includes(request.status)))
@@ -815,21 +826,24 @@ function renderRewardShop(member) {
     funMessage("", false, "reward-feedback");
     panel.dataset.memberId = member?.id || "";
   }
-  const adult = member?.role === "adult";
+  const adult = isUnlockedParent(member);
   document.getElementById("reward-shop-management").hidden = !adult;
   document.querySelectorAll("#reward-shop-form input, #reward-shop-form button")
     .forEach((control) => { control.disabled = !adult; });
   const shop = document.getElementById("reward-shop");
   shop.replaceChildren();
-  if (!funState.rewards.length) shop.append(funElement("p", "No treats yet. Choose an adult profile and add your family's first reward.", "fun-note"));
-  for (const reward of funState.rewards) {
+  for (const reward of getShopRewards()) {
     const card = funElement("article", undefined, "shop-item");
     card.append(funElement("strong", reward.title), funElement("span", `${reward.cost} reward stars`));
+    if (reward.id === greenlightReward.id) {
+      card.classList.add("greenlight-reward");
+      card.append(funElement("p", "\u{1F4B3} 100 star coins = $1. A parent transfers the money to your Greenlight card manually after approval.", "fun-note"));
+    }
     card.append(funElement("p", !member ? "Choose a profile to redeem rewards." : member.stars >= reward.cost
       ? "Ready to redeem!"
       : `${reward.cost - member.stars} more reward stars needed`, "fun-note"));
     card.append(funButton("Redeem reward", () => requestReward(reward.id), !member || member.stars < reward.cost));
-    if (adult) card.append(funButton("Remove reward", () => {
+    if (adult && reward.id !== greenlightReward.id) card.append(funButton("Remove reward", () => {
       commitFunChange(() => { funState.rewards = funState.rewards.filter((item) => item.id !== reward.id); }, "Reward removed. Existing requests are unchanged.", "reward-feedback");
     }));
     shop.append(card);
@@ -875,7 +889,7 @@ function renderWall() {
     const name = members.find((member) => member.id === win.memberId)?.name || "Family";
     const row = funElement("li");
     row.append(funElement("strong", win.title), funElement("span", `${name} \u00b7 ${dateFromKey(win.date).toLocaleDateString()}`));
-    if (win.kind === "manual" && (getFunMember()?.role === "adult" || activeMemberId === win.memberId)) {
+    if (win.kind === "manual" && (isUnlockedParent(getFunMember()) || activeMemberId === win.memberId)) {
       row.append(funButton("Remove", () => {
         commitFunChange(() => { funState.wall = funState.wall.filter((item) => item.id !== win.id); }, "Milestone removed.");
       }));
@@ -952,7 +966,7 @@ document.getElementById("reward-shop-form").addEventListener("submit", (event) =
   const form = event.currentTarget;
   const title = form.elements.title.value.trim();
   const cost = form.elements.cost.valueAsNumber;
-  if (member?.role !== "adult" || !title || title.length > 60 || !Number.isInteger(cost) || cost < 1 || cost > 10000) {
+  if (!isUnlockedParent(member) || !title || title.length > 60 || !Number.isInteger(cost) || cost < 1 || cost > 10000) {
     funMessage("Choose an adult profile and enter a whole-number reward-star price between 1 and 10,000.", true, "reward-feedback");
     return;
   }

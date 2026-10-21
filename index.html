@@ -5,10 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#f7f6f1">
     <title>Family Fun</title>
-    <link rel="stylesheet" href="styles.css?v=cute-piggy-1">
-    <link rel="stylesheet" href="fun.css?v=cute-piggy-1">
-    <script src="app.js?v=cute-piggy-1" defer></script>
-    <script src="fun.js?v=cute-piggy-1" defer></script>
+    <link rel="stylesheet" href="styles.css?v=parent-pin-1">
+    <link rel="stylesheet" href="fun.css?v=parent-pin-1">
+    <script src="parent-lock.js?v=parent-pin-1" defer></script>
+    <script src="earnings.js?v=parent-pin-1" defer></script>
+    <script src="app.js?v=parent-pin-1" defer></script>
+    <script src="fun.js?v=parent-pin-1" defer></script>
   </head>
   <body>
     <a class="skip-link" href="#section-guide">Skip to this section</a>
@@ -22,7 +24,8 @@
           <p class="topbar-note">A little more together, every day.</p>
           <button id="active-person-badge" class="current-person" type="button"
             aria-haspopup="dialog" aria-controls="profile-picker" aria-expanded="false">Choose who's playing</button>
-          <button class="data-button" id="manage-profiles" type="button">Settings</button>
+          <button class="data-button" id="manage-profiles" type="button" hidden>Settings</button>
+          <button class="data-button" id="setup-family" type="button" hidden>Parent setup</button>
         </div>
       </header>
       <dialog id="profile-picker" class="profile-picker" aria-labelledby="profile-picker-heading">
@@ -36,8 +39,31 @@
         </label>
         <div id="active-profile-rewards"></div>
         <p class="fun-note">Game time is one earned total from chores and brain-game bonuses, not a running timer. Reward stars can be redeemed in the shops.</p>
-        <button id="profile-picker-settings" class="data-button" type="button">Manage profiles in Settings</button>
+        <button id="profile-picker-settings" class="data-button" type="button" hidden>Manage profiles in Settings</button>
       </dialog>
+      <dialog id="parent-pin-dialog" class="profile-picker parent-pin-dialog" aria-labelledby="parent-pin-heading" aria-describedby="parent-pin-note">
+        <h2 id="parent-pin-heading">Unlock parent profile</h2>
+        <p id="parent-pin-note" class="fun-note">One shared parent PIN for this browser. Use 4 to 8 digits and keep it private. Parent profiles lock again when you switch away or reload.</p>
+        <form id="parent-pin-form">
+          <label id="parent-pin-current-field" class="fun-field">Parent PIN
+            <input name="currentPin" type="password" inputmode="numeric" pattern="[0-9]{4,8}" minlength="4" maxlength="8" autocomplete="current-password" required>
+          </label>
+          <div id="parent-pin-new-fields" hidden>
+            <label class="fun-field">New parent PIN
+              <input name="newPin" type="password" inputmode="numeric" pattern="[0-9]{4,8}" minlength="4" maxlength="8" autocomplete="new-password" disabled>
+            </label>
+            <label class="fun-field">Confirm new PIN
+              <input name="confirmPin" type="password" inputmode="numeric" pattern="[0-9]{4,8}" minlength="4" maxlength="8" autocomplete="new-password" disabled>
+            </label>
+          </div>
+          <p id="parent-pin-feedback" class="fun-feedback is-error" role="alert"></p>
+          <div class="parent-pin-actions">
+            <button id="parent-pin-submit" class="primary-button" type="submit">Continue</button>
+            <button id="cancel-parent-pin" class="data-button" type="button">Cancel</button>
+          </div>
+        </form>
+      </dialog>
+      <div id="earnings-celebration" class="earnings-celebration" role="status" aria-live="polite" aria-atomic="true" hidden></div>
       <p id="data-feedback" class="data-feedback" aria-live="polite"></p>
       <p id="alarm-banner" class="alarm-banner" aria-live="assertive" hidden></p>
 
@@ -76,7 +102,7 @@
           <span class="tab-icon" aria-hidden="true">&#127918;</span><span class="tab-label">Play Time<small>Games &amp; rewards</small></span>
         </button>
         <button class="theme-tab" id="settings-tab" type="button" role="tab"
-          aria-selected="false" aria-controls="settings-panel" data-theme-tab="settings" tabindex="-1">
+          aria-selected="false" aria-controls="settings-panel" data-theme-tab="settings" tabindex="-1" hidden>
           <span class="tab-icon" aria-hidden="true">⚙</span><span class="tab-label">Settings<small>Profiles &amp; preferences</small></span>
         </button>
       </nav>
@@ -210,7 +236,7 @@
             <p class="fun-note">A grown-up approves and delivers redeemed rewards. Canceling a request refunds its reward stars.</p>
             <details id="reward-shop-management" class="fun-card" hidden>
               <summary>Manage rewards (adult)</summary>
-              <p class="fun-note">Adult profiles are a household convention, not a password lock.</p>
+              <p class="fun-note">Unlock a parent profile with this browser's parent PIN to manage rewards.</p>
               <form id="reward-shop-form" class="fun-form">
                 <label class="fun-field">Reward
                   <input name="title" maxlength="60" placeholder="Choose movie night" required>
@@ -678,6 +704,8 @@
           </button>
           <button class="data-button" id="export-data" type="button">Export data</button>
           <button class="data-button" id="import-data" type="button">Import data</button>
+          <button class="data-button" id="change-parent-pin" type="button" hidden>Change parent PIN</button>
+          <button class="data-button" id="lock-parent" type="button" hidden>Lock parent profile</button>
           <input id="import-file" type="file" accept="application/json,.json" hidden>
         </div>
         <div id="member-list" class="member-list"></div>

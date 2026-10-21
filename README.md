@@ -80,9 +80,51 @@ Play Time now includes:
 
 All play progress, purchases, requests, and milestones are saved locally and
 included in Export data / Import data. Older backups still import with empty
-extra-play progress. Profiles are not accounts: choosing an adult profile is a
-household convention, **not an authentication or parental-control boundary**.
+extra-play progress. Parent profiles require this browser's parent PIN.
+Profiles are not server accounts; browser-local PINs are not a tamper-proof
+authentication or parental-control boundary.
 Shared activities are shared only inside this browser, not across devices.
+
+### Parent PIN and Settings
+
+The first time a parent profile is chosen, a parent sets and confirms one shared
+4–8 digit household PIN. There is no default PIN. Each switch into a parent
+profile requires that PIN, including switching between parents. Switching to a
+child, selecting **Lock parent profile**, or reloading locks parent access.
+Settings and its shortcuts are hidden in child profiles; keyboard navigation
+skips the hidden tab. Reward pricing and approvals require an unlocked parent.
+
+Use **Parent setup** on a new or children-only household to set the PIN and add
+the first parent profile. In unlocked Settings, **Change parent PIN** requires
+the current PIN. Five failed attempts impose a 30-second cooldown, retained
+across reloads. Changing the PIN in another tab relocks parent access here.
+
+Only a randomly salted PBKDF2-SHA-256 verifier (600,000 iterations) is stored,
+not the PIN itself. The PIN belongs to this browser and is deliberately excluded
+from family backups; importing family data does not replace it and relocks
+access. Configure it separately on each device. Keep a current family backup:
+there is no PIN-reset back door. Clearing site data to reset a forgotten PIN
+also removes family data, which must then be restored from a backup.
+
+This is a convenience lock for shared household use, not protection against
+someone who can edit browser storage, run developer tools, or access the device.
+The initial PIN must be set by a parent before handing the device to children.
+
+### Earning celebrations
+
+Saved reward-star earnings drop animated star coins into a miniature piggy bank.
+Saved chore minutes and brain-game bonus minutes get their own game-token
+celebration. Tasks, daily arcade games, number patterns, bingo, mystery missions,
+and Healthy Hero rewards all use these effects. Purchases, refunds, imports,
+zero-reward checklist steps, repeated completions, and failed saves do not
+trigger them. The notices do not block interaction and disappear automatically;
+reduced-motion preferences show the earned amounts without moving tokens.
+
+Routine entries show explicit star-coin or game-minute badges, including zero
+when no reward was assigned. Imported unpriced checklist steps stay at zero;
+the app does not invent prices. An unlocked parent can use **Calendar >
+Edit schedule & rewards** to set 0–1,000 reward stars for a task or game minutes
+for a chore. Changes apply only to future completions, not past earnings.
 
 ## Dated meal planning
 
@@ -114,6 +156,14 @@ which rewards are affordable and how many more reward stars are needed.
 Adults can define rewards, approve requests, and mark rewards delivered there.
 Calendar remains available for planning and the whole-family weekly chart.
 
+The default **$1 to Greenlight debit card** reward costs **100 reward stars
+(star coins)**. It is available with new data and older backups, alongside any
+custom rewards, without changing saved balances. Each redemption reserves 100
+stars through the usual request flow. An unlocked parent approves the request,
+transfers $1 in Greenlight separately, then marks it delivered. Canceling refunds
+the reserved stars once. There is no banking connection or automatic transfer,
+and no card credentials are stored. The fixed default reward cannot be removed.
+
 ### Wishlist & piggy-bank goals
 
 In **Rewards**, each person can add a wish and pick a playful icon. Children
@@ -136,8 +186,8 @@ do not change the cost of an existing request. Removing a wish preserves its
 existing requests. Adults can help choose a child's goal.
 
 Wishes, parent prices, goals, and requests stay in browser storage and backups.
-Older backups without wishlist fields remain supported. Profile roles are
-household conventions, not authenticated parental controls. The gift, rocket,
+Older backups without wishlist fields remain supported. Parent roles are
+PIN-gated locally, not server-authenticated accounts. The gift, rocket,
 piggy-bank art, and star-coin decorations are original local illustrations;
 there are no third-party image requests.
 
