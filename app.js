@@ -78,7 +78,7 @@ try {
 
 function activateTheme(theme, focusTab = false) {
   const tabs = [...document.querySelectorAll("[data-theme-tab]")];
-  if (!tabs.some((tab) => tab.dataset.themeTab === theme)) theme = "calendar";
+  if (!tabs.some((tab) => tab.dataset.themeTab === theme)) theme = "routine";
   for (const tab of tabs) {
     const isActive = tab.dataset.themeTab === theme;
     tab.classList.toggle("is-active", isActive);
@@ -90,6 +90,7 @@ function activateTheme(theme, focusTab = false) {
     panel.hidden = panel.dataset.themePanel !== theme;
   }
   document.getElementById("section-guide").textContent = {
+    routine: "Routine: check off your day, see your points and reward stars, and redeem rewards.",
     calendar: "Calendar: choose a day to see family plans and timed chores or tasks.",
     meals: "Meals: plan by date, check your kitchen supplies, and spin for dinner.",
     settings: "Settings: manage family profiles, ages, play themes, appearance, and backups.",
@@ -118,11 +119,11 @@ for (const tab of themeTabs) {
   });
 }
 
-let initialTheme = "calendar";
+let initialTheme = "routine";
 try {
   initialTheme = localStorage.getItem("family-fun-active-tab") || initialTheme;
 } catch {
-  // Use the calendar tab when browser storage is unavailable.
+  // Use the daily routine when browser storage is unavailable.
 }
 activateTheme(initialTheme);
 
@@ -381,7 +382,10 @@ function isValidAssignment(assignment) {
     typeof assignment.memberId === "string" &&
     typeof assignment.title === "string" &&
     (assignment.kind === "chore" || assignment.kind === "task") &&
-    Number.isInteger(assignment.reward) && assignment.reward > 0 &&
+    Number.isInteger(assignment.reward) && assignment.reward >= 0 &&
+    (assignment.optional === undefined || typeof assignment.optional === "boolean") &&
+    (assignment.period === undefined || ["morning", "afternoon", "evening", "anytime"].includes(assignment.period)) &&
+    (assignment.routineOrder === undefined || (Number.isSafeInteger(assignment.routineOrder) && assignment.routineOrder >= 0)) &&
     typeof assignment.completed === "boolean" &&
     (assignment.startDate === undefined || isValidDateKey(assignment.startDate)) &&
     isValidScheduleOptions(assignment) &&
@@ -402,6 +406,7 @@ function isAssignmentDue(assignment, date) {
   if (recurrence === "daily") return true;
   const start = dateFromKey(startDate);
   const occurrence = dateFromKey(date);
+  if (recurrence === "weekdays") return occurrence.getDay() >= 1 && occurrence.getDay() <= 5;
   if (recurrence === "weekly") return occurrence.getDay() === start.getDay();
   if (recurrence !== "monthly") return false;
   const lastDay = new Date(occurrence.getFullYear(), occurrence.getMonth() + 1, 0).getDate();
@@ -412,7 +417,7 @@ function isValidScheduleOptions(plan) {
   const notification = plan.notification;
   return (plan.time === undefined || plan.time === "" ||
       (typeof plan.time === "string" && /^([01]\d|2[0-3]):[0-5]\d$/.test(plan.time))) &&
-    (plan.recurrence === undefined || ["none", "daily", "weekly", "monthly"].includes(plan.recurrence)) &&
+    (plan.recurrence === undefined || ["none", "daily", "weekdays", "weekly", "monthly"].includes(plan.recurrence)) &&
     (notification === undefined ||
       (notification && (notification.kind === "reminder" || notification.kind === "alarm") &&
         Boolean(plan.time) && isValidDateKey(plan.startDate || plan.date) &&
@@ -460,12 +465,12 @@ function formatAssignmentTime(time) {
 
 function assignmentScheduleLabel(assignment) {
   if (!assignment.startDate) return "Not scheduled - edit schedule to add to the calendar";
-  const repeat = { none: "Once", daily: "Daily", weekly: "Weekly", monthly: "Monthly" }[assignment.recurrence || "none"];
+  const repeat = { none: "Once", daily: "Daily", weekdays: "Weekdays (Mon-Fri)", weekly: "Weekly", monthly: "Monthly" }[assignment.recurrence || "none"];
   return `${repeat} from ${formatMealDate(assignment.startDate)} · ${formatAssignmentTime(assignment.time)}`;
 }
 
 function setAssignmentFeedback(message, isError = false) {
-  for (const id of ["assignment-feedback", "calendar-feedback"]) {
+  for (const id of ["assignment-feedback", "calendar-feedback", "routine-feedback"]) {
     const feedback = document.getElementById(id);
     feedback.textContent = message;
     feedback.classList.toggle("is-error", isError);
@@ -577,9 +582,7 @@ function completeAssignment(assignmentId, date) {
   }
   const balance = assignment.kind === "chore" ? "points" : "stars";
   const newBalance = member[balance] + assignment.reward;
-  const earnedMinutes = assignment.kind === "chore"
-    ? (Math.floor(newBalance / 100) - Math.floor(member.points / 100)) * 10
-    : 0;
+  const earnedMinutes = assignment.kind === "chore" ? assignment.reward : 0;
   const newGameMinutes = (member.gameMinutes || 0) + earnedMinutes;
   if (!Number.isSafeInteger(newBalance) ||
       (earnedMinutes > 0 && !Number.isSafeInteger(newGameMinutes))) {
@@ -591,7 +594,9 @@ function completeAssignment(assignmentId, date) {
     else assignment.completed = true;
     member[balance] = newBalance;
     if (earnedMinutes > 0) member.gameMinutes = newGameMinutes;
-  }, `${assignment.title} completed${assignment.startDate ? ` for ${formatMealDate(date)}` : ""}. +${assignment.reward} ${assignment.kind === "chore" ? "game points" : "reward stars"}${earnedMinutes ? ` and +${earnedMinutes} game minutes` : ""}. Reward earned once for this occurrence!`);
+  }, `${assignment.title} completed${assignment.startDate ? ` for ${formatMealDate(date)}` : ""}. ${assignment.reward
+    ? `+${assignment.reward} ${assignment.kind === "chore" ? "game points" : "reward stars"}${earnedMinutes ? ` and +${earnedMinutes} game minutes` : ""}. Reward earned once for this occurrence!`
+    : "Checklist step saved. No reward assigned."}`);
   if (saved && typeof recordFunActivity === "function") {
     recordFunActivity(member.id, "chore", `Completed: ${assignment.title}`);
   }
@@ -615,7 +620,7 @@ function createAssignmentScheduleEditor(assignment) {
   form.className = "assignment-schedule-editor";
   form.hidden = true;
   const locked = assignment.completed || Boolean(assignment.completedDates?.length);
-  for (const [name, text, type] of [["startDate", "Start date", "date"], ["time", "Time (optional)", "time"], ["recurrence", "Repeat", "select"], ["notificationKind", "Reminder or alarm", "select"], ["minutesBefore", "Alert timing", "select"]]) {
+  for (const [name, text, type] of [["startDate", "Start date", "date"], ["time", "Time (optional)", "time"], ["recurrence", "Repeat", "select"], ["period", "Routine block", "select"], ["optional", "Checklist type", "select"], ["notificationKind", "Reminder or alarm", "select"], ["minutesBefore", "Alert timing", "select"]]) {
     const label = document.createElement("label");
     label.textContent = text;
     const input = document.createElement(type === "select" ? "select" : "input");
@@ -623,10 +628,14 @@ function createAssignmentScheduleEditor(assignment) {
     input.setAttribute("aria-label", `${assignment.title}: ${text}`);
     if (type === "select") {
       const options = name === "recurrence"
-        ? [["none", "Does not repeat"], ["daily", "Daily"], ["weekly", "Weekly"], ["monthly", "Monthly"]]
-        : name === "notificationKind"
-          ? [["none", "No alert"], ["reminder", "Reminder"], ["alarm", "Alarm with sound"]]
-          : [["0", "At the scheduled time"], ["5", "5 minutes before"], ["15", "15 minutes before"], ["30", "30 minutes before"], ["60", "1 hour before"]];
+        ? [["none", "Does not repeat"], ["daily", "Daily"], ["weekdays", "Weekdays (Mon-Fri)"], ["weekly", "Weekly"], ["monthly", "Monthly"]]
+        : name === "period"
+          ? [["anytime", "Any time"], ["morning", "Morning"], ["afternoon", "Afternoon"], ["evening", "Evening"]]
+          : name === "optional"
+            ? [["required", "Daily checklist"], ["optional", "Optional quest"]]
+            : name === "notificationKind"
+              ? [["none", "No alert"], ["reminder", "Reminder"], ["alarm", "Alarm with sound"]]
+              : [["0", "At the scheduled time"], ["5", "5 minutes before"], ["15", "15 minutes before"], ["30", "30 minutes before"], ["60", "1 hour before"]];
       for (const [value, title] of options) {
         const option = document.createElement("option");
         option.value = value;
@@ -638,6 +647,8 @@ function createAssignmentScheduleEditor(assignment) {
       startDate: assignment.startDate || (locked ? "" : toDateKey(new Date())),
       time: assignment.time || "",
       recurrence: assignment.recurrence || "none",
+      period: assignment.period || "anytime",
+      optional: assignment.optional ? "optional" : "required",
       notificationKind: assignment.notification?.kind || "none",
       minutesBefore: String(assignment.notification?.minutesBefore || 0),
     }[name];
@@ -657,7 +668,7 @@ function createAssignmentScheduleEditor(assignment) {
   if (locked) {
     const note = document.createElement("p");
     note.className = "fun-note schedule-note";
-    note.textContent = "Dates and repeats are fixed after the first completion to preserve reward history. Times and alerts remain editable.";
+    note.textContent = "Dates and repeats are fixed after the first completion to preserve reward history. Times, routine blocks, checklist type, and alerts remain editable.";
     form.append(note);
   }
   form.addEventListener("submit", async (event) => {
@@ -665,6 +676,8 @@ function createAssignmentScheduleEditor(assignment) {
     const updated = {
       ...assignment,
       time: form.elements.time.value,
+      period: form.elements.period.value,
+      optional: form.elements.optional.value === "optional",
       notification: readPlanNotification(form, assignment.notification),
       ...(locked ? {} : {
         startDate: form.elements.startDate.value,
@@ -750,6 +763,58 @@ function renderRoutineChart() {
     `${memberId ? `${active.name}'s routine` : "Family routine"} · Week of ${formatMealDate(toDateKey(monday))} · ${completed} of ${count} tasks complete · ${eventCount} events`;
 }
 
+function renderDailyRoutine() {
+  const member = members.find((candidate) => candidate.id === activeMemberId);
+  const panel = document.getElementById("routine-panel");
+  if (panel.dataset.memberId !== (member?.id || "")) {
+    document.getElementById("routine-feedback").textContent = "";
+    panel.dataset.memberId = member?.id || "";
+  }
+  const rewards = document.getElementById("daily-routine-rewards");
+  rewards.replaceChildren();
+  if (member) rewards.append(createProfileRewardSummary(member));
+  document.getElementById("daily-routine-heading").textContent = member ? `${member.name}'s routine` : "Your daily routine";
+  const list = document.getElementById("daily-routine-list");
+  const optionalList = document.getElementById("daily-optional-list");
+  list.replaceChildren();
+  optionalList.replaceChildren();
+  const date = document.getElementById("daily-routine-date").value;
+  const summary = document.getElementById("daily-routine-summary");
+  const progress = document.getElementById("daily-routine-progress");
+  progress.max = 1;
+  progress.value = 0;
+  document.getElementById("daily-optional-quests").hidden = true;
+  if (!member || !isValidDateKey(date)) {
+    summary.textContent = !member
+      ? "Choose who's playing above, or add a profile in Settings to start your routine."
+      : "Choose a valid date to see your routine.";
+    return;
+  }
+  const items = getAssignmentsForDate(date, member.id);
+  const required = items.filter((item) => !item.optional);
+  const optional = items.filter((item) => item.optional);
+  const completed = required.filter((item) => isAssignmentComplete(item, date)).length;
+  progress.max = Math.max(1, required.length);
+  progress.value = completed;
+  summary.textContent = `${formatMealDate(date)} · ${required.length
+    ? `${completed} of ${required.length} daily responsibilities complete${completed === required.length ? " — all done!" : ""}`
+    : "No daily responsibilities scheduled. Plan them in Calendar."}`;
+  for (const [period, label] of [["morning", "Morning"], ["afternoon", "Afternoon"], ["evening", "Evening"], ["anytime", "Any time"]]) {
+    const block = required.filter((item) => (item.period || "anytime") === period)
+      .sort((a, b) => (a.routineOrder ?? Number.MAX_SAFE_INTEGER) - (b.routineOrder ?? Number.MAX_SAFE_INTEGER));
+    if (!block.length) continue;
+    const heading = document.createElement("li");
+    heading.className = "daily-period-heading";
+    const title = document.createElement("h4");
+    title.textContent = label;
+    heading.append(title);
+    list.append(heading);
+    for (const item of block) list.append(createRoutineEntry(item, date));
+  }
+  for (const item of optional) optionalList.append(createRoutineEntry(item, date));
+  document.getElementById("daily-optional-quests").hidden = !optional.length;
+}
+
 function createRoutineEntry(assignment, date) {
   const row = document.createElement("li");
   row.className = `routine-entry${isAssignmentComplete(assignment, date) ? " is-complete" : ""}`;
@@ -762,7 +827,9 @@ function createRoutineEntry(assignment, date) {
   time.textContent = formatAssignmentTime(assignment.time);
   const meta = document.createElement("span");
   const member = members.find((item) => item.id === assignment.memberId);
-  meta.textContent = `${member.name} · ${assignment.kind === "chore" ? "Chore" : "Task"} · +${assignment.reward} ${assignment.kind === "chore" ? "game points" : "reward stars"}`;
+  meta.textContent = `${member.name} · ${assignment.kind === "chore" ? "Chore" : "Task"} · ${assignment.reward
+    ? `+${assignment.reward} ${assignment.kind === "chore" ? "game points" : "reward stars"}`
+    : "No reward"}`;
   if (assignment.notification) meta.textContent += ` · ${assignment.notification.kind} ${assignment.notification.minutesBefore ? `${assignment.notification.minutesBefore} min before` : "at start"}`;
   detail.append(time, title, meta);
   row.append(detail, createAssignmentCompleteButton(assignment, date));
@@ -1525,12 +1592,23 @@ document.getElementById("open-today").addEventListener("click", () => {
   document.getElementById("calendar-panel").scrollIntoView({ block: "start" });
 });
 document.getElementById("open-routine").addEventListener("click", () => {
-  document.getElementById("routine-week").value = toDateKey(new Date());
-  document.getElementById("routine-member").value = activeMemberId;
+  document.getElementById("daily-routine-date").value = toDateKey(new Date());
+  activateTheme("routine");
+  renderDailyRoutine();
+  document.getElementById("daily-routine-heading").focus({ preventScroll: true });
+  document.getElementById("routine-panel").scrollIntoView({ block: "start" });
+});
+document.getElementById("daily-routine-date").addEventListener("change", renderDailyRoutine);
+document.getElementById("daily-routine-today").addEventListener("click", () => document.getElementById("open-routine").click());
+document.getElementById("routine-calendar").addEventListener("click", () => {
   activateTheme("calendar");
-  renderRoutineChart();
-  document.getElementById("routine-heading").focus({ preventScroll: true });
-  document.querySelector(".routine-chart").scrollIntoView({ block: "start" });
+  document.getElementById("plan-heading").focus({ preventScroll: true });
+  document.getElementById("calendar-plans").scrollIntoView({ block: "start" });
+});
+document.getElementById("open-rewards").addEventListener("click", () => {
+  activateTheme("routine");
+  document.getElementById("routine-rewards-heading").focus({ preventScroll: true });
+  document.getElementById("routine-rewards").scrollIntoView({ block: "start" });
 });
 document.querySelector(".brand").addEventListener("click", (event) => {
   event.preventDefault();
@@ -1574,7 +1652,7 @@ function createProfileRewardSummary(member) {
     if (label === "Game points earned") {
       const progress = document.createElement("small");
       progress.className = "profile-game-progress";
-      progress.textContent = `${100 - (member.points % 100)} more points for +10 game minutes`;
+      progress.textContent = "1 chore point = 1 game minute";
       amount.append(progress);
     }
     tile.append(title, amount);
@@ -1736,10 +1814,12 @@ function renderRewards() {
     assignee.textContent = member.name;
     const reward = document.createElement("span");
     reward.className = "assignment-reward";
-    reward.textContent = assignment.kind === "chore"
+    reward.textContent = !assignment.reward ? "No reward" : assignment.kind === "chore"
       ? `+${assignment.reward} game pts`
       : `+${assignment.reward} ★`;
-    reward.setAttribute("aria-label", `+${assignment.reward} ${assignment.kind === "chore" ? "game points" : "reward stars"}`);
+    reward.setAttribute("aria-label", assignment.reward
+      ? `+${assignment.reward} ${assignment.kind === "chore" ? "game points" : "reward stars"}`
+      : "Checklist step, no reward");
     const complete = createAssignmentCompleteButton(assignment, occurrenceDate);
     const remove = document.createElement("button");
     remove.className = "delete-event";
@@ -1800,6 +1880,7 @@ function renderProfileSelector() {
     note.textContent = "No profiles yet. Add your family in Settings to start playing.";
     rewards.append(note);
   }
+  renderDailyRoutine();
 }
 
 const profilePicker = document.getElementById("profile-picker");
@@ -1930,6 +2011,10 @@ function updatePlanForm(resetReward = false) {
   const isEvent = form.elements.kind.value === "event";
   const isChore = form.elements.kind.value === "chore";
   document.getElementById("plan-reward-field").hidden = isEvent;
+  document.getElementById("plan-optional-field").hidden = isEvent;
+  form.elements.optional.disabled = isEvent;
+  document.getElementById("plan-period-field").hidden = isEvent;
+  form.elements.period.disabled = isEvent;
   form.elements.reward.disabled = isEvent;
   form.elements.reward.required = !isEvent;
   document.getElementById("reward-label").textContent = isChore ? "Game points" : "Reward stars";
@@ -1941,6 +2026,7 @@ function updatePlanForm(resetReward = false) {
 const assignmentForm = document.getElementById("assignment-form");
 assignmentForm.elements.startDate.value = toDateKey(new Date());
 document.getElementById("routine-week").value = toDateKey(new Date());
+document.getElementById("daily-routine-date").value = toDateKey(new Date());
 updatePlanForm();
 assignmentForm.elements.kind.addEventListener("change", () => updatePlanForm(true));
 assignmentForm.elements.time.addEventListener("change", () => updateNotificationControls(assignmentForm));
@@ -1950,19 +2036,19 @@ assignmentForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   const title = assignmentForm.elements.title.value.trim();
   const member = members.find((candidate) => candidate.id === assignmentForm.elements.member.value);
-  const reward = Number(assignmentForm.elements.reward.value);
+  const reward = assignmentForm.elements.reward.valueAsNumber;
   const startDate = assignmentForm.elements.startDate.value;
   const time = assignmentForm.elements.time.value;
   const recurrence = assignmentForm.elements.recurrence.value;
   const kind = assignmentForm.elements.kind.value;
   const notification = readPlanNotification(assignmentForm);
   const isEvent = kind === "event";
-  if (!title || (!isEvent && (!member || !Number.isInteger(reward) || reward < 1 || reward > 1000)) ||
+  if (!title || (!isEvent && (!member || !Number.isInteger(reward) || reward < 0 || reward > 1000)) ||
       (isEvent && assignmentForm.elements.member.value && !member) ||
       !isValidDateKey(startDate) || !["event", "chore", "task"].includes(kind) ||
-      !["none", "daily", "weekly", "monthly"].includes(recurrence) ||
+      !["none", "daily", "weekdays", "weekly", "monthly"].includes(recurrence) ||
       !isValidScheduleOptions({ startDate, time, recurrence, notification })) {
-    setAssignmentFeedback("Choose a title, valid date, family member for chores or tasks, and valid schedule. Alerts need a time; rewards must be between 1 and 1000.", true);
+    setAssignmentFeedback("Choose a title, valid date, family member for chores or tasks, and valid schedule. Alerts need a time; rewards must be between 0 and 1000 (0 for a checklist step).", true);
     return;
   }
   const assignment = {
@@ -1971,6 +2057,8 @@ assignmentForm.addEventListener("submit", async (event) => {
     memberId: member?.id || "",
     kind,
     reward,
+    optional: assignmentForm.elements.optional.checked,
+    period: assignmentForm.elements.period.value,
     completed: false,
     startDate,
     time,
@@ -2023,6 +2111,9 @@ function refreshRoutineDay() {
   if (current === routineToday) return;
   if (document.getElementById("routine-week").value === routineToday) {
     document.getElementById("routine-week").value = current;
+  }
+  if (document.getElementById("daily-routine-date").value === routineToday) {
+    document.getElementById("daily-routine-date").value = current;
   }
   if (selectedDate === routineToday) {
     const previous = dateFromKey(routineToday);
@@ -2289,7 +2380,7 @@ function renderGameRewards(member) {
   if (!member) return;
   const choreProgress = document.createElement("p");
   choreProgress.className = "fun-note";
-  choreProgress.textContent = `${member.points} game points from chores · ${100 - (member.points % 100)} more points for +10 game minutes.`;
+  choreProgress.textContent = `${member.points} game points from chores · 1 chore point earns 1 game minute.`;
   if (member.role !== "child") {
     const note = document.createElement("p");
     note.className = "adult-game-note";

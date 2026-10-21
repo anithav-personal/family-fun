@@ -5,10 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#f7f6f1">
     <title>Family Fun</title>
-    <link rel="stylesheet" href="styles.css?v=chore-game-points-1">
-    <link rel="stylesheet" href="fun.css?v=chore-game-points-1">
-    <script src="app.js?v=chore-game-points-1" defer></script>
-    <script src="fun.js?v=chore-game-points-1" defer></script>
+    <link rel="stylesheet" href="styles.css?v=routine-book-1">
+    <link rel="stylesheet" href="fun.css?v=routine-book-1">
+    <script src="app.js?v=routine-book-1" defer></script>
+    <script src="fun.js?v=routine-book-1" defer></script>
   </head>
   <body>
     <a class="skip-link" href="#section-guide">Skip to this section</a>
@@ -35,7 +35,7 @@
           <select id="active-profile" aria-label="Active family profile"></select>
         </label>
         <div id="active-profile-rewards"></div>
-        <p class="fun-note">Chores earn game points: every 100 points unlock 10 game minutes. Reward stars can be redeemed in the shops. Game minutes are earned rewards, not a running timer.</p>
+        <p class="fun-note">Chores earn game points: 1 point earns 1 game minute. Reward stars can be redeemed in the shops. Game minutes are earned rewards, not a running timer.</p>
         <button id="profile-picker-settings" class="data-button" type="button">Manage profiles in Settings</button>
       </dialog>
       <p id="data-feedback" class="data-feedback" aria-live="polite"></p>
@@ -55,6 +55,10 @@
       </section>
 
       <nav class="theme-tabs" aria-label="Family Fun sections" role="tablist">
+        <button class="theme-tab" id="routine-tab" type="button" role="tab"
+          aria-selected="false" aria-controls="routine-panel" data-theme-tab="routine" tabindex="-1">
+          <span class="tab-icon" aria-hidden="true">&#10003;</span><span class="tab-label">Routine<small>Today &amp; rewards</small></span>
+        </button>
         <button class="theme-tab is-active" id="calendar-tab" type="button" role="tab"
           aria-selected="true" aria-controls="calendar-panel" data-theme-tab="calendar">
           <span class="tab-icon" aria-hidden="true">▦</span><span class="tab-label">Calendar<small>Plans &amp; routines</small></span>
@@ -75,6 +79,52 @@
       <p id="section-guide" class="section-guide" tabindex="-1" role="status"></p>
 
       <div class="dashboard">
+        <section class="card daily-routine theme-panel" id="routine-panel" role="tabpanel"
+          aria-labelledby="routine-tab" data-theme-panel="routine" hidden>
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">ONE LITTLE WIN AT A TIME</p>
+              <h2 id="daily-routine-heading" tabindex="-1">Your daily routine</h2>
+            </div>
+            <button id="routine-calendar" class="data-button" type="button">Plan in Calendar</button>
+          </div>
+          <p class="fun-note">Your checklist and rewards, whether you're a kid or a grown-up. Use Playing as above to change who is checking in.</p>
+          <div id="daily-routine-rewards"></div>
+          <div class="daily-routine-controls">
+            <label>Routine date <input id="daily-routine-date" type="date" required></label>
+            <button id="daily-routine-today" class="data-button" type="button">Today</button>
+          </div>
+          <p id="daily-routine-summary" role="status"></p>
+          <progress id="daily-routine-progress" max="1" value="0" aria-label="Daily responsibilities completed"></progress>
+          <p id="routine-feedback" class="fun-feedback" role="status"></p>
+          <h3>Daily checklist</h3>
+          <ul id="daily-routine-list" class="routine-list"></ul>
+          <section id="daily-optional-quests" hidden>
+            <h3>Optional quests</h3>
+            <p class="fun-note">Choose an extra challenge when you want to. These do not count toward finishing your daily checklist.</p>
+            <ul id="daily-optional-list" class="routine-list"></ul>
+          </section>
+          <section id="routine-rewards" aria-labelledby="routine-rewards-heading">
+            <h3 id="routine-rewards-heading" tabindex="-1">Redeem reward stars</h3>
+            <p class="fun-note">Choose a reward you can afford. A grown-up approves and delivers it; canceling a request refunds your reward stars.</p>
+            <details id="reward-shop-management" class="fun-card" hidden>
+              <summary>Manage rewards (adult)</summary>
+              <p class="fun-note">Adult profiles are a household convention, not a password lock.</p>
+              <form id="reward-shop-form" class="fun-form">
+                <label class="fun-field">Reward
+                  <input name="title" maxlength="60" placeholder="Choose movie night" required>
+                </label>
+                <label class="fun-field">Reward star price
+                  <input name="cost" type="number" min="1" max="10000" step="1" value="5" required>
+                </label>
+                <button class="primary-button" type="submit">Add reward (adult)</button>
+              </form>
+            </details>
+            <div id="reward-shop" class="shop-grid"></div>
+            <h4>Reward requests</h4>
+            <ul id="reward-requests" class="fun-list"></ul>
+          </section>
+        </section>
         <section class="card calendar-card theme-panel" id="calendar-panel" role="tabpanel"
           aria-labelledby="calendar-tab" data-theme-panel="calendar">
           <div class="section-heading">
@@ -299,23 +349,11 @@
                 <button id="quest-reveal" class="primary-button" type="button">Reveal my mission</button>
                 <button id="quest-complete" class="primary-button" type="button" hidden>Mission complete!</button>
               </details>
-              <details class="fun-card">
-                <summary>Reward shop</summary>
-                <p class="fun-note">An adult defines the treats and reward-star prices. Redeem your reward stars to request a reward; an adult approves and marks it delivered. Canceling refunds reward stars.</p>
-                <p class="fun-note">Adult profiles are a household convention, not a password lock.</p>
-                <form id="reward-shop-form" class="fun-form">
-                  <label class="fun-field">Reward
-                    <input name="title" maxlength="60" placeholder="Choose movie night" required>
-                  </label>
-                  <label class="fun-field">Reward star price
-                    <input name="cost" type="number" min="1" max="10000" step="1" value="5" required>
-                  </label>
-                  <button class="primary-button" type="submit">Add reward (adult)</button>
-                </form>
-                <div id="reward-shop" class="shop-grid"></div>
-                <h4>Reward requests</h4>
-                <ul id="reward-requests" class="fun-list"></ul>
-              </details>
+              <div class="fun-card">
+                <h4>Reward shop</h4>
+                <p class="fun-note">Your reward stars and redeemable rewards are together in Routine.</p>
+                <button id="open-rewards" class="data-button" type="button">Redeem reward stars</button>
+              </div>
               <details class="fun-card fun-wide">
                 <summary>Celebration wall</summary>
                 <p class="fun-note">Your family's milestones, badges, and little wins stay in this browser and your exported backup.</p>
@@ -531,7 +569,7 @@
           </div>
           <span class="rewards-mark" aria-hidden="true">★</span>
         </div>
-        <p class="fun-note">Manage profiles, ages, game points goals, and play themes here. Use the Playing as button above to switch family members. Chores earn game points, with 10 game minutes unlocked for every 100 points, separately from brain-star rewards.</p>
+        <p class="fun-note">Manage profiles, ages, game points goals, and play themes here. Use the Playing as button above to switch family members. Chores earn game points, with 1 game minute per point, separately from brain-star rewards.</p>
         <div class="data-actions" aria-label="Appearance and data backup">
           <button class="theme-toggle" id="theme-toggle" type="button" aria-pressed="false">
             <span id="theme-icon" aria-hidden="true">☾</span>
@@ -590,7 +628,7 @@
               <h2 id="plan-heading" tabindex="-1">Create a family plan</h2>
             </div>
           </div>
-          <p class="fun-note">Chores earn game points: every 100 points unlock 10 game-time minutes. Tasks earn reward stars to redeem in the shops. Each repeat earns its reward only once.</p>
+          <p class="fun-note">Chores earn game points: 1 point earns 1 game-time minute. Tasks earn reward stars to redeem in the shops. Set the reward to 0 for a checklist step with no points or stars. Each repeat earns its reward only once.</p>
           <form id="assignment-form" class="assignment-form">
             <label>
               <span>Kind</span>
@@ -610,7 +648,7 @@
             </label>
             <label id="plan-reward-field" hidden>
               <span id="reward-label">Game points</span>
-              <input name="reward" type="number" min="1" max="1000" value="10" required>
+              <input name="reward" type="number" min="0" max="1000" value="10" required>
             </label>
             <label>
               <span>Start date</span>
@@ -625,8 +663,18 @@
               <select name="recurrence">
                 <option value="none">Does not repeat</option>
                 <option value="daily">Daily</option>
+                <option value="weekdays">Weekdays (Mon-Fri)</option>
                 <option value="weekly">Weekly</option>
                 <option value="monthly">Monthly</option>
+              </select>
+            </label>
+            <label id="plan-period-field" hidden>
+              <span>Routine block</span>
+              <select name="period">
+                <option value="anytime">Any time</option>
+                <option value="morning">Morning</option>
+                <option value="afternoon">Afternoon</option>
+                <option value="evening">Evening</option>
               </select>
             </label>
             <label>
@@ -647,9 +695,13 @@
                 <option value="60">1 hour before</option>
               </select>
             </label>
+            <label id="plan-optional-field" class="optional-plan-field" hidden>
+              <input name="optional" type="checkbox">
+              <span>Optional quest (not required for daily checklist progress)</span>
+            </label>
             <button class="primary-button" type="submit">Create plan</button>
           </form>
-          <p class="fun-note">Choose a time to add an optional reminder or alarm. Alerts work only while this page is open; sound and browser notifications may need permission. Weekly repeats use the start date's weekday; monthly repeats use its day, or the last day of a shorter month.</p>
+          <p class="fun-note">Choose a time to add an optional reminder or alarm. Alerts work only while this page is open; sound and browser notifications may need permission. Weekdays repeat Monday-Friday, skipping weekends. Weekly repeats use the start date's weekday; monthly repeats use its day, or the last day of a shorter month.</p>
           <button id="enable-calendar-alerts" class="data-button" type="button">Enable sound &amp; notifications</button>
           <p id="assignment-feedback" class="fun-feedback" role="status"></p>
           <h3>Family responsibilities</h3>

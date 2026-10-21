@@ -596,7 +596,7 @@ function requestReward(rewardId) {
   const reward = funState.rewards.find((item) => item.id === rewardId);
   if (!member || !reward) return;
   if (member.stars < reward.cost) {
-    funMessage("You need more reward stars for that reward.", true);
+    funMessage("You need more reward stars for that reward.", true, "routine-feedback");
     return;
   }
   commitFunChange(() => {
@@ -605,7 +605,7 @@ function requestReward(rewardId) {
       id: funId(), memberId: member.id, title: reward.title, cost: reward.cost,
       date: toDateKey(new Date()), status: "pending",
     });
-  }, "Reward requested! Your reward stars are reserved until an adult delivers it or the request is canceled.");
+  }, "Reward requested! Your reward stars are reserved until an adult delivers it or the request is canceled.", "routine-feedback");
 }
 
 function changeRewardRequest(id, action) {
@@ -615,7 +615,7 @@ function changeRewardRequest(id, action) {
   const adult = member.role === "adult";
   if ((action === "cancel" && !adult && member.id !== request.memberId) ||
       (action !== "cancel" && !adult)) {
-    funMessage("Choose an adult profile to approve or deliver rewards.", true);
+    funMessage("Choose an adult profile to approve or deliver rewards.", true, "routine-feedback");
     return;
   }
   if ((action === "approve" && request.status !== "pending") ||
@@ -631,11 +631,12 @@ function changeRewardRequest(id, action) {
       request.status = "delivered";
       addWallWin(owner.id, `Enjoyed a reward: ${request.title}`, "reward");
     }
-  }, action === "cancel" ? "Request canceled and reward stars refunded." : `Reward ${request.status === "pending" ? "approved" : "delivered"}.`);
+  }, action === "cancel" ? "Request canceled and reward stars refunded." : `Reward ${request.status === "pending" ? "approved" : "delivered"}.`, "routine-feedback");
 }
 
 function renderRewardShop(member) {
   const adult = member?.role === "adult";
+  document.getElementById("reward-shop-management").hidden = !adult;
   document.querySelectorAll("#reward-shop-form input, #reward-shop-form button")
     .forEach((control) => { control.disabled = !adult; });
   const shop = document.getElementById("reward-shop");
@@ -644,9 +645,12 @@ function renderRewardShop(member) {
   for (const reward of funState.rewards) {
     const card = funElement("article", undefined, "shop-item");
     card.append(funElement("strong", reward.title), funElement("span", `${reward.cost} reward stars`));
-    card.append(funButton("Request reward", () => requestReward(reward.id), !member || member.stars < reward.cost));
+    card.append(funElement("p", !member ? "Choose a profile to redeem rewards." : member.stars >= reward.cost
+      ? "Ready to redeem!"
+      : `${reward.cost - member.stars} more reward stars needed`, "fun-note"));
+    card.append(funButton("Redeem reward", () => requestReward(reward.id), !member || member.stars < reward.cost));
     if (adult) card.append(funButton("Remove reward", () => {
-      commitFunChange(() => { funState.rewards = funState.rewards.filter((item) => item.id !== reward.id); }, "Reward removed. Existing requests are unchanged.");
+      commitFunChange(() => { funState.rewards = funState.rewards.filter((item) => item.id !== reward.id); }, "Reward removed. Existing requests are unchanged.", "routine-feedback");
     }));
     shop.append(card);
   }
@@ -766,12 +770,12 @@ document.getElementById("reward-shop-form").addEventListener("submit", (event) =
   const title = form.elements.title.value.trim();
   const cost = form.elements.cost.valueAsNumber;
   if (member?.role !== "adult" || !title || title.length > 60 || !Number.isInteger(cost) || cost < 1 || cost > 10000) {
-    funMessage("Choose an adult profile and enter a whole-number reward-star price between 1 and 10,000.", true);
+    funMessage("Choose an adult profile and enter a whole-number reward-star price between 1 and 10,000.", true, "routine-feedback");
     return;
   }
   if (commitFunChange(() => {
     funState.rewards.push({ id: funId(), title, cost });
-  }, "Reward added to the shop.")) form.reset();
+  }, "Reward added to the shop.", "routine-feedback")) form.reset();
 });
 document.getElementById("celebration-form").addEventListener("submit", (event) => {
   event.preventDefault();
