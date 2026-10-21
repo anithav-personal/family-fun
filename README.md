@@ -120,6 +120,16 @@ zero-reward checklist steps, repeated completions, and failed saves do not
 trigger them. The notices do not block interaction and disappear automatically;
 reduced-motion preferences show the earned amounts without moving tokens.
 
+Use **Reward sounds** in the header to enable a gentle coin chime for saved
+reward-star earnings and a short game tune for earned game minutes. Sound is
+off until enabled; enabling plays a sample and remembers the choice in this
+browser, outside family backups. Mute stops reward tones immediately without
+changing calendar alarm sounds. Combined earnings play both cues in sequence.
+The tones are synthesized locally, with no audio downloads or external services.
+Reduced-motion mode still permits sound when explicitly enabled. Browsers may
+require another click to enable audio after a reload; if blocked, the app shows
+a message and keeps the saved rewards and visual celebration.
+
 Routine entries show explicit star-coin or game-minute badges, including zero
 when no reward was assigned. Imported unpriced checklist steps stay at zero;
 the app does not invent prices. An unlocked parent can use **Calendar >
