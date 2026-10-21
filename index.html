@@ -5,12 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#f7f6f1">
     <title>Family Fun</title>
-    <link rel="stylesheet" href="styles.css?v=parent-pin-1">
-    <link rel="stylesheet" href="fun.css?v=parent-pin-1">
-    <script src="parent-lock.js?v=parent-pin-1" defer></script>
-    <script src="earnings.js?v=parent-pin-1" defer></script>
-    <script src="app.js?v=parent-pin-1" defer></script>
-    <script src="fun.js?v=parent-pin-1" defer></script>
+    <link rel="stylesheet" href="styles.css?v=grateful-night-1">
+    <link rel="stylesheet" href="fun.css?v=grateful-night-1">
+    <script src="parent-lock.js?v=grateful-night-1" defer></script>
+    <script src="earnings.js?v=grateful-night-1" defer></script>
+    <script src="app.js?v=grateful-night-1" defer></script>
+    <script src="fun.js?v=grateful-night-1" defer></script>
   </head>
   <body>
     <a class="skip-link" href="#section-guide">Skip to this section</a>
@@ -141,6 +141,20 @@
             <h3>Optional quests</h3>
             <p class="fun-note">Choose an extra challenge when you want to. These do not count toward finishing your daily checklist.</p>
             <ul id="daily-optional-list" class="routine-list"></ul>
+          </section>
+          <section class="gratitude-journal" aria-labelledby="gratitude-heading">
+            <p class="eyebrow">A LITTLE GRATITUDE BEFORE GOODNIGHT</p>
+            <h3 id="gratitude-heading">&#127769; My grateful journal</h3>
+            <p id="gratitude-person" class="fun-note"></p>
+            <p id="gratitude-prompt">What made you smile today? Who helped you, or what are you grateful for?</p>
+            <form id="gratitude-form">
+              <label class="fun-field" for="gratitude-note">Tonight, I am grateful for...</label>
+              <textarea id="gratitude-note" name="note" rows="4" maxlength="2000" placeholder="One little thing that made today special..." aria-describedby="gratitude-prompt gratitude-reward" required></textarea>
+              <p id="gratitude-reward" class="fun-note"></p>
+              <button class="primary-button" type="submit">Save my grateful note</button>
+            </form>
+            <p id="gratitude-feedback" class="fun-feedback" role="status"></p>
+            <p class="fun-note">Your note stays in this browser and your family backup. Use the Routine date above to revisit a night. Shared-device profiles are not private accounts.</p>
           </section>
           <section id="routine-rewards" aria-labelledby="routine-rewards-heading">
             <h3 id="routine-rewards-heading">Ready-to-redeem rewards</h3>

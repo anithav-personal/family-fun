@@ -788,6 +788,7 @@ function renderRoutineChart() {
 }
 
 function renderDailyRoutine() {
+  if (typeof renderGratitudeJournal === "function") renderGratitudeJournal();
   const member = members.find((candidate) => candidate.id === activeMemberId);
   const panel = document.getElementById("routine-panel");
   if (panel.dataset.memberId !== (member?.id || "")) {
