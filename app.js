@@ -867,15 +867,21 @@ function createRoutineEntry(assignment, date, daily = false) {
   reward.setAttribute("aria-label", `${assignment.reward} ${assignment.kind === "task" ? "reward stars (coins)" : "game minutes"} per completion`);
   reward.title = assignment.reward ? "Earned once when this occurrence is completed."
     : "No reward assigned. An unlocked parent can set a reward in Calendar using Edit schedule & rewards.";
+  const complete = createAssignmentCompleteButton(assignment, date);
   if (daily) {
-    const secondary = document.createElement("div");
-    secondary.className = "routine-secondary";
-    secondary.append(meta, reward);
-    detail.append(title);
-    if (assignment.time) detail.append(time);
-    detail.append(secondary);
+    title.title = assignment.title;
+    time.textContent = assignment.time ? formatAssignmentTime(assignment.time) : "";
+    meta.className = "sr-only";
+    reward.textContent = assignment.kind === "task"
+      ? `\u2605 ${assignment.reward}` : `${assignment.reward} min`;
+    const icon = document.createElement("span");
+    icon.setAttribute("aria-hidden", "true");
+    icon.textContent = isAssignmentComplete(assignment, date) ? "\u2713" : complete.disabled ? "\u2013" : "\u25CB";
+    complete.replaceChildren(icon);
+    complete.title = complete.getAttribute("aria-label");
+    detail.append(title, time, reward, meta);
   } else detail.append(title, time, meta, reward);
-  row.append(detail, createAssignmentCompleteButton(assignment, date));
+  row.append(detail, complete);
   return row;
 }
 
