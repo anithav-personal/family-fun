@@ -90,7 +90,8 @@ function activateTheme(theme, focusTab = false) {
     panel.hidden = panel.dataset.themePanel !== theme;
   }
   document.getElementById("section-guide").textContent = {
-    routine: "Routine: check off your day, see your points and reward stars, and redeem rewards.",
+    routine: "Routine: check off your day, see earned game time and reward stars, and work toward your wish.",
+    rewards: "Rewards: add a wish, fill your piggy bank with reward stars, and celebrate your goal.",
     calendar: "Calendar: choose a day to see family plans and timed chores or tasks.",
     meals: "Meals: plan by date, check your kitchen supplies, and spin for dinner.",
     settings: "Settings: manage family profiles, ages, play themes, appearance, and backups.",
@@ -595,7 +596,7 @@ function completeAssignment(assignmentId, date) {
     member[balance] = newBalance;
     if (earnedMinutes > 0) member.gameMinutes = newGameMinutes;
   }, `${assignment.title} completed${assignment.startDate ? ` for ${formatMealDate(date)}` : ""}. ${assignment.reward
-    ? `+${assignment.reward} ${assignment.kind === "chore" ? "game points" : "reward stars"}${earnedMinutes ? ` and +${earnedMinutes} game minutes` : ""}. Reward earned once for this occurrence!`
+    ? `+${assignment.reward} ${assignment.kind === "chore" ? "game minutes" : "reward stars"}. Reward earned once for this occurrence!`
     : "Checklist step saved. No reward assigned."}`);
   if (saved && typeof recordFunActivity === "function") {
     recordFunActivity(member.id, "chore", `Completed: ${assignment.title}`);
@@ -828,7 +829,7 @@ function createRoutineEntry(assignment, date) {
   const meta = document.createElement("span");
   const member = members.find((item) => item.id === assignment.memberId);
   meta.textContent = `${member.name} · ${assignment.kind === "chore" ? "Chore" : "Task"} · ${assignment.reward
-    ? `+${assignment.reward} ${assignment.kind === "chore" ? "game points" : "reward stars"}`
+    ? `+${assignment.reward} ${assignment.kind === "chore" ? "game minutes" : "reward stars"}`
     : "No reward"}`;
   if (assignment.notification) meta.textContent += ` · ${assignment.notification.kind} ${assignment.notification.minutesBefore ? `${assignment.notification.minutesBefore} min before` : "at start"}`;
   detail.append(time, title, meta);
@@ -1605,11 +1606,13 @@ document.getElementById("routine-calendar").addEventListener("click", () => {
   document.getElementById("plan-heading").focus({ preventScroll: true });
   document.getElementById("calendar-plans").scrollIntoView({ block: "start" });
 });
-document.getElementById("open-rewards").addEventListener("click", () => {
-  activateTheme("routine");
-  document.getElementById("routine-rewards-heading").focus({ preventScroll: true });
-  document.getElementById("routine-rewards").scrollIntoView({ block: "start" });
-});
+function openRewardPage() {
+  activateTheme("rewards");
+  document.getElementById("rewards-heading").focus({ preventScroll: true });
+  document.getElementById("rewards-panel").scrollIntoView({ block: "start" });
+}
+document.getElementById("open-rewards").addEventListener("click", openRewardPage);
+document.getElementById("routine-view-rewards").addEventListener("click", openRewardPage);
 document.querySelector(".brand").addEventListener("click", (event) => {
   event.preventDefault();
   document.getElementById("open-today").click();
@@ -1635,26 +1638,24 @@ function createProfileRewardSummary(member) {
   const summary = document.createElement("dl");
   summary.className = "profile-reward-summary";
   summary.setAttribute("aria-label", `${member.name}'s rewards and earned game time`);
-  for (const [label, value, unit] of [
-    ["Game points earned", member.points, ""],
+  for (const [label, value, unit, icon] of [
+    ["Game time earned", member.gameMinutes || 0, " min", "\u{1F3AE}"],
     ["Reward stars available", member.stars, ""],
     ["Brain stars earned", member.brainStars || 0, ""],
-    ["Game time earned", member.gameMinutes || 0, " min"],
   ]) {
     const tile = document.createElement("div");
     tile.className = `profile-reward-tile${unit ? " profile-reward-time" : ""}`;
     const title = document.createElement("dt");
     title.textContent = label;
+    const badge = document.createElement("span");
+    badge.className = "reward-tile-icon";
+    badge.textContent = icon || (label === "Reward stars available" ? "\u{2B50}" : "\u{1F9E0}");
+    badge.setAttribute("aria-hidden", "true");
+    title.prepend(badge);
     const amount = document.createElement("dd");
     const number = document.createElement("strong");
     number.textContent = value.toLocaleString();
     amount.append(number, document.createTextNode(unit));
-    if (label === "Game points earned") {
-      const progress = document.createElement("small");
-      progress.className = "profile-game-progress";
-      progress.textContent = "1 chore point = 1 game minute";
-      amount.append(progress);
-    }
     tile.append(title, amount);
     summary.append(tile);
   }
@@ -1688,7 +1689,7 @@ function renderRewards() {
 
     const score = document.createElement("p");
     score.className = "goal-score";
-    score.textContent = `${member.points} / ${member.goal} game points`;
+    score.textContent = `Chore-history target: ${member.goal} points`;
     const progress = document.createElement("progress");
     progress.max = member.goal;
     progress.value = Math.min(member.points, member.goal);
@@ -1696,7 +1697,7 @@ function renderRewards() {
     const goalForm = document.createElement("form");
     goalForm.className = "goal-form";
     const goalLabel = document.createElement("label");
-    goalLabel.textContent = "Goal";
+    goalLabel.textContent = "Chore target";
     const goalInput = document.createElement("input");
     goalInput.type = "number";
     goalInput.min = "1";
@@ -1815,10 +1816,10 @@ function renderRewards() {
     const reward = document.createElement("span");
     reward.className = "assignment-reward";
     reward.textContent = !assignment.reward ? "No reward" : assignment.kind === "chore"
-      ? `+${assignment.reward} game pts`
+      ? `+${assignment.reward} min`
       : `+${assignment.reward} ★`;
     reward.setAttribute("aria-label", assignment.reward
-      ? `+${assignment.reward} ${assignment.kind === "chore" ? "game points" : "reward stars"}`
+      ? `+${assignment.reward} ${assignment.kind === "chore" ? "game minutes" : "reward stars"}`
       : "Checklist step, no reward");
     const complete = createAssignmentCompleteButton(assignment, occurrenceDate);
     const remove = document.createElement("button");
@@ -2017,7 +2018,7 @@ function updatePlanForm(resetReward = false) {
   form.elements.period.disabled = isEvent;
   form.elements.reward.disabled = isEvent;
   form.elements.reward.required = !isEvent;
-  document.getElementById("reward-label").textContent = isChore ? "Game points" : "Reward stars";
+  document.getElementById("reward-label").textContent = isChore ? "Game minutes (1 per point)" : "Reward stars";
   if (resetReward) form.elements.reward.value = isChore ? "10" : "1";
   renderPlanAssignees();
   updateNotificationControls(form);
@@ -2380,7 +2381,7 @@ function renderGameRewards(member) {
   if (!member) return;
   const choreProgress = document.createElement("p");
   choreProgress.className = "fun-note";
-  choreProgress.textContent = `${member.points} game points from chores · 1 chore point earns 1 game minute.`;
+  choreProgress.textContent = "Chores add 1 game minute per point. Brain-game badges add bonus minutes to the same earned total.";
   if (member.role !== "child") {
     const note = document.createElement("p");
     note.className = "adult-game-note";

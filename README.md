@@ -13,7 +13,7 @@ daily brain-game exercises everyone can enjoy.
   calendar and can be removed.
 - A daily number puzzle with answer feedback and a completed-for-today state.
 - Add family members, set each member's points goal, assign chores and tasks to
-  any family member, and track game points and reward stars.
+  any family member, and track earned game time and reward stars.
 - In Play Time, log a positive whole number of plant, protein, or healthy-fat
   points for a meal or snack instead of entering food names. Points count toward
   Healthy Hero badges and rewards; plant points also grow your virtual pet.
@@ -25,8 +25,11 @@ daily brain-game exercises everyone can enjoy.
 
 Use **Playing as...** in the header to open the quick profile chooser and switch
 who is playing without leaving the current section. The chooser and each profile
-card prominently show game points earned, reward stars available to redeem, brain stars, and
-earned game-time minutes. Game time is an earned reward, not a running timer.
+card prominently show one **Game time earned** balance, reward stars available
+to redeem, and brain stars. Chore points are not shown again as a second balance:
+their game minutes and brain-game bonus minutes already contribute to the earned
+total. Existing chore-point history and targets remain available in Settings.
+Game time is an earned reward, not a running timer.
 **Reward stars** are the redeemable shop currency; **brain stars** track puzzle
 progress. Existing star balances and backups are unchanged by this naming update.
 Use **Settings** to add family members or update their age, points goal, and
@@ -98,17 +101,45 @@ included in the dinner spinner until a date is assigned.
 
 **Routine** is the daily home for children and adults. Choose a person with
 **Playing as...**, then check off their dated responsibilities and see their
-game points, reward stars, and earned game minutes. Today is selected by
+one earned game-time balance and reward stars. Today is selected by
 default; other dates can be viewed without allowing future tasks to be completed.
 Optional quests are separate and do not count toward daily checklist progress.
 Choose **Optional quest** when creating an assignment in Calendar.
 Use **Routine block** to group responsibilities into morning, afternoon,
 evening, or any time. Imported routines can preserve their checklist order
 without inventing exact times for untimed steps.
-The reward shop lives in Routine, with a shortcut from Play Time. It shows
+Routine previews up to three affordable rewards. The full reward shop lives in
+**Rewards**, with shortcuts from Routine and Play Time. It shows
 which rewards are affordable and how many more reward stars are needed.
 Adults can define rewards, approve requests, and mark rewards delivered there.
 Calendar remains available for planning and the whole-family weekly chart.
+
+### Wishlist & piggy-bank goals
+
+In **Rewards**, each person can add a wish and pick a playful icon. Children
+cannot price their wishes: an adult profile sets or updates the reward-star
+price (1–10,000). Adults see the whole family's wishlist; children see their own.
+The first priced wish becomes its owner's goal if they do not already have one.
+Children can choose a different priced wish as their current goal.
+
+An original illustrated piggy bank fills from the current **available reward-star
+balance**, capped at 100%, with an accessible progress bar and the remaining
+stars needed. Picking a goal is free, not a second savings account. Spending
+stars on pets or another reward lowers the piggy's progress. Brain stars and
+game time are not redeemable currency.
+
+Redeeming a wish reserves its stars and uses the existing adult approval,
+delivery, and cancellation flow. A funded goal remains full while its request
+is pending or approved, and cannot be requested twice at the same time.
+Cancellation refunds once; delivery clears that current goal. Price changes
+do not change the cost of an existing request. Removing a wish preserves its
+existing requests. Adults can help choose a child's goal.
+
+Wishes, parent prices, goals, and requests stay in browser storage and backups.
+Older backups without wishlist fields remain supported. Profile roles are
+household conventions, not authenticated parental controls. The gift, rocket,
+piggy-bank art, and star-coin decorations are original local illustrations;
+there are no third-party image requests.
 
 In **Calendar**, use **Create event, task or routine** to add a family event,
 chore, or task for any family member. Give it a start date, an optional local time, and

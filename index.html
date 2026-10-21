@@ -5,10 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#f7f6f1">
     <title>Family Fun</title>
-    <link rel="stylesheet" href="styles.css?v=routine-book-1">
-    <link rel="stylesheet" href="fun.css?v=routine-book-1">
-    <script src="app.js?v=routine-book-1" defer></script>
-    <script src="fun.js?v=routine-book-1" defer></script>
+    <link rel="stylesheet" href="styles.css?v=wish-piggy-1">
+    <link rel="stylesheet" href="fun.css?v=wish-piggy-1">
+    <script src="app.js?v=wish-piggy-1" defer></script>
+    <script src="fun.js?v=wish-piggy-1" defer></script>
   </head>
   <body>
     <a class="skip-link" href="#section-guide">Skip to this section</a>
@@ -35,7 +35,7 @@
           <select id="active-profile" aria-label="Active family profile"></select>
         </label>
         <div id="active-profile-rewards"></div>
-        <p class="fun-note">Chores earn game points: 1 point earns 1 game minute. Reward stars can be redeemed in the shops. Game minutes are earned rewards, not a running timer.</p>
+        <p class="fun-note">Game time is one earned total from chores and brain-game bonuses, not a running timer. Reward stars can be redeemed in the shops.</p>
         <button id="profile-picker-settings" class="data-button" type="button">Manage profiles in Settings</button>
       </dialog>
       <p id="data-feedback" class="data-feedback" aria-live="polite"></p>
@@ -57,19 +57,23 @@
       <nav class="theme-tabs" aria-label="Family Fun sections" role="tablist">
         <button class="theme-tab" id="routine-tab" type="button" role="tab"
           aria-selected="false" aria-controls="routine-panel" data-theme-tab="routine" tabindex="-1">
-          <span class="tab-icon" aria-hidden="true">&#10003;</span><span class="tab-label">Routine<small>Today &amp; rewards</small></span>
+          <span class="tab-icon" aria-hidden="true">&#127774;</span><span class="tab-label">Routine<small>Today &amp; rewards</small></span>
+        </button>
+        <button class="theme-tab" id="rewards-tab" type="button" role="tab"
+          aria-selected="false" aria-controls="rewards-panel" data-theme-tab="rewards" tabindex="-1">
+          <span class="tab-icon" aria-hidden="true">&#127873;</span><span class="tab-label">Rewards<small>Wish &amp; save</small></span>
         </button>
         <button class="theme-tab is-active" id="calendar-tab" type="button" role="tab"
           aria-selected="true" aria-controls="calendar-panel" data-theme-tab="calendar">
-          <span class="tab-icon" aria-hidden="true">▦</span><span class="tab-label">Calendar<small>Plans &amp; routines</small></span>
+          <span class="tab-icon" aria-hidden="true">&#128197;</span><span class="tab-label">Calendar<small>Plans &amp; routines</small></span>
         </button>
         <button class="theme-tab" id="meals-tab" type="button" role="tab"
           aria-selected="false" aria-controls="meals-panel" data-theme-tab="meals" tabindex="-1">
-          <span class="tab-icon" aria-hidden="true">⌂</span><span class="tab-label">Meals<small>Plan &amp; pick dinner</small></span>
+          <span class="tab-icon" aria-hidden="true">&#127869;</span><span class="tab-label">Meals<small>Plan &amp; pick dinner</small></span>
         </button>
         <button class="theme-tab" id="fun-tab" type="button" role="tab"
           aria-selected="false" aria-controls="fun-panel" data-theme-tab="fun" tabindex="-1">
-          <span class="tab-icon" aria-hidden="true">✦</span><span class="tab-label">Play Time<small>Games &amp; rewards</small></span>
+          <span class="tab-icon" aria-hidden="true">&#127918;</span><span class="tab-label">Play Time<small>Games &amp; rewards</small></span>
         </button>
         <button class="theme-tab" id="settings-tab" type="button" role="tab"
           aria-selected="false" aria-controls="settings-panel" data-theme-tab="settings" tabindex="-1">
@@ -90,6 +94,14 @@
           </div>
           <p class="fun-note">Your checklist and rewards, whether you're a kid or a grown-up. Use Playing as above to change who is checking in.</p>
           <div id="daily-routine-rewards"></div>
+          <div class="dream-shortcut">
+            <img src="reward-gift.svg" width="88" height="88" alt="">
+            <div>
+              <h3>A little win, a little closer!</h3>
+              <p id="routine-goal-note" class="fun-note"></p>
+              <button id="routine-view-rewards" class="data-button" type="button">My wishlist &amp; piggy bank</button>
+            </div>
+          </div>
           <div class="daily-routine-controls">
             <label>Routine date <input id="daily-routine-date" type="date" required></label>
             <button id="daily-routine-today" class="data-button" type="button">Today</button>
@@ -105,8 +117,81 @@
             <ul id="daily-optional-list" class="routine-list"></ul>
           </section>
           <section id="routine-rewards" aria-labelledby="routine-rewards-heading">
-            <h3 id="routine-rewards-heading" tabindex="-1">Redeem reward stars</h3>
-            <p class="fun-note">Choose a reward you can afford. A grown-up approves and delivers it; canceling a request refunds your reward stars.</p>
+            <h3 id="routine-rewards-heading">Ready-to-redeem rewards</h3>
+            <div id="routine-reward-preview" class="shop-grid"></div>
+          </section>
+        </section>
+        <section class="card rewards-page theme-panel" id="rewards-panel" role="tabpanel"
+          aria-labelledby="rewards-tab" data-theme-panel="rewards" hidden>
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">DREAM IT. SAVE FOR IT. CELEBRATE IT.</p>
+              <h2 id="rewards-heading" tabindex="-1">My wish-powered rewards</h2>
+            </div>
+            <img src="reward-rocket.svg" class="reward-header-art" width="110" height="100" alt="">
+          </div>
+          <p id="reward-feedback" class="fun-feedback" role="status"></p>
+          <div class="piggy-goal">
+            <svg class="piggy-art" viewBox="0 0 280 230" role="img" aria-label="A cheerful piggy bank filling up as you save reward stars">
+              <defs>
+                <clipPath id="piggy-body-clip"><ellipse cx="126" cy="126" rx="84" ry="62"/></clipPath>
+                <linearGradient id="piggy-gold" x2="0" y2="1"><stop stop-color="#ffe36d"/><stop offset="1" stop-color="#ffbb42"/></linearGradient>
+              </defs>
+              <circle cx="140" cy="115" r="103" fill="#e1ddff"/>
+              <path d="M25 111c-26-22-22 25-7 12 11-10-6-18-12-7" fill="none" stroke="#d9488a" stroke-width="6" stroke-linecap="round"/>
+              <path d="m75 173-4 26h23l4-20m53-1 4 21h23l-5-29" fill="#f27fab" stroke="#90365f" stroke-width="4" stroke-linejoin="round"/>
+              <ellipse cx="126" cy="126" rx="84" ry="62" fill="#ffd4e6"/>
+              <g clip-path="url(#piggy-body-clip)"><rect id="piggy-fill" x="35" y="188" width="185" height="0" fill="url(#piggy-gold)"/></g>
+              <ellipse cx="126" cy="126" rx="84" ry="62" fill="none" stroke="#90365f" stroke-width="4"/>
+              <path d="m164 77 5-31 28 25" fill="#f27fab" stroke="#90365f" stroke-width="4" stroke-linejoin="round"/>
+              <ellipse cx="207" cy="132" rx="31" ry="25" fill="#ff97bd" stroke="#90365f" stroke-width="4"/>
+              <ellipse cx="198" cy="132" rx="4" ry="7" fill="#90365f"/><ellipse cx="215" cy="132" rx="4" ry="7" fill="#90365f"/>
+              <circle cx="172" cy="106" r="5" fill="#452d4f"/><circle cx="174" cy="104" r="1.5" fill="white"/>
+              <path d="M165 139q8 9 14 0" fill="none" stroke="#90365f" stroke-width="3" stroke-linecap="round"/>
+              <circle cx="155" cy="130" r="9" fill="#ff8db9" opacity=".7"/>
+              <path d="M101 73h41" stroke="#90365f" stroke-width="6" stroke-linecap="round"/>
+              <g class="piggy-coin">
+                <circle cx="122" cy="35" r="22" fill="#ffcf47" stroke="#b36d16" stroke-width="3"/>
+                <path d="m122 20 4 10 11 1-8 7 2 11-9-6-10 6 2-11-8-7 12-1z" fill="#fff6b7"/>
+              </g>
+              <path d="m244 54 4 11 12 3-12 4-4 11-4-11-11-4 11-3z" fill="#42b9bb"/>
+              <path d="m40 46 3 8 9 3-9 3-3 8-3-8-8-3 8-3z" fill="#ff9270"/>
+              <ellipse cx="136" cy="210" rx="95" ry="7" fill="#6b579f" opacity=".15"/>
+            </svg>
+            <div class="piggy-copy">
+              <p class="goal-kicker">MY CURRENT REWARD GOAL</p>
+              <h3 id="reward-goal-title">Big dreams start with little wins!</h3>
+              <p id="reward-goal-description"></p>
+              <p id="reward-goal-balance" class="goal-balance"></p>
+              <div class="goal-progress-label"><span>My piggy progress</span><strong id="reward-goal-percent">0%</strong></div>
+              <progress id="reward-goal-progress" max="100" value="0" aria-label="Reward-star saving goal progress"></progress>
+              <button id="reward-goal-redeem" class="primary-button" type="button" hidden>Redeem my wish</button>
+              <p class="fun-note">Your piggy follows your available reward stars. Choosing a goal is free; spending stars in either shop lowers your savings.</p>
+            </div>
+          </div>
+          <section class="wishlist-section" aria-labelledby="wishlist-heading">
+            <h3 id="wishlist-heading">My dream wishlist</h3>
+            <p class="fun-note">Kids add wishes. Grown-ups assign reward-star prices. Then pick your current goal and work toward it!</p>
+            <form id="wishlist-form" class="wishlist-form">
+              <label class="fun-field">I wish for...
+                <input name="title" maxlength="60" placeholder="A new book, a toy, a family adventure..." required>
+              </label>
+              <label class="fun-field">Pick a playful icon
+                <select name="icon">
+                  <option value="gift">&#127873; Surprise</option>
+                  <option value="toy">&#129528; Toy</option>
+                  <option value="book">&#128218; Book</option>
+                  <option value="adventure">&#128640; Adventure</option>
+                  <option value="game">&#127918; Game</option>
+                </select>
+              </label>
+              <button class="primary-button" type="submit">Add my wish</button>
+            </form>
+            <div id="wishlist" class="shop-grid"></div>
+          </section>
+          <section class="reward-shop-section" aria-labelledby="reward-shop-heading">
+            <h3 id="reward-shop-heading">Family reward shop</h3>
+            <p class="fun-note">A grown-up approves and delivers redeemed rewards. Canceling a request refunds its reward stars.</p>
             <details id="reward-shop-management" class="fun-card" hidden>
               <summary>Manage rewards (adult)</summary>
               <p class="fun-note">Adult profiles are a household convention, not a password lock.</p>
@@ -351,7 +436,7 @@
               </details>
               <div class="fun-card">
                 <h4>Reward shop</h4>
-                <p class="fun-note">Your reward stars and redeemable rewards are together in Routine.</p>
+                <p class="fun-note">Dream up a wish and fill your piggy bank in Rewards.</p>
                 <button id="open-rewards" class="data-button" type="button">Redeem reward stars</button>
               </div>
               <details class="fun-card fun-wide">
@@ -569,7 +654,7 @@
           </div>
           <span class="rewards-mark" aria-hidden="true">★</span>
         </div>
-        <p class="fun-note">Manage profiles, ages, game points goals, and play themes here. Use the Playing as button above to switch family members. Chores earn game points, with 1 game minute per point, separately from brain-star rewards.</p>
+        <p class="fun-note">Manage profiles, ages, chore-history targets, and play themes here. Use the Playing as button above to switch family members. Chores and brain-game bonuses contribute to one earned game-time balance.</p>
         <div class="data-actions" aria-label="Appearance and data backup">
           <button class="theme-toggle" id="theme-toggle" type="button" aria-pressed="false">
             <span id="theme-icon" aria-hidden="true">☾</span>
@@ -634,7 +719,7 @@
               <span>Kind</span>
               <select name="kind">
                 <option value="event">Family event</option>
-                <option value="chore">Chore · earns game points</option>
+                <option value="chore">Chore · earns game time</option>
                 <option value="task">Task · earns reward stars</option>
               </select>
             </label>

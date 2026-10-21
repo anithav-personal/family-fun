@@ -143,6 +143,54 @@ html[data-theme="dark"][data-play-theme="cube"] .primary-button { background: #3
 .app-shell :is(.fun-card, .fun-field, .shop-item span, .celebration-wall li span, .adventure-map li, .pet-accessories) { font-size: 15px; line-height: 1.6; }
 .app-shell :is(.fun-card summary, .fun-hub h3) { font-size: 19px; }
 .app-shell .bingo-cell { font-size: 14px; }
+
+.rewards-page { padding: 24px; }
+.rewards-page h2, .rewards-page h3, .dream-shortcut h3 { overflow-wrap: anywhere; }
+.reward-header-art { width: 110px; height: 100px; flex: none; }
+.dream-shortcut { display: flex; align-items: center; gap: 16px; margin: 20px 0; padding: 16px; border: 2px solid #d8c9f1; border-radius: 18px; background: #faf0ff; }
+.dream-shortcut img { width: 88px; height: 88px; flex: none; }
+.dream-shortcut > div { min-width: 0; overflow-wrap: anywhere; }
+.dream-shortcut h3 { margin: 0; }
+.piggy-goal { display: grid; grid-template-columns: minmax(200px, .8fr) minmax(0, 1.2fr); gap: 24px; align-items: center; padding: 24px; border: 2px solid #d9bfe9; border-radius: 24px; background: linear-gradient(120deg, #fff0f7, #f2ebff 60%, #fff3d4); }
+.piggy-art { display: block; width: 100%; max-width: 340px; margin: auto; }
+.piggy-copy { min-width: 0; }
+.app-shell .goal-kicker { color: #774479; font-size: 13px; font-weight: 800; letter-spacing: 1px; }
+.goal-balance { font-weight: 800; overflow-wrap: anywhere; }
+.goal-progress-label { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+.goal-progress-label strong { color: #754086; font-size: 24px; }
+#reward-goal-progress { display: block; width: 100%; height: 22px; margin: 10px 0 18px; accent-color: #b1478c; }
+.app-shell #reward-goal-redeem:disabled { background: #e8dfef; color: #655170; cursor: not-allowed; }
+.wishlist-section, .reward-shop-section { margin-top: 28px; padding-top: 22px; border-top: 2px dashed var(--border); }
+.wishlist-form { display: grid; grid-template-columns: minmax(0, 2fr) minmax(150px, 1fr) auto; align-items: end; gap: 12px; margin: 18px 0; }
+.wish-card { border: 2px solid #e3caed; border-top: 6px solid #d891ce; background: #fff9fd; }
+.wish-card:nth-child(3n + 2) { border-color: #b5dfdf; border-top-color: #52b9ba; background: #f3fdfb; }
+.wish-card:nth-child(3n) { border-color: #efdb9e; border-top-color: #f0bc48; background: #fffaf0; }
+.wish-card h4 { margin: 0; font-size: 19px; }
+.app-shell .wish-icon { align-self: flex-start; display: grid; place-items: center; width: 62px; height: 62px; border-radius: 18px; background: #ffe7a4; font-size: 36px; }
+.app-shell .wish-goal-label { align-self: flex-start; padding: 5px 10px; border-radius: 20px; background: #e5d9ff; color: #57357a; font-weight: 800; }
+.wish-price-form { margin-bottom: 0; }
+@media (prefers-reduced-motion: no-preference) {
+  .piggy-coin { animation: piggy-coin-float 3s ease-in-out infinite; }
+  @keyframes piggy-coin-float { 50% { transform: translateY(-5px); } }
+}
+html[data-theme="dark"] .dream-shortcut { background: #31253e; border-color: #705485; }
+html[data-theme="dark"] .piggy-goal { background: linear-gradient(120deg, #392637, #302641 60%, #3d3420); border-color: #80608e; }
+html[data-theme="dark"] .app-shell :is(.goal-kicker, .goal-progress-label strong) { color: #f0c1ef; }
+html[data-theme="dark"] .wish-card { background: #302534; border-color: #735377; }
+html[data-theme="dark"] .wish-card:nth-child(3n + 2) { background: #203331; border-color: #427b77; }
+html[data-theme="dark"] .wish-card:nth-child(3n) { background: #353020; border-color: #88743c; }
+html[data-theme="dark"] .wish-goal-label { background: #513a70; color: #f2e5ff; }
+@media (max-width: 760px) {
+  .piggy-goal { grid-template-columns: minmax(0, 1fr); gap: 12px; padding: 18px; }
+  .piggy-art { max-width: 230px; }
+  .wishlist-form { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 420px) {
+  .rewards-page { padding: 16px; }
+  .reward-header-art { width: 76px; height: 70px; }
+  .dream-shortcut { flex-wrap: wrap; }
+  .dream-shortcut img { width: 64px; height: 64px; }
+}
 .app-shell .memory-card { font-size: 26px; }
 .app-shell :is(.fun-hub, .brain-arcade) button { min-height: 44px; }
 .app-shell :is(.fun-hub, .brain-arcade) .text-button { font-size: 15px; }

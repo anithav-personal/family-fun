@@ -31,6 +31,7 @@ const adventureChapters = [
   { at: 80, name: "Star Harbor", story: "You reach the harbor of stars. The real treasure was every small win you shared along the way." },
 ];
 const arcadeGames = ["word", "math", "memory", "riddle", "odd", "pattern"];
+const wishIcons = { gift: "\u{1F381}", toy: "\u{1F9F8}", book: "\u{1F4DA}", adventure: "\u{1F680}", game: "\u{1F3AE}" };
 const funStorageKey = "family-fun-extra-fun";
 let funStorageBlocked = false;
 let funState = readFunState();
@@ -41,7 +42,7 @@ let arcadeProfileId = "";
 let currentArcadeChallenge = null;
 
 function createDefaultFunState() {
-  return { version: 1, profiles: {}, bingo: {}, rewards: [], requests: [], wall: [], steps: 0 };
+  return { version: 1, profiles: {}, bingo: {}, rewards: [], wishes: [], requests: [], wall: [], steps: 0 };
 }
 
 function isFunText(value, max = 200) {
@@ -61,8 +62,17 @@ function isValidFunState(state, family = members) {
   if (!object(state) || state.version !== 1 || !object(state.profiles) ||
       !object(state.bingo) || !Number.isSafeInteger(state.steps) || state.steps < 0 ||
       !Array.isArray(state.rewards) || !Array.isArray(state.requests) || !Array.isArray(state.wall)) return false;
+  const wishes = state.wishes === undefined ? [] : state.wishes;
+  if (!Array.isArray(wishes) ||
+      !wishes.every((wish) => object(wish) && isFunText(wish.id, 100) &&
+        memberExists(wish.memberId) && isFunText(wish.title, 60) &&
+        (wish.icon === undefined || (typeof wish.icon === "string" && Object.hasOwn(wishIcons, wish.icon))) &&
+        (wish.cost === undefined || (Number.isInteger(wish.cost) && wish.cost >= 1 && wish.cost <= 10000))) ||
+      !uniqueIds(wishes)) return false;
   if (!Object.entries(state.profiles).every(([id, profile]) =>
     memberExists(id) && object(profile) && Array.isArray(profile.owned) &&
+    (profile.goalWishId === undefined || wishes.some((wish) =>
+      wish.id === profile.goalWishId && wish.memberId === id && wish.cost !== undefined)) &&
     profile.owned.every((item) => validIds.has(item)) &&
     new Set(profile.owned).size === profile.owned.length && object(profile.equipped) &&
     Object.entries(profile.equipped).every(([slot, itemId]) =>
@@ -86,6 +96,8 @@ function isValidFunState(state, family = members) {
   if (!state.requests.every((request) => object(request) && isFunText(request.id, 100) &&
     memberExists(request.memberId) && isFunText(request.title, 60) &&
     Number.isInteger(request.cost) && request.cost >= 1 && request.cost <= 10000 &&
+    (request.wishId === undefined || (isFunText(request.wishId, 100) &&
+      !wishes.some((wish) => wish.id === request.wishId && wish.memberId !== request.memberId))) &&
     ["pending", "approved", "delivered", "canceled"].includes(request.status) &&
     isFunDate(request.date)) || !uniqueIds(state.requests)) return false;
   return state.wall.every((win) => object(win) && isFunText(win.id, 100) &&
@@ -591,12 +603,20 @@ function renderPetShop(member) {
   }
 }
 
-function requestReward(rewardId) {
+function requestReward(rewardId, fromWishlist = false) {
   const member = getFunMember();
-  const reward = funState.rewards.find((item) => item.id === rewardId);
-  if (!member || !reward) return;
+  const reward = (fromWishlist ? funState.wishes || [] : funState.rewards).find((item) => item.id === rewardId);
+  if (!member || !reward || (fromWishlist && reward.memberId !== member.id) || !Number.isInteger(reward.cost)) {
+    funMessage("Choose your own priced wish or a shop reward before redeeming.", true, "reward-feedback");
+    return;
+  }
+  if (fromWishlist && funState.requests.some((request) => request.wishId === reward.id &&
+      request.memberId === member.id && ["pending", "approved"].includes(request.status))) {
+    funMessage("This wish is already requested. Your grown-up can approve and deliver it.", true, "reward-feedback");
+    return;
+  }
   if (member.stars < reward.cost) {
-    funMessage("You need more reward stars for that reward.", true, "routine-feedback");
+    funMessage("You need more reward stars for that reward.", true, "reward-feedback");
     return;
   }
   commitFunChange(() => {
@@ -604,8 +624,9 @@ function requestReward(rewardId) {
     funState.requests.unshift({
       id: funId(), memberId: member.id, title: reward.title, cost: reward.cost,
       date: toDateKey(new Date()), status: "pending",
+      ...(fromWishlist ? { wishId: reward.id } : {}),
     });
-  }, "Reward requested! Your reward stars are reserved until an adult delivers it or the request is canceled.", "routine-feedback");
+  }, "Reward requested! Your reward stars are reserved until an adult delivers it or the request is canceled.", "reward-feedback");
 }
 
 function changeRewardRequest(id, action) {
@@ -615,7 +636,7 @@ function changeRewardRequest(id, action) {
   const adult = member.role === "adult";
   if ((action === "cancel" && !adult && member.id !== request.memberId) ||
       (action !== "cancel" && !adult)) {
-    funMessage("Choose an adult profile to approve or deliver rewards.", true, "routine-feedback");
+    funMessage("Choose an adult profile to approve or deliver rewards.", true, "reward-feedback");
     return;
   }
   if ((action === "approve" && request.status !== "pending") ||
@@ -629,12 +650,171 @@ function changeRewardRequest(id, action) {
     } else if (action === "approve") request.status = "approved";
     else {
       request.status = "delivered";
+      const profile = getFunProfile(owner.id);
+      if (request.wishId && profile.goalWishId === request.wishId) delete profile.goalWishId;
       addWallWin(owner.id, `Enjoyed a reward: ${request.title}`, "reward");
     }
-  }, action === "cancel" ? "Request canceled and reward stars refunded." : `Reward ${request.status === "pending" ? "approved" : "delivered"}.`, "routine-feedback");
+  }, action === "cancel" ? "Request canceled and reward stars refunded." : `Reward ${request.status === "pending" ? "approved" : "delivered"}.`, "reward-feedback");
+}
+
+function getWishGoal(member) {
+  if (!member) return null;
+  return (funState.wishes || []).find((wish) =>
+    wish.memberId === member.id && wish.id === getFunProfile(member.id).goalWishId) || null;
+}
+
+function priceWish(wishId, cost) {
+  const wish = (funState.wishes || []).find((item) => item.id === wishId);
+  if (getFunMember()?.role !== "adult" || !wish || !Number.isInteger(cost) || cost < 1 || cost > 10000) {
+    funMessage("A grown-up must set a whole-number price from 1 to 10,000 reward stars.", true, "reward-feedback");
+    return;
+  }
+  commitFunChange(() => {
+    wish.cost = cost;
+    const profile = getFunProfile(wish.memberId);
+    if (!profile.goalWishId) profile.goalWishId = wish.id;
+  }, "Wish priced! Its owner can now choose it as a goal and save reward stars.", "reward-feedback");
+}
+
+function chooseWishGoal(wishId) {
+  const member = getFunMember();
+  const wish = (funState.wishes || []).find((item) => item.id === wishId);
+  if (!member || !wish || !wish.cost || (member.role !== "adult" && wish.memberId !== member.id)) {
+    funMessage("Choose your own wish after a grown-up sets its price.", true, "reward-feedback");
+    return;
+  }
+  commitFunChange(() => {
+    getFunProfile(wish.memberId).goalWishId = wish.id;
+  }, "Saving goal selected! Choosing a goal does not spend or reserve any stars.", "reward-feedback");
+}
+
+function removeWish(wishId) {
+  const member = getFunMember();
+  const wish = (funState.wishes || []).find((item) => item.id === wishId);
+  if (!member || !wish || (member.role !== "adult" && wish.memberId !== member.id)) {
+    funMessage("Choose your own wish to remove, or ask a grown-up.", true, "reward-feedback");
+    return;
+  }
+  commitFunChange(() => {
+    funState.wishes = funState.wishes.filter((item) => item.id !== wish.id);
+    const profile = getFunProfile(wish.memberId);
+    if (profile.goalWishId === wish.id) delete profile.goalWishId;
+  }, "Wish removed. Existing reward requests and reserved stars are unchanged.", "reward-feedback");
+}
+
+function renderWishlist(member) {
+  document.querySelectorAll("#wishlist-form input, #wishlist-form select, #wishlist-form button")
+    .forEach((control) => { control.disabled = !member; });
+  const list = document.getElementById("wishlist");
+  list.replaceChildren();
+  const wishes = (funState.wishes || []).filter((wish) => member &&
+    (member.role === "adult" || wish.memberId === member.id));
+  if (!wishes.length) list.append(funElement("p", "Dream it, add it, then ask a grown-up to set its reward-star price.", "fun-note"));
+  for (const wish of wishes) {
+    const owner = members.find((candidate) => candidate.id === wish.memberId);
+    const card = funElement("article", undefined, "shop-item wish-card");
+    const icon = funElement("span", wishIcons[wish.icon || "gift"], "wish-icon");
+    icon.setAttribute("aria-hidden", "true");
+    card.append(icon, funElement("h4", wish.title),
+      funElement("span", `${owner.name}'s wish`),
+      funElement("strong", wish.cost ? `${wish.cost} reward stars` : "Waiting for a grown-up's price"));
+    const current = getFunProfile(owner.id).goalWishId === wish.id;
+    if (current) card.append(funElement("span", "Current saving goal", "wish-goal-label"));
+    if (member.role === "adult") {
+      const form = funElement("form", undefined, "fun-form wish-price-form");
+      const label = funElement("label", "Price in reward stars", "fun-field");
+      const input = document.createElement("input");
+      input.type = "number";
+      input.name = "cost";
+      input.min = "1";
+      input.max = "10000";
+      input.step = "1";
+      input.required = true;
+      input.value = wish.cost || "";
+      input.setAttribute("aria-label", `${owner.name}'s ${wish.title}: price in reward stars`);
+      label.append(input);
+      const save = funElement("button", wish.cost ? "Update price" : "Set price", "primary-button");
+      save.type = "submit";
+      form.append(label, save);
+      form.addEventListener("submit", (event) => {
+        event.preventDefault();
+        priceWish(wish.id, input.valueAsNumber);
+      });
+      card.append(form);
+    }
+    card.append(funButton(current ? "Current goal" : member.id === owner.id ? "Make this my goal" : `Set goal for ${owner.name}`,
+      () => chooseWishGoal(wish.id), !wish.cost || current));
+    if (member.id === owner.id && wish.cost) {
+      const pending = funState.requests.some((request) => request.wishId === wish.id &&
+        request.memberId === owner.id && ["pending", "approved"].includes(request.status));
+      card.append(funButton(pending ? "Requested" : "Redeem this wish",
+        () => requestReward(wish.id, true), pending || member.stars < wish.cost));
+    }
+    card.append(funButton("Remove wish", () => removeWish(wish.id)));
+    list.append(card);
+  }
+}
+
+function renderRewardGoal(member) {
+  const wish = getWishGoal(member);
+  const pending = wish && funState.requests.find((request) => request.wishId === wish.id &&
+    request.memberId === member.id && ["pending", "approved"].includes(request.status));
+  const percent = wish ? pending ? 100 : Math.min(100, Math.floor(member.stars / wish.cost * 100)) : 0;
+  document.getElementById("reward-goal-title").textContent = wish ? wish.title : "Big dreams start with little wins!";
+  document.getElementById("reward-goal-description").textContent = pending
+    ? `${pending.cost} reward stars reserved. ${pending.status === "approved" ? "Approved! Your reward is on its way." : "Waiting for a grown-up to approve."}`
+    : wish ? `${Math.max(0, wish.cost - member.stars)} more reward stars to reach your goal.`
+      : "Add a wish below. A grown-up sets the price, then you choose what to save for.";
+  document.getElementById("reward-goal-balance").textContent = member
+    ? `${member.stars.toLocaleString()} reward stars available${wish && !pending ? ` / ${wish.cost.toLocaleString()} for this wish` : ""}`
+    : "Choose who's playing to start your wish jar.";
+  document.getElementById("reward-goal-percent").textContent = `${percent}%`;
+  const progress = document.getElementById("reward-goal-progress");
+  progress.value = percent;
+  progress.setAttribute("aria-valuetext", pending ? "Goal funded; reward requested" : `${percent}% of your saving goal`);
+  const height = 124 * percent / 100;
+  document.getElementById("piggy-fill").setAttribute("height", height);
+  document.getElementById("piggy-fill").setAttribute("y", 188 - height);
+  const redeem = document.getElementById("reward-goal-redeem");
+  redeem.hidden = !wish;
+  redeem.disabled = !wish || !!pending || member.stars < wish.cost;
+  redeem.textContent = pending ? "Reward requested!"
+    : wish && member.stars < wish.cost ? `Keep saving - ${wish.cost - member.stars} more stars!`
+      : "My piggy is ready - redeem!";
+  const note = document.getElementById("routine-goal-note");
+  note.textContent = pending ? `Your wish "${wish.title}" is requested!`
+    : wish ? `${wish.title} · ${percent}% saved · ${Math.max(0, wish.cost - member.stars)} reward stars to go`
+      : "Add a dream to your wishlist and choose your next saving goal.";
+}
+
+function renderRoutineRewardPreview(member) {
+  const list = document.getElementById("routine-reward-preview");
+  list.replaceChildren();
+  const available = member ? [
+    ...funState.rewards.map((reward) => ({ ...reward, fromWishlist: false })),
+    ...(funState.wishes || []).filter((wish) => wish.memberId === member.id && wish.cost &&
+      !funState.requests.some((request) => request.wishId === wish.id &&
+        request.memberId === member.id && ["pending", "approved"].includes(request.status)))
+      .map((wish) => ({ ...wish, fromWishlist: true })),
+  ].filter((reward) => reward.cost <= member.stars).sort((a, b) => a.cost - b.cost).slice(0, 3) : [];
+  if (!available.length) list.append(funElement("p", "Keep collecting reward stars! Your wishlist and full reward shop are in Rewards.", "fun-note"));
+  for (const reward of available) {
+    const card = funElement("article", undefined, "shop-item");
+    card.append(funElement("strong", reward.title), funElement("span", `${reward.cost} reward stars`),
+      funButton("Redeem reward", () => {
+        openRewardPage();
+        requestReward(reward.id, reward.fromWishlist);
+      }));
+    list.append(card);
+  }
 }
 
 function renderRewardShop(member) {
+  const panel = document.getElementById("rewards-panel");
+  if (panel.dataset.memberId !== (member?.id || "")) {
+    funMessage("", false, "reward-feedback");
+    panel.dataset.memberId = member?.id || "";
+  }
   const adult = member?.role === "adult";
   document.getElementById("reward-shop-management").hidden = !adult;
   document.querySelectorAll("#reward-shop-form input, #reward-shop-form button")
@@ -650,7 +830,7 @@ function renderRewardShop(member) {
       : `${reward.cost - member.stars} more reward stars needed`, "fun-note"));
     card.append(funButton("Redeem reward", () => requestReward(reward.id), !member || member.stars < reward.cost));
     if (adult) card.append(funButton("Remove reward", () => {
-      commitFunChange(() => { funState.rewards = funState.rewards.filter((item) => item.id !== reward.id); }, "Reward removed. Existing requests are unchanged.", "routine-feedback");
+      commitFunChange(() => { funState.rewards = funState.rewards.filter((item) => item.id !== reward.id); }, "Reward removed. Existing requests are unchanged.", "reward-feedback");
     }));
     shop.append(card);
   }
@@ -667,6 +847,9 @@ function renderRewardShop(member) {
     if (["pending", "approved"].includes(request.status)) row.append(funButton("Cancel & refund", () => changeRewardRequest(request.id, "cancel")));
     list.append(row);
   }
+  renderWishlist(member);
+  renderRewardGoal(member);
+  renderRoutineRewardPreview(member);
 }
 
 function renderAdventure() {
@@ -770,12 +953,31 @@ document.getElementById("reward-shop-form").addEventListener("submit", (event) =
   const title = form.elements.title.value.trim();
   const cost = form.elements.cost.valueAsNumber;
   if (member?.role !== "adult" || !title || title.length > 60 || !Number.isInteger(cost) || cost < 1 || cost > 10000) {
-    funMessage("Choose an adult profile and enter a whole-number reward-star price between 1 and 10,000.", true, "routine-feedback");
+    funMessage("Choose an adult profile and enter a whole-number reward-star price between 1 and 10,000.", true, "reward-feedback");
     return;
   }
   if (commitFunChange(() => {
     funState.rewards.push({ id: funId(), title, cost });
-  }, "Reward added to the shop.", "routine-feedback")) form.reset();
+  }, "Reward added to the shop.", "reward-feedback")) form.reset();
+});
+document.getElementById("wishlist-form").addEventListener("submit", (event) => {
+  event.preventDefault();
+  const member = getFunMember();
+  const form = event.currentTarget;
+  const title = form.elements.title.value.trim();
+  const icon = form.elements.icon.value;
+  if (!member || !isFunText(title, 60) || !Object.hasOwn(wishIcons, icon)) {
+    funMessage("Choose a profile, an icon, and a wish of up to 60 characters.", true, "reward-feedback");
+    return;
+  }
+  if (commitFunChange(() => {
+    funState.wishes ||= [];
+    funState.wishes.unshift({ id: funId(), memberId: member.id, title, icon });
+  }, "Wish added! A grown-up can set its reward-star price.", "reward-feedback")) form.reset();
+});
+document.getElementById("reward-goal-redeem").addEventListener("click", () => {
+  const wish = getWishGoal(getFunMember());
+  if (wish) requestReward(wish.id, true);
 });
 document.getElementById("celebration-form").addEventListener("submit", (event) => {
   event.preventDefault();
