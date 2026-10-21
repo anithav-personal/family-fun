@@ -590,7 +590,7 @@ body { background: radial-gradient(ellipse at 10% 5%, #e5f2e9, transparent 45%),
 .app-shell .welcome { border: 1px solid #d1e3d1; background: linear-gradient(120deg, #e1f2e6, #fff1d7); }
 .welcome-shortcuts { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
 .welcome-shortcuts .data-button { background: #fff; }
-.app-shell .theme-tabs { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 10px; padding: 9px; border-radius: 18px; background: #e6eee7; }
+.app-shell .theme-tabs { grid-template-columns: repeat(var(--section-columns, 6), minmax(0, 1fr)); gap: 10px; padding: 9px; border-radius: 18px; background: #e6eee7; }
 .app-shell .theme-tab { min-width: 0; min-height: 78px; justify-content: flex-start; padding: 12px; color: var(--ink); text-align: left; border: 2px solid transparent; }
 .app-shell .theme-tab.is-active { border-color: var(--green); background: #fff; box-shadow: 0 4px 0 #26735d20; }
 .app-shell .tab-icon { display: grid; width: 36px; min-width: 36px; height: 36px; place-items: center; border-radius: 11px; background: #d6e9e1; color: #245f4c; font-size: 24px; }
@@ -698,6 +698,37 @@ html[data-theme="dark"] .app-shell :is(.member-stars, .assignment-reward) { colo
 }
 .profile-reward-time { grid-column: 1 / -1; border: 2px solid #a694d6; background: #f0eafb; }
 .profile-reward-time dd { color: #4e357d; }
+.parent-pin-dialog h2 { overflow-wrap: anywhere; }
+.parent-pin-dialog .fun-field { display: grid; gap: 8px; margin-top: 16px; }
+.parent-pin-dialog input { width: 100%; min-height: 48px; font-size: 22px; letter-spacing: 5px; }
+.parent-pin-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 18px; }
+.earnings-celebration { position: fixed; z-index: 20; right: 20px; bottom: 20px; width: min(340px, calc(100vw - 40px)); padding: 18px; border: 2px solid #c5a4df; border-radius: 24px; background: #fff7e9; color: #513461; box-shadow: 0 12px 40px #41264b35; pointer-events: none; overflow-wrap: anywhere; }
+.earnings-celebration > strong { display: block; font-size: 18px; }
+.earnings-row { display: flex; align-items: center; gap: 14px; min-height: 84px; font-size: 19px; font-weight: 800; }
+.earnings-art { position: relative; flex: none; display: grid; place-items: center; width: 68px; height: 76px; padding-top: 20px; font-size: 40px; }
+.earnings-bank { width: 78px; height: 64px; }
+.app-shell .routine-reward-badge { display: inline-block; align-self: flex-start; width: fit-content; max-width: 100%; margin-top: 5px; padding: 4px 10px; border-radius: 20px; font-size: 14px; font-weight: 800; overflow-wrap: anywhere; }
+.app-shell .routine-detail > .routine-star-coins { background: #fff0b7; color: #704d13; }
+.app-shell .routine-detail > .routine-game-minutes { background: #eadfff; color: #573780; }
+.app-shell .routine-detail > .routine-task-title { padding: 7px 10px; border-radius: 8px; background: #fff4c9; color: #4b3918; font-size: 17px; font-weight: 800; }
+.app-shell .routine-detail > .routine-time-note { margin-left: 12px; color: var(--muted); font-size: 14px; font-weight: 500; }
+.app-shell .routine-entry.is-complete .routine-task-title { background: none; color: var(--muted); }
+html[data-theme="dark"] .app-shell .routine-detail > .routine-task-title { background: #443921; color: #ffebae; }
+html[data-theme="dark"] .app-shell .routine-entry.is-complete .routine-task-title { background: none; color: var(--muted); }
+html[data-theme="dark"] .app-shell .routine-star-coins { background: #4b3b1d; color: #ffe392; }
+html[data-theme="dark"] .app-shell .routine-game-minutes { background: #41305c; color: #e6d7ff; }
+.earning-token { position: absolute; top: 0; left: 24px; display: grid; place-items: center; width: 24px; height: 24px; border: 2px solid #bd8c28; border-radius: 50%; background: #ffda5b; color: #7a4a15; font-size: 16px; opacity: 0; }
+.earnings-minutes .earning-token { border-color: #7460ad; background: #d6c6ff; color: #4c357f; }
+html[data-theme="dark"] .earnings-celebration { background: #30243c; color: #fff0d5; border-color: #9370ae; }
+@media (prefers-reduced-motion: no-preference) {
+  .earning-token { animation: earning-token-drop 1.1s calc(var(--token) * .25s) 2 both; }
+  .earnings-art { animation: earning-bank-bounce .7s .6s 3; }
+  @keyframes earning-token-drop { 0% { opacity: 0; transform: translateY(-14px) scale(.7); } 20% { opacity: 1; } 75% { opacity: 1; } 100% { opacity: 0; transform: translateY(44px) scale(.4); } }
+  @keyframes earning-bank-bounce { 50% { transform: translateY(3px) scale(1.06, .94); } }
+}
+@media (prefers-reduced-motion: reduce) {
+  .earning-token:first-child { opacity: 1; }
+}
 .app-shell .member-heading h4 { max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
 html[data-theme="dark"] .profile-picker { background: #18251e; }
 html[data-theme="dark"] .profile-reward-time { border-color: #907bc4; background: #302642; }

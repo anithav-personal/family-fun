@@ -169,6 +169,8 @@ html[data-theme="dark"][data-play-theme="cube"] .primary-button { background: #3
 .app-shell .wish-icon { align-self: flex-start; display: grid; place-items: center; width: 62px; height: 62px; border-radius: 18px; background: #ffe7a4; font-size: 36px; }
 .app-shell .wish-goal-label { align-self: flex-start; padding: 5px 10px; border-radius: 20px; background: #e5d9ff; color: #57357a; font-weight: 800; }
 .wish-price-form { margin-bottom: 0; }
+.greenlight-reward { border: 2px solid #8ac8a2; background: #effaf0; }
+html[data-theme="dark"] .greenlight-reward { border-color: #5c9872; background: #20382b; }
 @media (prefers-reduced-motion: no-preference) {
   .piggy-coin { animation: piggy-coin-float 3s ease-in-out infinite; }
   @keyframes piggy-coin-float { 50% { transform: translateY(-5px); } }

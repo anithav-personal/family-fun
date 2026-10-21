@@ -77,6 +77,7 @@ try {
 }
 
 function activateTheme(theme, focusTab = false) {
+  if (theme === "settings" && !canUseParentSettings()) theme = "routine";
   const tabs = [...document.querySelectorAll("[data-theme-tab]")];
   if (!tabs.some((tab) => tab.dataset.themeTab === theme)) theme = "routine";
   for (const tab of tabs) {
@@ -110,13 +111,14 @@ for (const tab of themeTabs) {
   tab.addEventListener("keydown", (event) => {
     if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
     event.preventDefault();
-    const currentIndex = themeTabs.indexOf(tab);
+    const visibleTabs = themeTabs.filter((candidate) => !candidate.hidden);
+    const currentIndex = visibleTabs.indexOf(tab);
     let nextIndex = currentIndex;
-    if (event.key === "ArrowLeft") nextIndex = (currentIndex - 1 + themeTabs.length) % themeTabs.length;
-    if (event.key === "ArrowRight") nextIndex = (currentIndex + 1) % themeTabs.length;
+    if (event.key === "ArrowLeft") nextIndex = (currentIndex - 1 + visibleTabs.length) % visibleTabs.length;
+    if (event.key === "ArrowRight") nextIndex = (currentIndex + 1) % visibleTabs.length;
     if (event.key === "Home") nextIndex = 0;
-    if (event.key === "End") nextIndex = themeTabs.length - 1;
-    activateTheme(themeTabs[nextIndex].dataset.themeTab, true);
+    if (event.key === "End") nextIndex = visibleTabs.length - 1;
+    activateTheme(visibleTabs[nextIndex].dataset.themeTab, true);
   });
 }
 
@@ -598,8 +600,9 @@ function completeAssignment(assignmentId, date) {
   }, `${assignment.title} completed${assignment.startDate ? ` for ${formatMealDate(date)}` : ""}. ${assignment.reward
     ? `+${assignment.reward} ${assignment.kind === "chore" ? "game minutes" : "reward stars"}. Reward earned once for this occurrence!`
     : "Checklist step saved. No reward assigned."}`);
-  if (saved && typeof recordFunActivity === "function") {
-    recordFunActivity(member.id, "chore", `Completed: ${assignment.title}`);
+  if (saved) {
+    celebrateEarnings(member.id, assignment.kind === "task" ? assignment.reward : 0, earnedMinutes);
+    if (typeof recordFunActivity === "function") recordFunActivity(member.id, "chore", `Completed: ${assignment.title}`);
   }
 }
 
@@ -658,6 +661,25 @@ function createAssignmentScheduleEditor(assignment) {
     label.append(input);
     form.append(label);
   }
+  if (canUseParentSettings()) {
+    const label = document.createElement("label");
+    label.textContent = assignment.kind === "task" ? "Reward stars (star coins)" : "Game minutes";
+    const input = document.createElement("input");
+    input.name = "reward";
+    input.type = "number";
+    input.min = "0";
+    input.max = "1000";
+    input.step = "1";
+    input.value = assignment.reward;
+    input.required = true;
+    input.setAttribute("aria-label", `${assignment.title}: reward for future completions`);
+    label.append(input);
+    form.append(label);
+    const note = document.createElement("p");
+    note.className = "fun-note schedule-note";
+    note.textContent = "Reward changes apply to future completions only. Past earnings are kept and are not recalculated.";
+    form.append(note);
+  }
   const save = document.createElement("button");
   save.className = "text-button";
   save.type = "submit";
@@ -676,6 +698,7 @@ function createAssignmentScheduleEditor(assignment) {
     event.preventDefault();
     const updated = {
       ...assignment,
+      reward: canUseParentSettings() && form.elements.reward ? Number(form.elements.reward.value) : assignment.reward,
       time: form.elements.time.value,
       period: form.elements.period.value,
       optional: form.elements.optional.value === "optional",
@@ -689,8 +712,8 @@ function createAssignmentScheduleEditor(assignment) {
     if (updated.notification) {
       updated.notification.notifiedDates = updated.notification.notifiedDates.filter((date) => isAssignmentDue(updated, date));
     }
-    if (!isValidAssignment(updated)) {
-      setAssignmentFeedback("Choose a valid start date, time, and repeat option.", true);
+    if (!isValidAssignment(updated) || (form.elements.reward && (updated.reward < 0 || updated.reward > 1000))) {
+      setAssignmentFeedback("Choose a valid schedule and a whole-number reward from 0 to 1,000.", true);
       return;
     }
     if (commitAssignmentChange(() => Object.assign(assignment, updated), `${assignment.title}'s schedule updated.`) && updated.notification) {
@@ -823,16 +846,23 @@ function createRoutineEntry(assignment, date) {
   detail.className = "routine-detail";
   const title = document.createElement("strong");
   title.textContent = assignment.title;
+  title.className = "routine-task-title";
   const time = document.createElement(assignment.time ? "time" : "span");
   if (assignment.time) time.dateTime = `${date}T${assignment.time}`;
-  time.textContent = formatAssignmentTime(assignment.time);
+  time.textContent = `\u2022 ${formatAssignmentTime(assignment.time)}`;
+  time.className = "routine-time-note";
   const meta = document.createElement("span");
   const member = members.find((item) => item.id === assignment.memberId);
-  meta.textContent = `${member.name} · ${assignment.kind === "chore" ? "Chore" : "Task"} · ${assignment.reward
-    ? `+${assignment.reward} ${assignment.kind === "chore" ? "game minutes" : "reward stars"}`
-    : "No reward"}`;
+  meta.textContent = `${member.name} · ${assignment.kind === "chore" ? "Chore" : "Task"}`;
   if (assignment.notification) meta.textContent += ` · ${assignment.notification.kind} ${assignment.notification.minutesBefore ? `${assignment.notification.minutesBefore} min before` : "at start"}`;
-  detail.append(time, title, meta);
+  const reward = document.createElement("span");
+  reward.className = `routine-reward-badge ${assignment.kind === "task" ? "routine-star-coins" : "routine-game-minutes"}`;
+  reward.textContent = assignment.kind === "task"
+    ? `\u2605 ${assignment.reward ? "+" : ""}${assignment.reward} Reward stars`
+    : `\u{1F3AE} ${assignment.reward ? "+" : ""}${assignment.reward} game minutes`;
+  reward.title = assignment.reward ? "Earned once when this occurrence is completed."
+    : "No reward assigned. An unlocked parent can set a reward in Calendar using Edit schedule & rewards.";
+  detail.append(title, time, meta, reward);
   row.append(detail, createAssignmentCompleteButton(assignment, date));
   return row;
 }
@@ -965,6 +995,7 @@ function setDataFeedback(message, isError = false) {
 }
 
 async function exportData() {
+  if (!requireParentSettings()) return;
   const content = JSON.stringify(createDataExport(), null, 2);
   const filename = `family-fun-backup-${toDateKey(new Date())}.json`;
   try {
@@ -1061,6 +1092,8 @@ function importData(data) {
   } else {
     localStorage.removeItem("family-fun-game-completed");
   }
+  unlockedParentId = "";
+  parentSetupUnlocked = false;
   events = data.events;
   members = data.members;
   assignments = data.assignments;
@@ -1085,15 +1118,17 @@ function importData(data) {
 
 document.getElementById("export-data").addEventListener("click", exportData);
 document.getElementById("import-data").addEventListener("click", () => {
+  if (!requireParentSettings()) return;
   document.getElementById("import-file").click();
 });
 document.getElementById("import-file").addEventListener("change", async (event) => {
   const input = event.currentTarget;
   const file = input.files?.[0];
   input.value = "";
-  if (!file) return;
+  if (!file || !requireParentSettings()) return;
   try {
     const backup = JSON.parse(await file.text());
+    if (!requireParentSettings()) return;
     const data = validateImportedData(backup);
     if (!data) {
       setDataFeedback("That file is not a valid Family Fun backup.", true);
@@ -1712,6 +1747,7 @@ function renderRewards() {
     goalForm.append(goalLabel, updateGoal);
     goalForm.addEventListener("submit", (submitEvent) => {
       submitEvent.preventDefault();
+      if (!requireParentSettings()) return;
       const newGoal = Number(goalInput.value);
       if (!Number.isInteger(newGoal) || newGoal < 1 || newGoal > 100000) return;
       member.goal = newGoal;
@@ -1737,6 +1773,7 @@ function renderRewards() {
     ageForm.append(ageLabel, saveAge);
     ageForm.addEventListener("submit", (submitEvent) => {
       submitEvent.preventDefault();
+      if (!requireParentSettings()) return;
       const age = ageInput.value ? Number(ageInput.value) : null;
       if (age !== null && (!Number.isInteger(age) || age < 1 || age > 120)) {
         document.getElementById("profile-feedback").textContent = "Use a whole-number age between 1 and 120, or leave it blank.";
@@ -1766,6 +1803,7 @@ function renderRewards() {
       }
       themeSelect.value = member.playTheme || "blocks";
       themeSelect.addEventListener("change", () => {
+        if (!requireParentSettings()) return;
         member.playTheme = themeSelect.value;
         const saved = saveRewards();
         renderRewards();
@@ -1801,7 +1839,7 @@ function renderRewards() {
     const edit = document.createElement("button");
     edit.type = "button";
     edit.className = "text-button";
-    edit.textContent = "Edit schedule";
+    edit.textContent = canUseParentSettings() ? "Edit schedule & rewards" : "Edit schedule";
     edit.setAttribute("aria-label", `Edit schedule for ${assignment.title}`);
     edit.setAttribute("aria-expanded", "false");
     edit.addEventListener("click", () => {
@@ -1841,8 +1879,9 @@ function renderRewards() {
 
 function renderProfileSelector() {
   const selector = document.getElementById("active-profile");
-  if (!members.some((member) => member.id === activeMemberId)) {
-    activeMemberId = members[0]?.id || "";
+  const selectedMember = members.find((member) => member.id === activeMemberId);
+  if ((!selectedMember && !parentSetupUnlocked) || (selectedMember?.role === "adult" && !isUnlockedParent(selectedMember))) {
+    activeMemberId = members.find((member) => member.role === "child")?.id || "";
   }
 
   selector.replaceChildren();
@@ -1854,10 +1893,18 @@ function renderProfileSelector() {
     selector.disabled = true;
   } else {
     selector.disabled = false;
+    if (!activeMemberId) {
+      const placeholder = document.createElement("option");
+      placeholder.value = "";
+      placeholder.textContent = "Choose a family member";
+      placeholder.disabled = true;
+      placeholder.selected = true;
+      selector.append(placeholder);
+    }
     for (const member of members) {
       const option = document.createElement("option");
       option.value = member.id;
-      option.textContent = member.name;
+      option.textContent = `${member.name}${member.role === "adult" ? " (parent PIN)" : ""}`;
       option.selected = member.id === activeMemberId;
       selector.append(option);
     }
@@ -1878,9 +1925,10 @@ function renderProfileSelector() {
   else {
     const note = document.createElement("p");
     note.className = "fun-note";
-    note.textContent = "No profiles yet. Add your family in Settings to start playing.";
+    note.textContent = "No profiles yet. A grown-up can use Parent setup to get started.";
     rewards.append(note);
   }
+  updateParentControls();
   renderDailyRoutine();
 }
 
@@ -1908,22 +1956,37 @@ document.getElementById("profile-picker-settings").addEventListener("click", () 
   document.getElementById("manage-profiles").click();
 });
 
-document.getElementById("active-profile").addEventListener("change", (event) => {
-  activeMemberId = event.currentTarget.value;
+function applyProfileSelection(memberId) {
+  const member = members.find((candidate) => candidate.id === memberId);
+  if (!member || (member.role === "adult" && !isUnlockedParent(member))) return;
+  if (member.role !== "adult") {
+    unlockedParentId = "";
+    parentSetupUnlocked = false;
+  }
+  activeMemberId = memberId;
+  document.getElementById("earnings-celebration").hidden = true;
   try {
     localStorage.setItem("family-fun-active-profile", activeMemberId);
   } catch {
     setDataFeedback("Profile changed for this visit, but could not be saved. Check browser storage before closing the page.", true);
   }
-  renderProfileSelector();
+  renderRewards();
   document.getElementById("alert-member").value = activeMemberId;
   document.getElementById("routine-member").value = activeMemberId;
   renderRoutineChart();
   renderGameForProfile();
   profilePicker.close();
+}
+document.getElementById("active-profile").addEventListener("change", (event) => {
+  const member = members.find((candidate) => candidate.id === event.currentTarget.value);
+  if (member?.role === "adult" && !isUnlockedParent(member)) {
+    renderProfileSelector();
+    requestParentUnlock(member.id);
+  } else applyProfileSelection(event.currentTarget.value);
 });
 
 document.getElementById("manage-profiles").addEventListener("click", () => {
+  if (!requireParentSettings()) return;
   activateTheme("settings");
   document.getElementById("settings-panel").scrollIntoView({ block: "start" });
   document.getElementById("settings-heading").focus({ preventScroll: true });
@@ -1931,12 +1994,17 @@ document.getElementById("manage-profiles").addEventListener("click", () => {
 
 document.getElementById("member-form").addEventListener("submit", (event) => {
   event.preventDefault();
+  if (!requireParentSettings()) return;
   const form = event.currentTarget;
   const name = form.elements.name.value.trim();
   const goal = Number(form.elements.goal.value);
   const age = form.elements.age.value ? Number(form.elements.age.value) : null;
   const relationship = form.elements.relationship.value;
   const playTheme = form.elements.playTheme.value;
+  if (parentSetupUnlocked && relationship === "Kid") {
+    document.getElementById("profile-feedback").textContent = "Add a parent profile first to finish parent setup.";
+    return;
+  }
   if (!name || !["Kid", "Mom", "Dad", "Adult"].includes(relationship) ||
       !["blocks", "cube", "classic"].includes(playTheme) ||
       (age !== null && (!Number.isInteger(age) || age < 1 || age > 120)) ||
@@ -1956,6 +2024,8 @@ document.getElementById("member-form").addEventListener("submit", (event) => {
     brainStars: 0,
   });
   activeMemberId = memberId;
+  unlockedParentId = relationship === "Kid" ? "" : memberId;
+  parentSetupUnlocked = false;
   let selectedProfileSaved = true;
   try {
     localStorage.setItem("family-fun-active-profile", memberId);
@@ -2460,9 +2530,11 @@ function getHealthyEntry(memberId) {
 function saveHealthyQuest() {
   try {
     localStorage.setItem("family-fun-healthy-quest", JSON.stringify(healthyQuest));
+    return true;
   } catch {
     document.getElementById("healthy-feedback").textContent =
       "Browser storage is unavailable. Healthy Quest progress may not be saved.";
+    return false;
   }
 }
 
@@ -2556,9 +2628,10 @@ function awardHealthyQuestIfComplete(member, entry) {
       entry.water < waterCupGoal) return false;
   entry.rewarded = true;
   member.stars += 1;
-  saveHealthyQuest();
-  saveRewards();
+  const questSaved = saveHealthyQuest();
+  const rewardSaved = saveRewards();
   renderRewards();
+  if (questSaved && rewardSaved) celebrateEarnings(member.id, 1);
   document.getElementById("healthy-feedback").textContent =
     `${member.name} completed the Healthy Hero Quest and earned a bonus reward star!`;
   showCelebration({
@@ -2802,8 +2875,9 @@ document.getElementById("answer-form").addEventListener("submit", (event) => {
         member.gameMinutes = (member.gameMinutes || 0) + (newBadgeCount - previousBadgeCount) * 10;
         earnedBrainBadge = true;
       }
-      saveRewards();
+      const rewardSaved = saveRewards();
       renderRewards();
+      if (rewardSaved) celebrateEarnings(member.id, 1, earnedBrainBadge ? 10 : 0);
     }
     try {
       localStorage.setItem("family-fun-game-achievements", JSON.stringify(gameAchievements));
