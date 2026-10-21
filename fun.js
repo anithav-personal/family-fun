@@ -362,7 +362,7 @@ function renderArcade(member) {
   document.getElementById("arcade-practice").hidden = !member || game === "memory";
   const status = document.getElementById("arcade-status");
   if (!member) {
-    status.textContent = "Add or select a family profile in Teamwork to play.";
+    status.textContent = "Add and select a family profile in Settings to play.";
     return;
   }
   const completed = getFunProfile(member.id).arcade[toDateKey(new Date())] || [];
@@ -706,8 +706,8 @@ function renderFunHub() {
   const member = getFunMember();
   document.getElementById("fun-wallet").textContent = member ? `${member.stars} stars to spend` : "";
   document.getElementById("fun-profile-note").textContent = member
-    ? `Playing as ${member.name}. Progress stays in this browser. Switch profiles to play for someone else.`
-    : "No profiles yet. Add family members under Teamwork to start playing.";
+    ? `Playing as ${member.name}. Progress stays in this browser. Change the active family member in Settings to play for someone else.`
+    : "No profiles yet. Add family members in Settings to start playing.";
   document.querySelectorAll("#celebration-form input, #celebration-form button").forEach((control) => { control.disabled = !member; });
   renderAdventure();
   renderArcade(member);
@@ -779,7 +779,7 @@ document.getElementById("spin-dinner").addEventListener("click", () => {
 document.getElementById("spin-helper").addEventListener("click", () => {
   document.getElementById("spinner-result").textContent = members.length
     ? `Today's kitchen helper: ${members[Math.floor(Math.random() * members.length)].name}! An adult chooses a safe job.`
-    : "Add a family profile in Teamwork first.";
+    : "Add a family profile in Settings first.";
 });
 
 document.getElementById("spinner-date").value = toDateKey(new Date());

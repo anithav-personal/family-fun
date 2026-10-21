@@ -89,6 +89,12 @@ function activateTheme(theme, focusTab = false) {
   for (const panel of document.querySelectorAll("[data-theme-panel]")) {
     panel.hidden = panel.dataset.themePanel !== theme;
   }
+  document.getElementById("section-guide").textContent = {
+    calendar: "Calendar: choose a day to see family plans and timed chores or tasks.",
+    meals: "Meals: plan by date, check your kitchen supplies, and spin for dinner.",
+    settings: "Settings: manage family profiles, ages, play themes, appearance, and backups.",
+    fun: "Play Time: give your brain a boost, grow your pet, and celebrate little wins.",
+  }[theme];
   try {
     localStorage.setItem("family-fun-active-tab", theme);
   } catch {
@@ -362,10 +368,11 @@ function isValidMember(member) {
 function isValidEvent(event) {
   return event &&
     typeof event.id === "string" &&
-    typeof event.date === "string" &&
-    /^\d{4}-\d{2}-\d{2}$/.test(event.date) &&
+    isValidDateKey(event.date) &&
     typeof event.title === "string" &&
-    typeof event.person === "string";
+    typeof event.person === "string" &&
+    (event.memberId === undefined || typeof event.memberId === "string") &&
+    isValidScheduleOptions(event);
 }
 
 function isValidAssignment(assignment) {
@@ -375,7 +382,384 @@ function isValidAssignment(assignment) {
     typeof assignment.title === "string" &&
     (assignment.kind === "chore" || assignment.kind === "task") &&
     Number.isInteger(assignment.reward) && assignment.reward > 0 &&
-    typeof assignment.completed === "boolean";
+    typeof assignment.completed === "boolean" &&
+    (assignment.startDate === undefined || isValidDateKey(assignment.startDate)) &&
+    isValidScheduleOptions(assignment) &&
+    (assignment.completedDates === undefined ||
+      (Array.isArray(assignment.completedDates) &&
+        new Set(assignment.completedDates).size === assignment.completedDates.length &&
+        assignment.completedDates.every((date) => isAssignmentDue(assignment, date)))) &&
+    (!(assignment.recurrence && assignment.recurrence !== "none") ||
+      (isValidDateKey(assignment.startDate) && Array.isArray(assignment.completedDates) && !assignment.completed)) &&
+    ((assignment.recurrence && assignment.recurrence !== "none") || !assignment.completedDates?.length);
+}
+
+function isAssignmentDue(assignment, date) {
+  const startDate = assignment.startDate || assignment.date;
+  if (!isValidDateKey(date) || !isValidDateKey(startDate) || date < startDate) return false;
+  const recurrence = assignment.recurrence || "none";
+  if (recurrence === "none") return date === startDate;
+  if (recurrence === "daily") return true;
+  const start = dateFromKey(startDate);
+  const occurrence = dateFromKey(date);
+  if (recurrence === "weekly") return occurrence.getDay() === start.getDay();
+  if (recurrence !== "monthly") return false;
+  const lastDay = new Date(occurrence.getFullYear(), occurrence.getMonth() + 1, 0).getDate();
+  return occurrence.getDate() === Math.min(start.getDate(), lastDay);
+}
+
+function isValidScheduleOptions(plan) {
+  const notification = plan.notification;
+  return (plan.time === undefined || plan.time === "" ||
+      (typeof plan.time === "string" && /^([01]\d|2[0-3]):[0-5]\d$/.test(plan.time))) &&
+    (plan.recurrence === undefined || ["none", "daily", "weekly", "monthly"].includes(plan.recurrence)) &&
+    (notification === undefined ||
+      (notification && (notification.kind === "reminder" || notification.kind === "alarm") &&
+        Boolean(plan.time) && isValidDateKey(plan.startDate || plan.date) &&
+        [0, 5, 15, 30, 60].includes(notification.minutesBefore) &&
+        Array.isArray(notification.notifiedDates) &&
+        new Set(notification.notifiedDates).size === notification.notifiedDates.length &&
+        notification.notifiedDates.every((date) => isAssignmentDue(plan, date))));
+}
+
+function getEventsForDate(date, memberId = "") {
+  const member = members.find((item) => item.id === memberId);
+  return events.filter((event) => isAssignmentDue(event, date) &&
+    (!memberId || event.memberId === memberId || (!event.memberId &&
+      (event.person === "Everyone" || event.person === member?.name))))
+    .sort((a, b) => (a.time || "24:00").localeCompare(b.time || "24:00") || a.title.localeCompare(b.title));
+}
+
+function readPlanNotification(form, previous) {
+  return form.elements.notificationKind.value === "none" ? undefined : {
+    kind: form.elements.notificationKind.value,
+    minutesBefore: Number(form.elements.minutesBefore.value),
+    notifiedDates: previous?.notifiedDates || [],
+  };
+}
+
+function isAssignmentComplete(assignment, date) {
+  return assignment.recurrence && assignment.recurrence !== "none"
+    ? assignment.completedDates.includes(date)
+    : assignment.completed;
+}
+
+function getAssignmentsForDate(date, memberId = "") {
+  return assignments.filter((assignment) =>
+    (!memberId || assignment.memberId === memberId) &&
+    members.some((member) => member.id === assignment.memberId) &&
+    isAssignmentDue(assignment, date))
+    .sort((a, b) => (a.time || "24:00").localeCompare(b.time || "24:00") || a.title.localeCompare(b.title));
+}
+
+function formatAssignmentTime(time) {
+  if (!time) return "Any time";
+  const [hour, minute] = time.split(":").map(Number);
+  return new Date(2000, 0, 1, hour, minute).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+}
+
+function assignmentScheduleLabel(assignment) {
+  if (!assignment.startDate) return "Not scheduled - edit schedule to add to the calendar";
+  const repeat = { none: "Once", daily: "Daily", weekly: "Weekly", monthly: "Monthly" }[assignment.recurrence || "none"];
+  return `${repeat} from ${formatMealDate(assignment.startDate)} · ${formatAssignmentTime(assignment.time)}`;
+}
+
+function setAssignmentFeedback(message, isError = false) {
+  for (const id of ["assignment-feedback", "calendar-feedback"]) {
+    const feedback = document.getElementById(id);
+    feedback.textContent = message;
+    feedback.classList.toggle("is-error", isError);
+  }
+}
+
+function refreshAssignmentViews() {
+  renderRewards();
+  renderCalendar();
+  renderAgenda();
+}
+
+function commitEventChange(change, message) {
+  const oldEvents = structuredClone(events);
+  try {
+    change();
+    if (!events.every(isValidEvent)) throw new Error("Invalid event data");
+    localStorage.setItem("family-fun-events", JSON.stringify(events));
+  } catch {
+    events = oldEvents;
+    refreshAssignmentViews();
+    setAssignmentFeedback("Could not save this event change. No events were changed. Check browser storage and try again.", true);
+    return false;
+  }
+  refreshAssignmentViews();
+  setAssignmentFeedback(message);
+  return true;
+}
+
+function createCalendarEventEntry(event, date) {
+  const row = document.createElement("li");
+  row.className = "routine-entry event-entry";
+  const detail = document.createElement("div");
+  detail.className = "routine-detail";
+  const title = document.createElement("strong");
+  title.textContent = event.title;
+  const time = document.createElement(event.time ? "time" : "span");
+  if (event.time) time.dateTime = `${date}T${event.time}`;
+  time.textContent = formatAssignmentTime(event.time);
+  const meta = document.createElement("span");
+  meta.textContent = `${event.person} · Event${event.recurrence && event.recurrence !== "none" ? ` · ${event.recurrence}` : ""}`;
+  if (event.notification) meta.textContent += ` · ${event.notification.kind} ${event.notification.minutesBefore ? `${event.notification.minutesBefore} min before` : "at start"}`;
+  detail.append(time, title, meta);
+  const remove = document.createElement("button");
+  remove.className = "delete-event";
+  remove.type = "button";
+  remove.textContent = "×";
+  remove.setAttribute("aria-label", `Remove ${event.title}${event.recurrence && event.recurrence !== "none" ? " and all its repeats" : ""}`);
+  remove.addEventListener("click", () => commitEventChange(() => {
+    events = events.filter((item) => item.id !== event.id);
+  }, `${event.title} and its scheduled repeats removed.`));
+  row.append(detail, remove);
+  return row;
+}
+
+function appendCalendarEntries(list, dayEvents, dayAssignments, date) {
+  const entries = [
+    ...dayEvents.map((plan) => ({ plan, event: true })),
+    ...dayAssignments.map((plan) => ({ plan, event: false })),
+  ].sort((a, b) => (a.plan.time || "24:00").localeCompare(b.plan.time || "24:00") || a.plan.title.localeCompare(b.plan.title));
+  for (const entry of entries) list.append(entry.event
+    ? createCalendarEventEntry(entry.plan, date)
+    : createRoutineEntry(entry.plan, date));
+}
+
+function commitAssignmentChange(change, message) {
+  const oldAssignments = structuredClone(assignments);
+  const oldMembers = structuredClone(members);
+  let storedAssignments;
+  let assignmentsSaved = false;
+  try {
+    storedAssignments = localStorage.getItem("family-fun-assignments");
+    change();
+    if (!assignments.every(isValidAssignment) || !members.every(isValidMember)) throw new Error("Invalid assignment data");
+    localStorage.setItem("family-fun-assignments", JSON.stringify(assignments));
+    assignmentsSaved = true;
+    localStorage.setItem("family-fun-members", JSON.stringify(members));
+  } catch {
+    assignments = oldAssignments;
+    members = oldMembers;
+    let rollbackFailed = false;
+    if (assignmentsSaved) {
+      try {
+        if (storedAssignments === null) localStorage.removeItem("family-fun-assignments");
+        else localStorage.setItem("family-fun-assignments", storedAssignments);
+      } catch {
+        rollbackFailed = true;
+      }
+    }
+    refreshAssignmentViews();
+    setAssignmentFeedback(rollbackFailed
+      ? "Saving failed and browser storage could not be restored. Export a backup before reloading."
+      : "Could not save this change. No chores, tasks, or rewards were changed. Check browser storage and try again.", true);
+    return false;
+  }
+  refreshAssignmentViews();
+  setAssignmentFeedback(message);
+  return true;
+}
+
+function completeAssignment(assignmentId, date) {
+  const assignment = assignments.find((item) => item.id === assignmentId);
+  const member = members.find((item) => item.id === assignment?.memberId);
+  if (!assignment || !member || !isValidDateKey(date) ||
+      (assignment.startDate && !isAssignmentDue(assignment, date)) ||
+      isAssignmentComplete(assignment, date) || date > toDateKey(new Date())) {
+    setAssignmentFeedback("This occurrence is already complete or is not available to complete yet.", true);
+    return;
+  }
+  const balance = assignment.kind === "chore" ? "points" : "stars";
+  if (!Number.isSafeInteger(member[balance] + assignment.reward)) {
+    setAssignmentFeedback("The reward total is too large to save safely.", true);
+    return;
+  }
+  const saved = commitAssignmentChange(() => {
+    if (assignment.recurrence && assignment.recurrence !== "none") assignment.completedDates.push(date);
+    else assignment.completed = true;
+    member[balance] += assignment.reward;
+  }, `${assignment.title} completed${assignment.startDate ? ` for ${formatMealDate(date)}` : ""}. Reward earned once for this occurrence!`);
+  if (saved && typeof recordFunActivity === "function") {
+    recordFunActivity(member.id, "chore", `Completed: ${assignment.title}`);
+  }
+}
+
+function createAssignmentCompleteButton(assignment, date) {
+  const complete = document.createElement("button");
+  const done = isAssignmentComplete(assignment, date);
+  const upcoming = date > toDateKey(new Date()) || (assignment.startDate && !isAssignmentDue(assignment, date));
+  complete.className = "complete-button";
+  complete.type = "button";
+  complete.disabled = done || upcoming;
+  complete.textContent = done ? "Done" : upcoming ? "Upcoming" : "Complete";
+  complete.setAttribute("aria-label", `${assignment.title}: ${done ? "completed" : upcoming ? "upcoming" : "complete"}${assignment.startDate ? ` for ${formatMealDate(date)}` : ""}`);
+  complete.addEventListener("click", () => completeAssignment(assignment.id, date));
+  return complete;
+}
+
+function createAssignmentScheduleEditor(assignment) {
+  const form = document.createElement("form");
+  form.className = "assignment-schedule-editor";
+  form.hidden = true;
+  const locked = assignment.completed || Boolean(assignment.completedDates?.length);
+  for (const [name, text, type] of [["startDate", "Start date", "date"], ["time", "Time (optional)", "time"], ["recurrence", "Repeat", "select"], ["notificationKind", "Reminder or alarm", "select"], ["minutesBefore", "Alert timing", "select"]]) {
+    const label = document.createElement("label");
+    label.textContent = text;
+    const input = document.createElement(type === "select" ? "select" : "input");
+    input.name = name;
+    input.setAttribute("aria-label", `${assignment.title}: ${text}`);
+    if (type === "select") {
+      const options = name === "recurrence"
+        ? [["none", "Does not repeat"], ["daily", "Daily"], ["weekly", "Weekly"], ["monthly", "Monthly"]]
+        : name === "notificationKind"
+          ? [["none", "No alert"], ["reminder", "Reminder"], ["alarm", "Alarm with sound"]]
+          : [["0", "At the scheduled time"], ["5", "5 minutes before"], ["15", "15 minutes before"], ["30", "30 minutes before"], ["60", "1 hour before"]];
+      for (const [value, title] of options) {
+        const option = document.createElement("option");
+        option.value = value;
+        option.textContent = title;
+        input.append(option);
+      }
+    } else input.type = type;
+    input.value = {
+      startDate: assignment.startDate || (locked ? "" : toDateKey(new Date())),
+      time: assignment.time || "",
+      recurrence: assignment.recurrence || "none",
+      notificationKind: assignment.notification?.kind || "none",
+      minutesBefore: String(assignment.notification?.minutesBefore || 0),
+    }[name];
+    input.required = name === "startDate";
+    input.disabled = locked && (name === "startDate" || name === "recurrence");
+    label.append(input);
+    form.append(label);
+  }
+  const save = document.createElement("button");
+  save.className = "text-button";
+  save.type = "submit";
+  save.textContent = "Save schedule";
+  form.append(save);
+  updateNotificationControls(form);
+  form.elements.time.addEventListener("change", () => updateNotificationControls(form));
+  form.elements.notificationKind.addEventListener("change", () => updateNotificationControls(form));
+  if (locked) {
+    const note = document.createElement("p");
+    note.className = "fun-note schedule-note";
+    note.textContent = "Dates and repeats are fixed after the first completion to preserve reward history. Times and alerts remain editable.";
+    form.append(note);
+  }
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const updated = {
+      ...assignment,
+      time: form.elements.time.value,
+      notification: readPlanNotification(form, assignment.notification),
+      ...(locked ? {} : {
+        startDate: form.elements.startDate.value,
+        recurrence: form.elements.recurrence.value,
+        completedDates: [],
+      }),
+    };
+    if (updated.notification) {
+      updated.notification.notifiedDates = updated.notification.notifiedDates.filter((date) => isAssignmentDue(updated, date));
+    }
+    if (!isValidAssignment(updated)) {
+      setAssignmentFeedback("Choose a valid start date, time, and repeat option.", true);
+      return;
+    }
+    if (commitAssignmentChange(() => Object.assign(assignment, updated), `${assignment.title}'s schedule updated.`) && updated.notification) {
+      await prepareCalendarAlerts(updated.notification.kind);
+    }
+  });
+  return form;
+}
+
+function renderRoutineChart() {
+  const anchor = document.getElementById("routine-week").value;
+  const selector = document.getElementById("routine-member");
+  const previous = selector.options.length ? selector.value : activeMemberId;
+  selector.replaceChildren();
+  const family = document.createElement("option");
+  family.value = "";
+  family.textContent = "Whole family";
+  selector.append(family);
+  for (const member of members) {
+    const option = document.createElement("option");
+    option.value = member.id;
+    option.textContent = member.name;
+    selector.append(option);
+  }
+  selector.value = members.some((member) => member.id === previous) ? previous : "";
+  const chart = document.getElementById("routine-days");
+  chart.replaceChildren();
+  if (!isValidDateKey(anchor)) {
+    document.getElementById("routine-summary").textContent = "Choose a valid date to view its week.";
+    return;
+  }
+  const monday = dateFromKey(anchor);
+  monday.setDate(monday.getDate() - (monday.getDay() + 6) % 7);
+  const memberId = selector.value;
+  const active = members.find((member) => member.id === memberId);
+  let count = 0;
+  let completed = 0;
+  let eventCount = 0;
+  for (let index = 0; index < 7; index += 1) {
+    const day = new Date(monday);
+    day.setDate(day.getDate() + index);
+    const key = toDateKey(day);
+    const items = getAssignmentsForDate(key, memberId);
+    const dayEvents = getEventsForDate(key, memberId);
+    const card = document.createElement("section");
+    card.className = `routine-day${key === toDateKey(new Date()) ? " is-today" : ""}`;
+    const heading = document.createElement("h4");
+    const time = document.createElement("time");
+    time.dateTime = key;
+    time.textContent = day.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
+    heading.append(time);
+    card.append(heading);
+    const list = document.createElement("ul");
+    list.className = "routine-list";
+    for (const assignment of items) {
+      count += 1;
+      if (isAssignmentComplete(assignment, key)) completed += 1;
+    }
+    eventCount += dayEvents.length;
+    appendCalendarEntries(list, dayEvents, items, key);
+    if (!items.length && !dayEvents.length) {
+      const empty = document.createElement("p");
+      empty.className = "fun-note";
+      empty.textContent = "Room for a little adventure!";
+      card.append(empty);
+    }
+    card.append(list);
+    chart.append(card);
+  }
+  document.getElementById("routine-summary").textContent =
+    `${memberId ? `${active.name}'s routine` : "Family routine"} · Week of ${formatMealDate(toDateKey(monday))} · ${completed} of ${count} tasks complete · ${eventCount} events`;
+}
+
+function createRoutineEntry(assignment, date) {
+  const row = document.createElement("li");
+  row.className = `routine-entry${isAssignmentComplete(assignment, date) ? " is-complete" : ""}`;
+  const detail = document.createElement("div");
+  detail.className = "routine-detail";
+  const title = document.createElement("strong");
+  title.textContent = assignment.title;
+  const time = document.createElement(assignment.time ? "time" : "span");
+  if (assignment.time) time.dateTime = `${date}T${assignment.time}`;
+  time.textContent = formatAssignmentTime(assignment.time);
+  const meta = document.createElement("span");
+  const member = members.find((item) => item.id === assignment.memberId);
+  meta.textContent = `${member.name} · ${assignment.kind === "chore" ? "Chore" : "Task"} · +${assignment.reward} ${assignment.kind === "chore" ? "points" : "stars"}`;
+  if (assignment.notification) meta.textContent += ` · ${assignment.notification.kind} ${assignment.notification.minutesBefore ? `${assignment.notification.minutesBefore} min before` : "at start"}`;
+  detail.append(time, title, meta);
+  row.append(detail, createAssignmentCompleteButton(assignment, date));
+  return row;
 }
 
 function isValidTodo(todo) {
@@ -810,6 +1194,7 @@ function renderAlerts() {
 function playAlarm() {
   try {
     alarmAudioContext ||= new AudioContext();
+    if (alarmAudioContext.state !== "running") return false;
     const start = alarmAudioContext.currentTime;
     for (let index = 0; index < 3; index += 1) {
       const oscillator = alarmAudioContext.createOscillator();
@@ -823,10 +1208,89 @@ function playAlarm() {
       oscillator.start(start + index * 0.45);
       oscillator.stop(start + index * 0.45 + 0.3);
     }
+    return true;
   } catch {
-    // The visible alert and browser notification remain available without audio.
+    return false;
   }
 }
+
+async function prepareCalendarAlerts(kind) {
+  const warnings = [];
+  if (kind === "alarm") {
+    try {
+      alarmAudioContext ||= new AudioContext();
+      await alarmAudioContext.resume();
+      if (alarmAudioContext.state !== "running") warnings.push("Sound is blocked by the browser.");
+    } catch {
+      warnings.push("Sound is unavailable in this browser.");
+    }
+  }
+  if ("Notification" in window) {
+    try {
+      const permission = Notification.permission === "default"
+        ? await Notification.requestPermission() : Notification.permission;
+      if (permission !== "granted") warnings.push("Browser notifications are not allowed.");
+    } catch {
+      warnings.push("Browser notification permission could not be requested.");
+    }
+  } else warnings.push("Browser notifications are unavailable.");
+  if (warnings.length) {
+    setAssignmentFeedback(`${warnings.join(" ")} In-page alerts still work while this page is open.`, true);
+  }
+  return warnings.length === 0;
+}
+
+function showCalendarNotice(kind, message) {
+  const banner = document.getElementById("alarm-banner");
+  banner.textContent = `${kind === "alarm" ? "Alarm" : "Reminder"}: ${message}`;
+  banner.hidden = false;
+  if (kind === "alarm" && !playAlarm()) {
+    banner.textContent += " (Sound blocked. Use Enable sound & notifications in Calendar.)";
+  }
+  if ("Notification" in window && Notification.permission === "granted") {
+    try {
+      new Notification(kind === "alarm" ? "Family Fun alarm" : "Family Fun reminder", { body: message });
+    } catch {
+      setAssignmentFeedback("The browser notification could not be shown. The alert is visible at the top of this page.", true);
+    }
+  }
+}
+
+function checkScheduledNotifications(now = new Date()) {
+  const tomorrow = new Date(now);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const dates = [toDateKey(now), toDateKey(tomorrow)];
+  for (const [plans, key] of [[events, "family-fun-events"], [assignments, "family-fun-assignments"]]) {
+    let changed = false;
+    for (const plan of plans) {
+      if (!plan.notification) continue;
+      for (const date of dates) {
+        if (!isAssignmentDue(plan, date) || plan.notification.notifiedDates.includes(date) ||
+            (plan.kind && isAssignmentComplete(plan, date))) continue;
+        const scheduledAt = new Date(`${date}T${plan.time}`);
+        const notifyAt = scheduledAt.getTime() - plan.notification.minutesBefore * 60000;
+        if (notifyAt > now.getTime()) continue;
+        plan.notification.notifiedDates.push(date);
+        changed = true;
+        const member = members.find((item) => item.id === plan.memberId);
+        showCalendarNotice(plan.notification.kind, `${member?.name || plan.person || "Family"}: ${plan.title} · ${formatAssignmentTime(plan.time)}`);
+      }
+    }
+    if (changed) {
+      try {
+        localStorage.setItem(key, JSON.stringify(plans));
+      } catch {
+        setAssignmentFeedback("The alert was shown, but its history could not be saved. It may repeat after reloading. Check browser storage.", true);
+      }
+    }
+  }
+}
+
+document.getElementById("enable-calendar-alerts").addEventListener("click", async () => {
+  if (await prepareCalendarAlerts("alarm")) {
+    setAssignmentFeedback("Sound and notifications are ready while this page stays open. Browser and device sleep settings can delay alerts.");
+  }
+});
 
 function checkAlerts() {
   const now = Date.now();
@@ -838,15 +1302,7 @@ function checkAlerts() {
     alert.triggered = true;
     const member = members.find((candidate) => candidate.id === alert.memberId);
     const message = `${member?.name ? `${member.name}: ` : ""}${alert.title}`;
-    const banner = document.getElementById("alarm-banner");
-    banner.textContent = `${alert.kind === "alarm" ? "Alarm" : "Reminder"}: ${message}`;
-    banner.hidden = false;
-    if (alert.kind === "alarm") playAlarm();
-    if ("Notification" in window && Notification.permission === "granted") {
-      new Notification(alert.kind === "alarm" ? "Family Fun alarm" : "Family Fun reminder", {
-        body: message,
-      });
-    }
+    showCalendarNotice(alert.kind, message);
   }
   saveAlerts();
   renderAlerts();
@@ -999,7 +1455,8 @@ function renderCalendar() {
     const date = new Date(gridStart);
     date.setDate(gridStart.getDate() + index);
     const key = toDateKey(date);
-    const dayEvents = events.filter((event) => event.date === key);
+    const dayEvents = getEventsForDate(key);
+    const dayAssignments = getAssignmentsForDate(key);
     const button = document.createElement("button");
     button.type = "button";
     button.className = "calendar-day";
@@ -1008,16 +1465,16 @@ function renderCalendar() {
       weekday: "long",
       month: "long",
       day: "numeric",
-    })}${dayEvents.length ? `, ${dayEvents.length} event${dayEvents.length === 1 ? "" : "s"}` : ""}`);
+    })}${dayEvents.length ? `, ${dayEvents.length} event${dayEvents.length === 1 ? "" : "s"}` : ""}${dayAssignments.length ? `, ${dayAssignments.length} chores or tasks` : ""}`);
     if (date.getMonth() !== displayedMonth.getMonth()) button.classList.add("outside-month");
-    if (key === todayKey) button.classList.add("is-today");
+    if (key === toDateKey(new Date())) button.classList.add("is-today");
     if (key === selectedDate) {
       button.classList.add("is-selected");
       button.setAttribute("aria-pressed", "true");
     } else {
       button.setAttribute("aria-pressed", "false");
     }
-    if (dayEvents.length) {
+    if (dayEvents.length || dayAssignments.length) {
       const dot = document.createElement("span");
       dot.className = "event-dot";
       dot.setAttribute("aria-hidden", "true");
@@ -1037,44 +1494,41 @@ function renderAgenda() {
   document.getElementById("selected-date-label").textContent =
     date.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" });
   const list = document.getElementById("event-list");
-  const dayEvents = events.filter((event) => event.date === selectedDate);
+  const dayEvents = getEventsForDate(selectedDate);
+  const dayAssignments = getAssignmentsForDate(selectedDate);
+  const planCount = dayEvents.length + dayAssignments.length;
   list.replaceChildren();
   document.getElementById("event-count").textContent =
-    `${dayEvents.length} ${dayEvents.length === 1 ? "plan" : "plans"}`;
-  document.getElementById("empty-events").hidden = dayEvents.length > 0;
-  document.getElementById("event-title").placeholder =
-    selectedDate === todayKey ? "Add a family plan…" : "Add a plan for this day…";
-
-  for (const event of dayEvents) {
-    const row = document.createElement("li");
-    row.className = "event-row";
-    const marker = document.createElement("span");
-    marker.className = "event-marker";
-    marker.setAttribute("aria-hidden", "true");
-    const title = document.createElement("span");
-    title.className = "event-title";
-    title.textContent = event.title;
-    const person = document.createElement("span");
-    person.className = "event-person";
-    person.textContent = event.person;
-    const remove = document.createElement("button");
-    remove.className = "delete-event";
-    remove.type = "button";
-    remove.textContent = "×";
-    remove.setAttribute("aria-label", `Remove ${event.title}`);
-    remove.addEventListener("click", () => {
-      events = events.filter((item) => item.id !== event.id);
-      saveEvents();
-      renderCalendar();
-      renderAgenda();
-    });
-    row.append(marker, title, person, remove);
-    list.append(row);
-  }
+    `${planCount} ${planCount === 1 ? "plan" : "plans"}`;
+  document.getElementById("empty-events").hidden = planCount > 0;
+  appendCalendarEntries(list, dayEvents, dayAssignments, selectedDate);
 }
 
 document.getElementById("today-label").textContent =
   today.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" });
+
+document.getElementById("open-today").addEventListener("click", () => {
+  const current = new Date();
+  selectedDate = toDateKey(current);
+  displayedMonth = new Date(current.getFullYear(), current.getMonth(), 1);
+  activateTheme("calendar");
+  renderCalendar();
+  renderAgenda();
+  document.getElementById("calendar-tab").focus({ preventScroll: true });
+  document.getElementById("calendar-panel").scrollIntoView({ block: "start" });
+});
+document.getElementById("open-routine").addEventListener("click", () => {
+  document.getElementById("routine-week").value = toDateKey(new Date());
+  document.getElementById("routine-member").value = activeMemberId;
+  activateTheme("calendar");
+  renderRoutineChart();
+  document.getElementById("routine-heading").focus({ preventScroll: true });
+  document.querySelector(".routine-chart").scrollIntoView({ block: "start" });
+});
+document.querySelector(".brand").addEventListener("click", (event) => {
+  event.preventDefault();
+  document.getElementById("open-today").click();
+});
 
 document.getElementById("previous-month").addEventListener("click", () => {
   displayedMonth = new Date(displayedMonth.getFullYear(), displayedMonth.getMonth() - 1, 1);
@@ -1086,21 +1540,10 @@ document.getElementById("next-month").addEventListener("click", () => {
   renderCalendar();
 });
 
-document.getElementById("event-form").addEventListener("submit", (event) => {
-  event.preventDefault();
-  const form = event.currentTarget;
-  const title = form.elements.title.value.trim();
-  if (!title) return;
-  events.push({
-    id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
-    date: selectedDate,
-    title,
-    person: form.elements.person.value,
-  });
-  saveEvents();
-  form.reset();
-  renderCalendar();
-  renderAgenda();
+document.getElementById("open-plan-form").addEventListener("click", () => {
+  assignmentForm.elements.startDate.value = selectedDate;
+  document.getElementById("calendar-plans").scrollIntoView({ block: "start" });
+  assignmentForm.elements.title.focus({ preventScroll: true });
 });
 
 function renderRewards() {
@@ -1108,18 +1551,8 @@ function renderRewards() {
   memberList.replaceChildren();
   document.getElementById("empty-members").hidden = members.length > 0;
   renderProfileSelector();
-  const childMembers = members.filter((member) => member.role === "child");
-  const memberSelect = document.getElementById("assignment-member");
-  memberSelect.replaceChildren();
-  for (const child of childMembers) {
-    const option = document.createElement("option");
-    option.value = child.id;
-    option.textContent = child.name;
-    memberSelect.append(option);
-  }
+  renderPlanAssignees();
   renderTodos();
-  memberSelect.disabled = childMembers.length === 0;
-  document.querySelector("#assignment-form button[type='submit']").disabled = childMembers.length === 0;
   document.getElementById("empty-assignments").hidden = assignments.length > 0;
 
   for (const member of members) {
@@ -1245,10 +1678,30 @@ function renderRewards() {
     const member = members.find((candidate) => candidate.id === assignment.memberId);
     if (!member) continue;
     const row = document.createElement("li");
-    row.className = `assignment-row${assignment.completed ? " is-complete" : ""}`;
+    const occurrenceDate = !assignment.recurrence || assignment.recurrence === "none"
+      ? assignment.startDate || toDateKey(new Date()) : toDateKey(new Date());
+    row.className = `assignment-row${isAssignmentComplete(assignment, occurrenceDate) ? " is-complete" : ""}`;
+    const detail = document.createElement("div");
+    detail.className = "assignment-detail";
     const title = document.createElement("span");
     title.className = "assignment-title";
     title.textContent = assignment.title;
+    const schedule = document.createElement("span");
+    schedule.className = "assignment-schedule";
+    schedule.textContent = assignmentScheduleLabel(assignment);
+    const editor = createAssignmentScheduleEditor(assignment);
+    const edit = document.createElement("button");
+    edit.type = "button";
+    edit.className = "text-button";
+    edit.textContent = "Edit schedule";
+    edit.setAttribute("aria-label", `Edit schedule for ${assignment.title}`);
+    edit.setAttribute("aria-expanded", "false");
+    edit.addEventListener("click", () => {
+      editor.hidden = !editor.hidden;
+      edit.setAttribute("aria-expanded", String(!editor.hidden));
+      if (!editor.hidden) editor.querySelector("input:not(:disabled)").focus();
+    });
+    detail.append(title, schedule, edit);
     const assignee = document.createElement("span");
     assignee.className = "assignment-assignee";
     assignee.textContent = member.name;
@@ -1257,45 +1710,26 @@ function renderRewards() {
     reward.textContent = assignment.kind === "chore"
       ? `+${assignment.reward} pts`
       : `+${assignment.reward} ★`;
-    const complete = document.createElement("button");
-    complete.className = "complete-button";
-    complete.type = "button";
-    complete.disabled = assignment.completed;
-    complete.textContent = assignment.completed ? "Done ✓" : "Complete";
-    complete.setAttribute("aria-label", assignment.completed
-      ? `${assignment.title} completed`
-      : `Mark ${assignment.title} complete`);
-    complete.addEventListener("click", () => {
-      if (assignment.completed) return;
-      assignment.completed = true;
-      if (assignment.kind === "chore") member.points += assignment.reward;
-      else member.stars += assignment.reward;
-      saveRewards();
-      if (typeof recordFunActivity === "function") {
-        recordFunActivity(member.id, "chore", `Completed: ${assignment.title}`);
-      }
-      renderRewards();
-    });
+    const complete = createAssignmentCompleteButton(assignment, occurrenceDate);
     const remove = document.createElement("button");
     remove.className = "delete-event";
     remove.type = "button";
     remove.textContent = "×";
     remove.setAttribute("aria-label", `Remove ${assignment.title}`);
     remove.addEventListener("click", () => {
-      assignments = assignments.filter((item) => item.id !== assignment.id);
-      saveRewards();
-      renderRewards();
+      commitAssignmentChange(() => {
+        assignments = assignments.filter((item) => item.id !== assignment.id);
+      }, `${assignment.title} removed from the routine and calendar. Earned rewards are kept.`);
     });
-    row.append(title, assignee, reward, complete, remove);
+    row.append(detail, assignee, reward, complete, remove, editor);
     assignmentList.append(row);
   }
+  renderRoutineChart();
   if (typeof renderFunHub === "function") renderFunHub();
 }
 
 function renderProfileSelector() {
   const selector = document.getElementById("active-profile");
-  const eventPerson = document.getElementById("event-person");
-  const selectedEventPerson = eventPerson.value;
   if (!members.some((member) => member.id === activeMemberId)) {
     activeMemberId = members[0]?.id || "";
   }
@@ -1318,29 +1752,15 @@ function renderProfileSelector() {
     }
   }
 
-  eventPerson.replaceChildren();
-  const everyone = document.createElement("option");
-  everyone.value = "Everyone";
-  everyone.textContent = "Everyone";
-  eventPerson.append(everyone);
-  for (const member of members) {
-    const option = document.createElement("option");
-    option.value = member.name;
-    option.textContent = member.name;
-    eventPerson.append(option);
-  }
   const activeMember = members.find((member) => member.id === activeMemberId);
   document.documentElement.dataset.playTheme = activeMember?.role === "child"
     ? activeMember.playTheme || "blocks"
     : "classic";
-  const eventPersonExists = [...eventPerson.options]
-    .some((option) => option.value === selectedEventPerson);
-  eventPerson.value = eventPersonExists
-    ? selectedEventPerson
-    : (activeMember?.name || "Everyone");
   document.getElementById("welcome-heading").textContent = activeMember
     ? `Make today a good one, ${activeMember.name}.`
     : "Make today a good one.";
+  document.getElementById("active-person-badge").textContent = activeMember
+    ? `Playing as ${activeMember.name}` : "Family space";
 }
 
 document.getElementById("active-profile").addEventListener("change", (event) => {
@@ -1351,16 +1771,16 @@ document.getElementById("active-profile").addEventListener("change", (event) => 
     // The selected profile remains active for this page session.
   }
   renderProfileSelector();
-  const activeMember = members.find((member) => member.id === activeMemberId);
-  document.getElementById("event-person").value = activeMember?.name || "Everyone";
   document.getElementById("alert-member").value = activeMemberId;
+  document.getElementById("routine-member").value = activeMemberId;
+  renderRoutineChart();
   renderGameForProfile();
 });
 
 document.getElementById("manage-profiles").addEventListener("click", () => {
-  activateTheme("tasks");
-  document.getElementById("member-form").scrollIntoView({ block: "center" });
-  document.querySelector("#member-form input[name=name]").focus({ preventScroll: true });
+  activateTheme("settings");
+  document.getElementById("settings-panel").scrollIntoView({ block: "start" });
+  document.getElementById("settings-heading").focus({ preventScroll: true });
 });
 
 document.getElementById("member-form").addEventListener("submit", (event) => {
@@ -1401,6 +1821,8 @@ document.getElementById("member-form").addEventListener("submit", (event) => {
   form.elements.goal.value = "100";
   renderRewards();
   renderAlerts();
+  document.getElementById("routine-member").value = memberId;
+  renderRoutineChart();
   document.getElementById("alert-member").value = memberId;
   renderGameForProfile();
   document.getElementById("profile-feedback").textContent = profileSaved && selectedProfileSaved
@@ -1408,33 +1830,152 @@ document.getElementById("member-form").addEventListener("submit", (event) => {
     : `Profile added for this visit, but could not be fully saved. Check browser storage before closing the page.`;
 });
 
-const assignmentForm = document.getElementById("assignment-form");
-assignmentForm.elements.kind.addEventListener("change", () => {
-  const isChore = assignmentForm.elements.kind.value === "chore";
-  document.getElementById("reward-label").textContent = isChore ? "Points" : "Stars";
-  assignmentForm.elements.reward.value = isChore ? "10" : "1";
-});
+function renderPlanAssignees() {
+  const form = document.getElementById("assignment-form");
+  const selector = form.elements.member;
+  const previous = selector.value;
+  const isEvent = form.elements.kind.value === "event";
+  selector.replaceChildren();
+  if (isEvent) {
+    const everyone = document.createElement("option");
+    everyone.value = "";
+    everyone.textContent = "Everyone";
+    selector.append(everyone);
+  }
+  for (const member of members) {
+    const option = document.createElement("option");
+    option.value = member.id;
+    option.textContent = member.name;
+    selector.append(option);
+  }
+  if ([...selector.options].some((option) => option.value === previous)) selector.value = previous;
+  else if (members.some((member) => member.id === activeMemberId)) selector.value = activeMemberId;
+  selector.required = !isEvent;
+  selector.disabled = !isEvent && !members.length;
+  form.querySelector("button[type=submit]").disabled = !isEvent && !members.length;
+}
 
-assignmentForm.addEventListener("submit", (event) => {
+function updateNotificationControls(form) {
+  if (!form.elements.time.value) form.elements.notificationKind.value = "none";
+  form.elements.notificationKind.disabled = !form.elements.time.value;
+  form.elements.minutesBefore.disabled = form.elements.notificationKind.value === "none";
+}
+
+function updatePlanForm(resetReward = false) {
+  const form = document.getElementById("assignment-form");
+  const isEvent = form.elements.kind.value === "event";
+  const isChore = form.elements.kind.value === "chore";
+  document.getElementById("plan-reward-field").hidden = isEvent;
+  form.elements.reward.disabled = isEvent;
+  form.elements.reward.required = !isEvent;
+  document.getElementById("reward-label").textContent = isChore ? "Points" : "Stars";
+  if (resetReward) form.elements.reward.value = isChore ? "10" : "1";
+  renderPlanAssignees();
+  updateNotificationControls(form);
+}
+
+const assignmentForm = document.getElementById("assignment-form");
+assignmentForm.elements.startDate.value = toDateKey(new Date());
+document.getElementById("routine-week").value = toDateKey(new Date());
+updatePlanForm();
+assignmentForm.elements.kind.addEventListener("change", () => updatePlanForm(true));
+assignmentForm.elements.time.addEventListener("change", () => updateNotificationControls(assignmentForm));
+assignmentForm.elements.notificationKind.addEventListener("change", () => updateNotificationControls(assignmentForm));
+
+assignmentForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   const title = assignmentForm.elements.title.value.trim();
   const member = members.find((candidate) => candidate.id === assignmentForm.elements.member.value);
   const reward = Number(assignmentForm.elements.reward.value);
-  if (!title || !member || member.role !== "child" ||
-      !Number.isInteger(reward) || reward < 1 || reward > 1000) return;
-  assignments.unshift({
+  const startDate = assignmentForm.elements.startDate.value;
+  const time = assignmentForm.elements.time.value;
+  const recurrence = assignmentForm.elements.recurrence.value;
+  const kind = assignmentForm.elements.kind.value;
+  const notification = readPlanNotification(assignmentForm);
+  const isEvent = kind === "event";
+  if (!title || (!isEvent && (!member || !Number.isInteger(reward) || reward < 1 || reward > 1000)) ||
+      (isEvent && assignmentForm.elements.member.value && !member) ||
+      !isValidDateKey(startDate) || !["event", "chore", "task"].includes(kind) ||
+      !["none", "daily", "weekly", "monthly"].includes(recurrence) ||
+      !isValidScheduleOptions({ startDate, time, recurrence, notification })) {
+    setAssignmentFeedback("Choose a title, valid date, family member for chores or tasks, and valid schedule. Alerts need a time; rewards must be between 1 and 1000.", true);
+    return;
+  }
+  const assignment = {
     id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
     title,
-    memberId: member.id,
-    kind: assignmentForm.elements.kind.value,
+    memberId: member?.id || "",
+    kind,
     reward,
     completed: false,
-  });
-  saveRewards();
+    startDate,
+    time,
+    recurrence,
+    completedDates: [],
+    notification,
+  };
+  const message = `${title} added to the calendar and routine chart.`;
+  const saved = isEvent
+    ? commitEventChange(() => events.push({
+      id: assignment.id, title, date: startDate, person: member?.name || "Everyone",
+      memberId: member?.id || "", time, recurrence, notification,
+    }), message)
+    : commitAssignmentChange(() => assignments.unshift(assignment), message);
+  if (!saved) return;
+  selectedDate = startDate;
+  const date = dateFromKey(startDate);
+  displayedMonth = new Date(date.getFullYear(), date.getMonth(), 1);
+  document.getElementById("routine-week").value = startDate;
+  document.getElementById("routine-member").value = member?.id || "";
   assignmentForm.reset();
-  document.getElementById("reward-label").textContent = "Points";
-  assignmentForm.elements.reward.value = "10";
-  renderRewards();
+  assignmentForm.elements.startDate.value = startDate;
+  updatePlanForm(true);
+  renderCalendar();
+  renderAgenda();
+  renderRoutineChart();
+  if (notification) await prepareCalendarAlerts(notification.kind);
+});
+
+document.getElementById("routine-week").addEventListener("change", renderRoutineChart);
+document.getElementById("routine-member").addEventListener("change", renderRoutineChart);
+for (const [id, offset] of [["routine-previous", -7], ["routine-next", 7], ["routine-today", 0]]) {
+  document.getElementById(id).addEventListener("click", () => {
+    const input = document.getElementById("routine-week");
+    const date = offset && isValidDateKey(input.value) ? dateFromKey(input.value) : new Date();
+    date.setDate(date.getDate() + offset);
+    const key = toDateKey(date);
+    if (!isValidDateKey(key)) {
+      setAssignmentFeedback("That week is outside the supported date range.", true);
+      return;
+    }
+    input.value = key;
+    renderRoutineChart();
+  });
+}
+
+let routineToday = toDateKey(new Date());
+function refreshRoutineDay() {
+  const current = toDateKey(new Date());
+  if (current === routineToday) return;
+  if (document.getElementById("routine-week").value === routineToday) {
+    document.getElementById("routine-week").value = current;
+  }
+  if (selectedDate === routineToday) {
+    const previous = dateFromKey(routineToday);
+    selectedDate = current;
+    if (displayedMonth.getFullYear() === previous.getFullYear() && displayedMonth.getMonth() === previous.getMonth()) {
+      const date = dateFromKey(current);
+      displayedMonth = new Date(date.getFullYear(), date.getMonth(), 1);
+    }
+  }
+  document.getElementById("today-label").textContent =
+    dateFromKey(current).toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" });
+  routineToday = current;
+  refreshAssignmentViews();
+}
+window.setInterval(refreshRoutineDay, 30000);
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden) refreshRoutineDay();
 });
 
 function renderTodos() {
@@ -2147,5 +2688,7 @@ renderAlerts();
 renderGameForProfile();
 checkTodoReminders();
 checkAlerts();
+checkScheduledNotifications();
 window.setInterval(checkTodoReminders, 30000);
 window.setInterval(checkAlerts, 1000);
+window.setInterval(checkScheduledNotifications, 1000);

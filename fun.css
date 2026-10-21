@@ -138,3 +138,21 @@ html[data-theme="dark"][data-play-theme="cube"] .primary-button { background: #3
 @media (prefers-reduced-motion: reduce) {
   .pet-accessories { animation: none; }
 }
+
+.app-shell :is(.fun-card, .fun-field, .shop-item span, .celebration-wall li span, .adventure-map li, .pet-accessories) { font-size: 15px; line-height: 1.6; }
+.app-shell :is(.fun-card summary, .fun-hub h3) { font-size: 19px; }
+.app-shell .bingo-cell { font-size: 14px; }
+.app-shell .memory-card { font-size: 26px; }
+.app-shell :is(.fun-hub, .brain-arcade) button { min-height: 44px; }
+.app-shell :is(.fun-hub, .brain-arcade) .text-button { font-size: 15px; }
+.app-shell .profile-theme-field { font-size: 14px; }
+html:is([data-play-theme="blocks"], [data-play-theme="cube"]) .app-shell h1 { font-family: Manrope, sans-serif; letter-spacing: -1px; }
+html:is([data-play-theme="blocks"], [data-play-theme="cube"]) .app-shell .welcome { padding-right: 150px; }
+html[data-theme="dark"] .app-shell .fun-feedback.is-error { color: #ffb2a6; }
+@media (max-width: 600px) {
+  html:is([data-play-theme="blocks"], [data-play-theme="cube"]) .app-shell .welcome { padding-right: 18px; }
+  html:is([data-play-theme="blocks"], [data-play-theme="cube"]) .welcome::after { display: none; }
+  .app-shell .shop-grid { grid-template-columns: 1fr; }
+  .app-shell .bingo-board { gap: 5px; }
+  .app-shell .bingo-cell { font-size: 13px; padding: 7px 4px; }
+}

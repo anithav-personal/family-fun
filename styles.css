@@ -509,3 +509,164 @@ html[data-theme="dark"] .celebration-card p { color: #bac6bf; }
   .alert-form .primary-button, .alert-form .reminder-note, .alert-form .todo-feedback { grid-column: auto; }
   .meal-name-field { grid-column: auto; }
 }
+
+.assignment-detail { display: grid; min-width: 0; justify-items: start; gap: 6px; }
+.assignment-schedule { color: var(--muted); overflow-wrap: anywhere; }
+.assignment-schedule-editor { display: grid; grid-column: 1 / -1; grid-template-columns: repeat(3, minmax(0, 1fr)) auto; align-items: end; gap: 10px; padding-top: 12px; border-top: 1px solid var(--border); }
+.assignment-schedule-editor[hidden] { display: none; }
+.assignment-schedule-editor label { display: grid; min-width: 0; gap: 6px; }
+.assignment-schedule-editor input, .assignment-schedule-editor select { width: 100%; min-width: 0; border: 1px solid var(--border); border-radius: 8px; background: white; color: var(--ink); }
+.schedule-note { grid-column: 1 / -1; }
+.routine-chart { margin-top: 28px; padding-top: 24px; border-top: 2px dashed var(--border); }
+.routine-controls { display: flex; flex-wrap: wrap; align-items: end; gap: 8px; }
+.routine-controls label { display: grid; min-width: 0; gap: 6px; }
+.routine-controls input { max-width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 8px; color: var(--ink); background: white; }
+.routine-controls select { width: 100%; max-width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 8px; color: var(--ink); background: white; }
+.routine-days { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr)); gap: 14px; }
+.routine-day { min-width: 0; padding: 14px; border: 1px solid var(--border); border-top: 5px solid #9dcab7; border-radius: 12px; background: #f6faf7; }
+.routine-day:nth-child(3n + 2) { border-top-color: #d9b5db; }
+.routine-day:nth-child(3n) { border-top-color: #eac67f; }
+.routine-day.is-today { outline: 2px solid var(--green); outline-offset: 2px; }
+.routine-day h4 { margin: 0 0 12px; color: var(--green); font-size: 17px; }
+.routine-list { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.routine-entry { display: flex; min-width: 0; flex-wrap: wrap; align-items: center; gap: 12px; padding: 12px; border: 1px solid var(--border); border-radius: 10px; background: white; }
+.routine-detail { display: grid; min-width: 0; flex: 1 1 140px; gap: 4px; overflow-wrap: anywhere; }
+.routine-detail > time, .routine-detail > span:first-child { color: var(--green); font-weight: 700; }
+.routine-detail > span:last-child { color: var(--muted); font-size: 14px; }
+.routine-entry.is-complete strong { color: var(--muted); text-decoration: line-through; }
+html[data-theme="dark"] :is(.routine-day, .routine-entry) { background: #202a25; }
+
+:root { --muted: #53665b; --border: #d8e3da; }
+body { background: radial-gradient(ellipse at 10% 5%, #e5f2e9, transparent 45%), radial-gradient(ellipse at 95% 30%, #fff1db, transparent 40%), #f8f8f3; }
+.app-shell { font-size: 16px; line-height: 1.55; }
+.app-shell :is(p, .event-title, .assignment-title, .puzzle-hint) { font-size: 16px; }
+.app-shell :is(h2, .game-card h2) { font-size: 25px; line-height: 1.3; }
+.app-shell :is(h3, .fun-card summary) { font-size: 19px; line-height: 1.4; }
+.app-shell :is(label, small, .fun-note, .event-person, .assignment-assignee, .assignment-schedule, .assignment-reward, .todo-assignees, .todo-deadline, .todo-reminder, .meal-day, .inventory-count, .goal-score, .member-stars, .member-role, .badge-heading span, .game-reward-summary span, .healthy-meter, .plant-chip, .pet-message, .pet-stage, .pet-stats span, .pet-details small, .game-footer, .page-footer, .reminder-note, .healthy-note, .inventory-heading p, .alert-detail span, .meal-detail span, .inventory-row span) { font-size: 14px; line-height: 1.5; }
+.app-shell :is(label, .event-person, .assignment-assignee, .assignment-schedule, .todo-assignees, .todo-deadline, .todo-reminder, .goal-score, .member-role, .badge-heading span, .pet-message, .pet-details small, .game-footer, .page-footer, .reminder-note, .healthy-note, .inventory-heading p, .alert-detail span, .meal-detail span, .inventory-row span, .empty-state, .fun-note, .game-intro, .welcome-copy) { color: var(--muted); }
+.app-shell :is(.eyebrow, .puzzle-label) { color: var(--green); font-size: 12px; letter-spacing: 1px; }
+.app-shell :is(.todo-detail strong, .inventory-row strong, .meal-detail strong, .alert-detail strong, .member-heading h4) { font-size: 16px; line-height: 1.5; }
+.app-shell :is(.badge-item strong, .badge-item small, .healthy-badge strong) { font-size: 13px; line-height: 1.4; }
+.app-shell input:not([type="checkbox"]):not([type="file"]), .app-shell select { min-height: 44px; min-width: 0; max-width: 100%; padding: 8px 10px; font-size: 16px; line-height: 1.4; }
+.app-shell button { min-height: 44px; font-size: 15px; line-height: 1.4; }
+.app-shell :is(.primary-button, .data-button, .text-button, .complete-button, .answer-form button) { padding: 10px 14px; }
+.app-shell :is(.delete-event, .icon-button, .water-controls button, .todo-check) { width: 44px; min-width: 44px; height: 44px; }
+.app-shell .icon-button { font-size: 25px; }
+.app-shell .delete-event { color: var(--muted); font-size: 23px; }
+.app-shell .calendar-day { min-height: 48px; font-size: 16px; }
+.app-shell .weekday-row { color: var(--muted); font-size: 14px; }
+.app-shell :is(.complete-button:disabled, .todo-check:disabled) { color: var(--muted); }
+.app-shell .section-heading { gap: 16px; flex-wrap: wrap; }
+.app-shell .member-heading, .app-shell .goal-form { flex-wrap: wrap; }
+.app-shell .member-heading > div { flex-wrap: wrap; }
+.app-shell .goal-form input { width: 86px; }
+.app-shell .member-list { grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 16px; }
+.app-shell .member-form-fields { grid-template-columns: repeat(auto-fit, minmax(min(100%, 170px), 1fr)); }
+.app-shell .assignment-form { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+.app-shell .assignment-title-field { grid-column: span 2; }
+.app-shell .assignment-row { grid-template-columns: minmax(0, 1fr) minmax(0, auto) auto auto 44px; padding: 14px; }
+.app-shell .todo-row { grid-template-columns: 44px minmax(0, 1fr) 44px; }
+.app-shell .inventory-row { grid-template-columns: minmax(0, 1fr) 44px; }
+.app-shell .meal-row { grid-template-columns: minmax(90px, 115px) minmax(0, 1fr) 44px; }
+.app-shell .meal-list { max-height: 380px; }
+.app-shell .meal-form { grid-template-columns: minmax(160px, .65fr) minmax(0, 1fr); }
+.app-shell .meal-day { text-transform: none; letter-spacing: 0; }
+.app-shell .alert-row { grid-template-columns: 30px minmax(0, 1fr) 44px; }
+.app-shell .badge-grid { grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); }
+.app-shell .healthy-badges { grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); }
+.app-shell .game-reward-summary { grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); }
+.app-shell .healthy-meters { grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); }
+.app-shell .game-reward-summary strong { font-size: 22px; }
+.app-shell .healthy-meter strong { font-size: 16px; }
+.app-shell :is(.puzzle-hint, .inventory-count, .todo-count, .event-count, .month-controls, .healthy-meter, .game-reward-summary span, .pet-stats span) { color: var(--muted); }
+.app-shell :is(.inventory-count, .todo-count, .event-count, .month-controls) { font-size: 14px; }
+.app-shell :is(.badge-item:not(.is-earned), .healthy-badge:not(.is-earned)) { color: var(--muted); }
+.app-shell #fun-wallet { color: var(--ink); font-size: 16px; }
+.app-shell :is(.is-complete .assignment-title, .todo-row.is-complete .todo-detail strong) { color: var(--muted); }
+.app-shell :is(.member-stars, .assignment-reward) { color: #805017; }
+.app-shell .answer-form button { background: #f0b96a; color: #492c0b; }
+.app-shell .healthy-food-form button { background: #347441; color: white; }
+.app-shell .card { margin-bottom: 20px; box-shadow: 0 8px 24px #223b2810; }
+.app-shell .welcome { border: 1px solid #d1e3d1; background: linear-gradient(120deg, #e1f2e6, #fff1d7); }
+.welcome-shortcuts { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
+.welcome-shortcuts .data-button { background: #fff; }
+.app-shell .theme-tabs { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; padding: 9px; border-radius: 18px; background: #e6eee7; }
+.app-shell .theme-tab { min-width: 0; min-height: 78px; justify-content: flex-start; padding: 12px; color: var(--ink); text-align: left; border: 2px solid transparent; }
+.app-shell .theme-tab.is-active { border-color: var(--green); background: #fff; box-shadow: 0 4px 0 #26735d20; }
+.app-shell .tab-icon { display: grid; width: 36px; min-width: 36px; height: 36px; place-items: center; border-radius: 11px; background: #d6e9e1; color: #245f4c; font-size: 24px; }
+.app-shell .theme-tab:nth-child(2) .tab-icon { background: #f8e3bf; color: #774914; }
+.app-shell .theme-tab:nth-child(3) .tab-icon { background: #dddff6; color: #434782; }
+.app-shell .theme-tab:nth-child(4) .tab-icon { background: #f6dcdf; color: #853c4b; }
+.app-shell .theme-tab:nth-child(5) .tab-icon { background: #e4ddf5; color: #654287; }
+.app-shell .tab-label { display: grid; min-width: 0; gap: 3px; font-size: 16px; }
+.app-shell .tab-label small { color: var(--muted); font-size: 12px; font-weight: 500; }
+.app-shell .section-guide { margin: 0 0 20px; padding: 12px 16px; border-left: 4px solid var(--green); border-radius: 0 10px 10px 0; background: #e9f2eb; color: var(--ink); }
+.app-shell .data-feedback { margin: 12px 0; min-height: 0; font-size: 14px; text-align: left; }
+.data-feedback:empty, #calendar-feedback:empty, #assignment-feedback:empty { display: none; }
+.skip-link { position: fixed; z-index: 10; top: 10px; left: 10px; transform: translateY(-180%); padding: 12px 18px; border-radius: 8px; background: white; color: #154c3b; font-weight: 700; }
+.skip-link:focus { transform: translateY(0); }
+:focus-visible { outline: 3px solid #b06c16; outline-offset: 3px; }
+html[data-theme="dark"] { --muted: #becdc3; }
+html[data-theme="dark"] .app-shell .welcome { background: linear-gradient(120deg, #203c31, #393121); }
+html[data-theme="dark"] .app-shell :is(.theme-tabs, .section-guide) { background: #23352c; color: var(--ink); }
+html[data-theme="dark"] .app-shell .theme-tab.is-active { background: #17291f; }
+html[data-theme="dark"] .app-shell .data-button { background: #1e3026; }
+html[data-theme="dark"] .app-shell .member-role { background: #2c4032; }
+html[data-theme="dark"] .app-shell .primary-button { background: #34765c; color: white; }
+html[data-theme="dark"] .app-shell :is(.text-button, .complete-button) { background: #294538; border-color: #52775f; color: #d8efe0; }
+html[data-theme="dark"] .app-shell :is(.complete-button:disabled, .todo-check:disabled) { background: #26312a; color: var(--muted); }
+html[data-theme="dark"] .app-shell :is(.member-stars, .assignment-reward) { color: #f3c373; }
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .app-shell :is(.primary-button, .data-button, .text-button, .theme-tab, .complete-button:not(:disabled)) { transition: transform .16s ease, box-shadow .16s ease; }
+  .app-shell :is(.primary-button, .data-button, .text-button, .theme-tab, .complete-button:not(:disabled)):hover { transform: translateY(-2px); box-shadow: 0 4px 12px #234b3320; }
+}
+@media (max-width: 980px) {
+  .app-shell .theme-tab { flex-direction: column; justify-content: center; padding: 10px 5px; text-align: center; }
+  .app-shell :is(.pet-form, .healthy-food-form) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .app-shell :is(.assignment-form, .assignment-schedule-editor) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .app-shell :is(.meal-layout, .alerts-layout) { grid-template-columns: minmax(0, 1fr); }
+  .app-shell .inventory-panel, .app-shell .alerts-layout > div { padding-right: 0; padding-bottom: 22px; border-right: 0; border-bottom: 1px solid var(--border); }
+}
+@media (max-width: 600px) {
+  .app-shell .topbar-actions { width: 100%; }
+  .app-shell .profile-switcher span { display: inline; }
+  .app-shell .profile-switcher select { max-width: 160px; }
+  .app-shell .theme-tabs { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .app-shell .theme-tab { flex-direction: row; justify-content: flex-start; min-height: 70px; padding: 10px 8px; text-align: left; gap: 8px; }
+  .app-shell .theme-tab:last-child { grid-column: auto; }
+  .app-shell .tab-icon { width: 28px; min-width: 28px; height: 32px; font-size: 21px; }
+  .app-shell .tab-label { font-size: 14px; }
+  .app-shell .tab-label small { font-size: 11px; }
+  .app-shell :is(.game-card, .family-rewards, .meal-planner, .alerts-card, .todo-card) { padding: 18px 14px; }
+  .app-shell .welcome { padding: 24px 18px; }
+  .app-shell .welcome-sun { display: none; }
+  .app-shell .welcome > div { max-width: 100%; }
+  .app-shell :is(.assignment-form, .assignment-schedule-editor, .inventory-form, .meal-form, .alert-form, .pet-form, .healthy-food-form) { grid-template-columns: minmax(0, 1fr); }
+  .app-shell .assignment-title-field, .app-shell .meal-name-field { grid-column: 1; }
+  .app-shell .assignment-row { grid-template-columns: minmax(0, 1fr) auto 44px; gap: 8px; }
+  .app-shell .assignment-detail { grid-column: 1 / -1; }
+  .app-shell .assignment-assignee { display: block; grid-column: 1; overflow-wrap: anywhere; }
+  .app-shell .assignment-reward { grid-column: 2; }
+  .app-shell .assignment-row > .complete-button { grid-column: 1 / 3; }
+  .app-shell .assignment-row > .delete-event { grid-column: 3; grid-row: 2 / 4; }
+  .app-shell .meal-row { grid-template-columns: minmax(0, 1fr) 44px; }
+  .app-shell :is(.meal-day, .meal-detail) { grid-column: 1; }
+  .app-shell .meal-row > .delete-event { grid-column: 2; grid-row: 1 / 3; }
+  .app-shell .meal-date-form { grid-template-columns: minmax(0, 1fr); }
+  .app-shell .routine-controls { width: 100%; }
+  .app-shell .routine-controls label { order: -1; width: 100%; }
+  .app-shell .routine-controls input { width: 100%; }
+  .app-shell .event-row { flex-wrap: wrap; }
+}
+
+.app-shell [hidden] { display: none !important; }
+.app-shell .data-actions { flex-wrap: wrap; margin-bottom: 20px; }
+.app-shell .theme-toggle #theme-label { display: inline; }
+.calendar-extra > summary { padding: 6px 0; cursor: pointer; color: var(--green); font-family: Manrope, sans-serif; font-size: 18px; font-weight: 700; }
+.calendar-extra[open] > summary { margin-bottom: 20px; }
+#open-plan-form { margin-top: 16px; }
+#calendar-plans .assignments { margin-top: 0; }
+.current-person { max-width: 100%; padding: 7px 12px; border-radius: 20px; background: var(--green-light); color: var(--ink); font-size: 14px; overflow-wrap: anywhere; }
+.app-shell .settings-profile-switcher { display: grid; gap: 7px; max-width: 320px; margin: 18px 0; }
+.app-shell .settings-profile-switcher span { display: inline; }
+.app-shell .settings-profile-switcher select { width: 100%; max-width: 100%; }
