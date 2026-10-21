@@ -141,6 +141,11 @@ household conventions, not authenticated parental controls. The gift, rocket,
 piggy-bank art, and star-coin decorations are original local illustrations;
 there are no third-party image requests.
 
+Publishing the website does not transfer routines between browsers. To move
+your routines, export the backup from the browser that has them, then use
+**Settings > Import backup** in the destination browser. Import replaces that
+browser's saved family data; export its current data first if you need to keep it.
+
 In **Calendar**, use **Create event, task or routine** to add a family event,
 chore, or task for any family member. Give it a start date, an optional local time, and
 choose **Does not repeat**, **Daily**, **Weekdays (Mon-Fri)**, **Weekly**, or
