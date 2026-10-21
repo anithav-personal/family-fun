@@ -23,9 +23,12 @@ daily brain-game exercises everyone can enjoy.
 
 ## Profiles & play
 
+Use **Playing as...** in the header to open the quick profile chooser and switch
+who is playing without leaving the current section. The chooser and each profile
+card prominently show points earned, stars available to spend, brain stars, and
+earned game-time minutes. Game time is an earned reward, not a running timer.
 Use **Settings** to add family members or update their age, points goal, and
-play theme, or choose the active family member. Appearance and data backups live
-there too. The header shows who is playing. Newly added profiles
+play theme. Appearance and data backups live there too. Newly added profiles
 are selected automatically. Names and ages are browser data, not published
 website content; keep exported backups private.
 
@@ -39,15 +42,19 @@ logos, or branded assets are used.
 
 Play Time now includes:
 
-- **Brain arcade:** word scrambles, riddles, odd-one-out, visual patterns,
-  memory pairs, and quick math, alongside the original number patterns.
+- **Brain arcade:** choose number patterns, word scrambles, riddles, odd-one-out,
+  visual patterns, memory pairs, or quick math from one game selector. Number
+  patterns and the shared game-progress summary are inside the arcade.
   Difficulty adapts to ages 6 and under, 7-9, 10-12, and teens/adults.
   Children without an age use the gentle 7-9 band; adults default to the
-  teen/adult band. Younger players may need help reading. Each arcade game
-  awards children one star and one brain star per day. Extra questions and
+  teen/adult band. Younger players may need help reading. Number patterns retain
+  their existing reward of one star and one brain star per solve for children.
+  The other six games each award children once per day; extra questions and
   memory replays are practice, not extra rewards.
-- **Pet shop:** buy hats, scenes, and toys using earned stars. Equip or remove
-  owned items for free. Create a Plant Pal first.
+- **Pet care & shop:** feeding, food/water tracking, and the pet shop are together
+  in **Pet care, food & water**. Create a Plant Pal, then buy hats, scenes, and
+  toys using earned stars. Equip or remove owned items for free. Star balance
+  and purchase/save feedback appear beside the shop.
 - **Family bingo:** a shared nine-square board changes each Monday. The child
   completing the week's first row, column, or diagonal earns one bonus star.
 - **Mystery quests:** reveal a profile-specific daily activity and mark it
