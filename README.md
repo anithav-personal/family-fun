@@ -13,7 +13,7 @@ daily brain-game exercises everyone can enjoy.
   calendar and can be removed.
 - A daily number puzzle with answer feedback and a completed-for-today state.
 - Add family members, set each member's points goal, assign chores and tasks to
-  any family member, and track earned points and stars.
+  any family member, and track game points and reward stars.
 - In Play Time, log a positive whole number of plant, protein, or healthy-fat
   points for a meal or snack instead of entering food names. Points count toward
   Healthy Hero badges and rewards; plant points also grow your virtual pet.
@@ -25,8 +25,10 @@ daily brain-game exercises everyone can enjoy.
 
 Use **Playing as...** in the header to open the quick profile chooser and switch
 who is playing without leaving the current section. The chooser and each profile
-card prominently show points earned, stars available to spend, brain stars, and
+card prominently show game points earned, reward stars available to redeem, brain stars, and
 earned game-time minutes. Game time is an earned reward, not a running timer.
+**Reward stars** are the redeemable shop currency; **brain stars** track puzzle
+progress. Existing star balances and backups are unchanged by this naming update.
 Use **Settings** to add family members or update their age, points goal, and
 play theme. Appearance and data backups live there too. Newly added profiles
 are selected automatically. Names and ages are browser data, not published
@@ -48,20 +50,20 @@ Play Time now includes:
   Difficulty adapts to ages 6 and under, 7-9, 10-12, and teens/adults.
   Children without an age use the gentle 7-9 band; adults default to the
   teen/adult band. Younger players may need help reading. Number patterns retain
-  their existing reward of one star and one brain star per solve for children.
+  their existing reward of one reward star and one brain star per solve for children.
   The other six games each award children once per day; extra questions and
   memory replays are practice, not extra rewards.
 - **Pet care & shop:** feeding, food/water tracking, and the pet shop are together
   in **Pet care, food & water**. Create a Plant Pal, then buy hats, scenes, and
-  toys using earned stars. Equip or remove owned items for free. Star balance
+  toys using earned reward stars. Equip or remove owned items for free. Reward-star balance
   and purchase/save feedback appear beside the shop.
 - **Family bingo:** a shared nine-square board changes each Monday. The child
-  completing the week's first row, column, or diagonal earns one bonus star.
+  completing the week's first row, column, or diagonal earns one bonus reward star.
 - **Mystery quests:** reveal a profile-specific daily activity and mark it
-  complete. Children earn one star once per day.
+  complete. Children earn one reward star once per day.
 - **Reward shop:** adult profiles define rewards and prices. Requests reserve
-  stars; adults approve and mark rewards delivered. Canceling a pending or
-  approved request refunds its stars exactly once. Removing a shop reward
+  reward stars; adults approve and mark rewards delivered. Canceling a pending or
+  approved request refunds its reward stars exactly once. Removing a shop reward
   does not remove outstanding requests.
 - **Adventure map:** completed puzzles, arcade games, bingo squares, mystery
   quests, chores/tasks, and Healthy Hero completions unlock six story chapters.
@@ -111,8 +113,16 @@ the whole family. Switching the active profile selects that person's routine;
 the chart filter can also be changed without switching who is playing.
 Browse other weeks or use **My routine chart** to return to this week.
 
-Each occurrence can be completed once, on its date or later, earning points for
-chores or stars for tasks. Future occurrences cannot be completed early. Past
+Each occurrence can be completed once, on its date or later, earning game points
+for chores or redeemable reward stars for tasks. Every 100 chore game points unlock
+10 earned game-time minutes, separately from the brain-star rewards. Profiles
+and Play Time show progress toward the next 10-minute reward. Points are
+cumulative and are not spent in the shops. Existing points and minutes are
+preserved; older completed chores do not receive retroactive minutes. New
+completions award minutes when the cumulative points cross each 100-point
+milestone, including multiple milestones from one chore. Points and minutes
+are saved together with completion history, so a failed save earns neither.
+Future occurrences cannot be completed early. Past
 missed occurrences stay on their original dates; they do not roll into today.
 Completion history is retained separately for each occurrence. **Edit schedule**
 lets you add dates to older unfinished assignments or adjust a new routine.
@@ -146,7 +156,7 @@ Settings, reminders, and games remain available in both day and night mode.
 
 This first version is a browser prototype. Data is stored locally on one
 browser, so family members do not yet share updates across devices. Chores award
-points toward a member's goal; tasks award stars. To-do reminders are checked
+game points toward a member's goal and earned game time; tasks award reward stars. To-do reminders are checked
 while the page is open; browser notifications are optional and require
 permission. Accounts, calendar integrations, and a larger game library are later
 features.

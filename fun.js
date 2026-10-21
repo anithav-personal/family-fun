@@ -178,7 +178,7 @@ function commitFunChange(change, message = "", feedbackTarget = "fun-feedback") 
     }
     funMessage(rollbackFailed
       ? "Saving failed and browser storage could not be restored. Export a backup before reloading."
-      : "Could not save this action. No stars or progress were changed. Check browser storage and try again.", true, feedbackTarget);
+      : "Could not save this action. No reward stars or progress were changed. Check browser storage and try again.", true, feedbackTarget);
     return false;
   }
   if (message) funMessage(message, false, feedbackTarget);
@@ -371,7 +371,7 @@ function renderArcade(member) {
   status.textContent = `${ageDescription(member)}${member.age ? ` (age ${member.age})` : " (no age set; edit profile for a closer fit)"} \u00b7 ${completed.length} / ${arcadeGames.length} daily games completed${completed.includes(game) ? " \u00b7 Practice round" : ""}`;
   if (game === "number") {
     status.textContent += member.role === "child"
-      ? " \u00b7 Number patterns earn a star and a brain star for every solve."
+      ? " \u00b7 Number patterns earn a reward star and a brain star for every solve."
       : " \u00b7 Find the missing number. Keep solving to build your streak.";
     return;
   }
@@ -414,7 +414,7 @@ function finishArcade(game) {
   const date = toDateKey(new Date());
   const profile = getFunProfile(member.id);
   if ((profile.arcade[date] || []).includes(game)) {
-    document.getElementById("arcade-feedback").textContent = "Great practice! Today's star for this game is already collected.";
+    document.getElementById("arcade-feedback").textContent = "Great practice! Today's reward star for this game is already collected.";
     return;
   }
   const success = commitFunChange(() => {
@@ -437,7 +437,7 @@ function finishArcade(game) {
     return;
   }
   document.getElementById("arcade-feedback").textContent = member.role === "child"
-    ? "Brilliant! One star and one brain star earned. Try another game or a practice round."
+    ? "Brilliant! One reward star and one brain star earned. Try another game or a practice round."
     : "Brilliant! You added a step to the family adventure.";
   showCelebration({ icon: "\u{1F9E0}", title: `${member.name} solved it!`, quote: "A little practice makes a big difference.", record: false });
 }
@@ -474,7 +474,7 @@ function completeBingo(index) {
       if (member.role === "child") member.stars += 1;
       addWallWin(member.id, "Family bingo! A full line completed.", "badge");
     }
-  }, "Bingo square completed! A first full line earns its completing child one star.");
+  }, "Bingo square completed! A first full line earns its completing child one reward star.");
 }
 
 function renderBingo(member) {
@@ -553,7 +553,7 @@ function buyPetItem(itemId) {
   const profile = getFunProfile(member.id);
   const owned = profile.owned.includes(item.id);
   if (!owned && member.stars < item.cost) {
-    funMessage("Not enough stars yet. Try a game or a quest!", true, "pet-shop-feedback");
+    funMessage("Not enough reward stars yet. Try a game or a quest!", true, "pet-shop-feedback");
     return;
   }
   const wasEquipped = profile.equipped[item.slot] === item.id;
@@ -575,7 +575,7 @@ function renderPetShop(member) {
     shop.dataset.memberId = member?.id || "";
   }
   document.getElementById("pet-shop-wallet").textContent = member
-    ? `${member.stars} stars to spend${virtualPets[member.id] ? "" : " \u00b7 Create a Plant Pal above to shop."}`
+    ? `${member.stars} reward stars to spend${virtualPets[member.id] ? "" : " \u00b7 Create a Plant Pal above to shop."}`
     : "Add a family member in Settings, then choose them using Playing as above.";
   shop.replaceChildren();
   const profile = member ? getFunProfile(member.id) : null;
@@ -584,8 +584,8 @@ function renderPetShop(member) {
     card.append(funElement("strong", `${item.icon} ${item.name}`));
     const owned = profile?.owned.includes(item.id);
     const equipped = profile?.equipped[item.slot] === item.id;
-    card.append(funElement("span", owned ? "Owned" : `${item.cost} stars`));
-    card.append(funButton(equipped ? "Unequip" : owned ? "Equip" : `Buy for ${item.cost} stars`,
+    card.append(funElement("span", owned ? "Owned" : `${item.cost} reward stars`));
+    card.append(funButton(equipped ? "Unequip" : owned ? "Equip" : `Buy for ${item.cost} reward stars`,
       () => buyPetItem(item.id), !member || !virtualPets[member.id] || (!owned && member.stars < item.cost)));
     shop.append(card);
   }
@@ -596,7 +596,7 @@ function requestReward(rewardId) {
   const reward = funState.rewards.find((item) => item.id === rewardId);
   if (!member || !reward) return;
   if (member.stars < reward.cost) {
-    funMessage("You need more stars for that reward.", true);
+    funMessage("You need more reward stars for that reward.", true);
     return;
   }
   commitFunChange(() => {
@@ -605,7 +605,7 @@ function requestReward(rewardId) {
       id: funId(), memberId: member.id, title: reward.title, cost: reward.cost,
       date: toDateKey(new Date()), status: "pending",
     });
-  }, "Reward requested! Your stars are reserved until an adult delivers it or the request is canceled.");
+  }, "Reward requested! Your reward stars are reserved until an adult delivers it or the request is canceled.");
 }
 
 function changeRewardRequest(id, action) {
@@ -631,7 +631,7 @@ function changeRewardRequest(id, action) {
       request.status = "delivered";
       addWallWin(owner.id, `Enjoyed a reward: ${request.title}`, "reward");
     }
-  }, action === "cancel" ? "Request canceled and stars refunded." : `Reward ${request.status === "pending" ? "approved" : "delivered"}.`);
+  }, action === "cancel" ? "Request canceled and reward stars refunded." : `Reward ${request.status === "pending" ? "approved" : "delivered"}.`);
 }
 
 function renderRewardShop(member) {
@@ -643,7 +643,7 @@ function renderRewardShop(member) {
   if (!funState.rewards.length) shop.append(funElement("p", "No treats yet. Choose an adult profile and add your family's first reward.", "fun-note"));
   for (const reward of funState.rewards) {
     const card = funElement("article", undefined, "shop-item");
-    card.append(funElement("strong", reward.title), funElement("span", `${reward.cost} stars`));
+    card.append(funElement("strong", reward.title), funElement("span", `${reward.cost} reward stars`));
     card.append(funButton("Request reward", () => requestReward(reward.id), !member || member.stars < reward.cost));
     if (adult) card.append(funButton("Remove reward", () => {
       commitFunChange(() => { funState.rewards = funState.rewards.filter((item) => item.id !== reward.id); }, "Reward removed. Existing requests are unchanged.");
@@ -657,7 +657,7 @@ function renderRewardShop(member) {
   for (const request of visible) {
     const row = funElement("li");
     const name = members.find((candidate) => candidate.id === request.memberId)?.name || "Family member";
-    row.append(funElement("span", `${name}: ${request.title} \u00b7 ${request.cost} stars \u00b7 ${request.status}`));
+    row.append(funElement("span", `${name}: ${request.title} \u00b7 ${request.cost} reward stars \u00b7 ${request.status}`));
     if (adult && request.status === "pending") row.append(funButton("Approve", () => changeRewardRequest(request.id, "approve")));
     if (adult && request.status === "approved") row.append(funButton("Mark delivered", () => changeRewardRequest(request.id, "deliver")));
     if (["pending", "approved"].includes(request.status)) row.append(funButton("Cancel & refund", () => changeRewardRequest(request.id, "cancel")));
@@ -719,7 +719,7 @@ function renderDinnerSpinner() {
 
 function renderFunHub() {
   const member = getFunMember();
-  document.getElementById("fun-wallet").textContent = member ? `${member.stars} stars to spend` : "";
+  document.getElementById("fun-wallet").textContent = member ? `${member.stars} reward stars to spend` : "";
   document.getElementById("fun-profile-note").textContent = member
     ? `Playing as ${member.name}. Progress stays in this browser. Use the Playing as button above to switch family members.`
     : "No profiles yet. Add family members in Settings to start playing.";
@@ -766,7 +766,7 @@ document.getElementById("reward-shop-form").addEventListener("submit", (event) =
   const title = form.elements.title.value.trim();
   const cost = form.elements.cost.valueAsNumber;
   if (member?.role !== "adult" || !title || title.length > 60 || !Number.isInteger(cost) || cost < 1 || cost > 10000) {
-    funMessage("Choose an adult profile and enter a reward with a whole-star price between 1 and 10,000.", true);
+    funMessage("Choose an adult profile and enter a whole-number reward-star price between 1 and 10,000.", true);
     return;
   }
   if (commitFunChange(() => {
