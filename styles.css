@@ -681,6 +681,7 @@ html[data-theme="dark"] .app-shell :is(.member-stars, .assignment-reward) { colo
 .profile-reward-tile dt { color: var(--muted); font-size: 14px; line-height: 1.5; }
 .profile-reward-tile dd { margin: 6px 0 0; color: var(--ink); overflow-wrap: anywhere; font-size: 16px; }
 .profile-reward-tile strong { font-size: 27px; line-height: 1.2; font-weight: 800; }
+.profile-game-progress { display: block; margin-top: 8px; color: var(--muted); font-size: 13px; line-height: 1.5; }
 .profile-reward-time { border: 2px solid #a694d6; background: #f0eafb; }
 .profile-reward-time dd { color: #4e357d; }
 .app-shell .member-heading h4 { max-width: 100%; white-space: normal; overflow-wrap: anywhere; }

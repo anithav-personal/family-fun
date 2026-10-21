@@ -576,15 +576,22 @@ function completeAssignment(assignmentId, date) {
     return;
   }
   const balance = assignment.kind === "chore" ? "points" : "stars";
-  if (!Number.isSafeInteger(member[balance] + assignment.reward)) {
+  const newBalance = member[balance] + assignment.reward;
+  const earnedMinutes = assignment.kind === "chore"
+    ? (Math.floor(newBalance / 100) - Math.floor(member.points / 100)) * 10
+    : 0;
+  const newGameMinutes = (member.gameMinutes || 0) + earnedMinutes;
+  if (!Number.isSafeInteger(newBalance) ||
+      (earnedMinutes > 0 && !Number.isSafeInteger(newGameMinutes))) {
     setAssignmentFeedback("The reward total is too large to save safely.", true);
     return;
   }
   const saved = commitAssignmentChange(() => {
     if (assignment.recurrence && assignment.recurrence !== "none") assignment.completedDates.push(date);
     else assignment.completed = true;
-    member[balance] += assignment.reward;
-  }, `${assignment.title} completed${assignment.startDate ? ` for ${formatMealDate(date)}` : ""}. Reward earned once for this occurrence!`);
+    member[balance] = newBalance;
+    if (earnedMinutes > 0) member.gameMinutes = newGameMinutes;
+  }, `${assignment.title} completed${assignment.startDate ? ` for ${formatMealDate(date)}` : ""}. +${assignment.reward} ${assignment.kind === "chore" ? "game points" : "reward stars"}${earnedMinutes ? ` and +${earnedMinutes} game minutes` : ""}. Reward earned once for this occurrence!`);
   if (saved && typeof recordFunActivity === "function") {
     recordFunActivity(member.id, "chore", `Completed: ${assignment.title}`);
   }
@@ -755,7 +762,7 @@ function createRoutineEntry(assignment, date) {
   time.textContent = formatAssignmentTime(assignment.time);
   const meta = document.createElement("span");
   const member = members.find((item) => item.id === assignment.memberId);
-  meta.textContent = `${member.name} · ${assignment.kind === "chore" ? "Chore" : "Task"} · +${assignment.reward} ${assignment.kind === "chore" ? "points" : "stars"}`;
+  meta.textContent = `${member.name} · ${assignment.kind === "chore" ? "Chore" : "Task"} · +${assignment.reward} ${assignment.kind === "chore" ? "game points" : "reward stars"}`;
   if (assignment.notification) meta.textContent += ` · ${assignment.notification.kind} ${assignment.notification.minutesBefore ? `${assignment.notification.minutesBefore} min before` : "at start"}`;
   detail.append(time, title, meta);
   row.append(detail, createAssignmentCompleteButton(assignment, date));
@@ -1551,8 +1558,8 @@ function createProfileRewardSummary(member) {
   summary.className = "profile-reward-summary";
   summary.setAttribute("aria-label", `${member.name}'s rewards and earned game time`);
   for (const [label, value, unit] of [
-    ["Points earned", member.points, ""],
-    ["Stars available", member.stars, ""],
+    ["Game points earned", member.points, ""],
+    ["Reward stars available", member.stars, ""],
     ["Brain stars earned", member.brainStars || 0, ""],
     ["Game time earned", member.gameMinutes || 0, " min"],
   ]) {
@@ -1564,6 +1571,12 @@ function createProfileRewardSummary(member) {
     const number = document.createElement("strong");
     number.textContent = value.toLocaleString();
     amount.append(number, document.createTextNode(unit));
+    if (label === "Game points earned") {
+      const progress = document.createElement("small");
+      progress.className = "profile-game-progress";
+      progress.textContent = `${100 - (member.points % 100)} more points for +10 game minutes`;
+      amount.append(progress);
+    }
     tile.append(title, amount);
     summary.append(tile);
   }
@@ -1597,11 +1610,11 @@ function renderRewards() {
 
     const score = document.createElement("p");
     score.className = "goal-score";
-    score.textContent = `${member.points} / ${member.goal} points`;
+    score.textContent = `${member.points} / ${member.goal} game points`;
     const progress = document.createElement("progress");
     progress.max = member.goal;
     progress.value = Math.min(member.points, member.goal);
-    progress.setAttribute("aria-label", `${member.name}'s points goal progress`);
+    progress.setAttribute("aria-label", `${member.name}'s game points goal progress`);
     const goalForm = document.createElement("form");
     goalForm.className = "goal-form";
     const goalLabel = document.createElement("label");
@@ -1611,7 +1624,7 @@ function renderRewards() {
     goalInput.min = "1";
     goalInput.max = "100000";
     goalInput.value = String(member.goal);
-    goalInput.setAttribute("aria-label", `${member.name}'s points goal`);
+    goalInput.setAttribute("aria-label", `${member.name}'s game points goal`);
     const updateGoal = document.createElement("button");
     updateGoal.className = "text-button";
     updateGoal.type = "submit";
@@ -1724,8 +1737,9 @@ function renderRewards() {
     const reward = document.createElement("span");
     reward.className = "assignment-reward";
     reward.textContent = assignment.kind === "chore"
-      ? `+${assignment.reward} pts`
+      ? `+${assignment.reward} game pts`
       : `+${assignment.reward} ★`;
+    reward.setAttribute("aria-label", `+${assignment.reward} ${assignment.kind === "chore" ? "game points" : "reward stars"}`);
     const complete = createAssignmentCompleteButton(assignment, occurrenceDate);
     const remove = document.createElement("button");
     remove.className = "delete-event";
@@ -1918,7 +1932,7 @@ function updatePlanForm(resetReward = false) {
   document.getElementById("plan-reward-field").hidden = isEvent;
   form.elements.reward.disabled = isEvent;
   form.elements.reward.required = !isEvent;
-  document.getElementById("reward-label").textContent = isChore ? "Points" : "Stars";
+  document.getElementById("reward-label").textContent = isChore ? "Game points" : "Reward stars";
   if (resetReward) form.elements.reward.value = isChore ? "10" : "1";
   renderPlanAssignees();
   updateNotificationControls(form);
@@ -2273,11 +2287,14 @@ function renderGameRewards(member) {
   const container = document.getElementById("game-rewards");
   container.replaceChildren();
   if (!member) return;
+  const choreProgress = document.createElement("p");
+  choreProgress.className = "fun-note";
+  choreProgress.textContent = `${member.points} game points from chores · ${100 - (member.points % 100)} more points for +10 game minutes.`;
   if (member.role !== "child") {
     const note = document.createElement("p");
     note.className = "adult-game-note";
-    note.textContent = "Kids earn stars and badges here. Grown-ups can still play for fun!";
-    container.append(note);
+    note.textContent = "Brain games award reward stars, brain stars, and badges to kids. Everyone can earn game minutes from chores.";
+    container.append(note, choreProgress);
     return;
   }
   const arcadeDates = typeof getArcadeCompletionDates === "function"
@@ -2294,7 +2311,7 @@ function renderGameRewards(member) {
     <span><strong>${earnedCount}</strong> challenges</span>
     <span><strong>${streak}</strong> day streak</span>
     <span><strong>${brainStars}</strong> brain stars</span>
-    <span><strong>${member.gameMinutes || 0}</strong> screen mins</span>
+    <span><strong>${member.gameMinutes || 0}</strong> game mins</span>
   `;
   const heading = document.createElement("div");
   heading.className = "badge-heading";
@@ -2303,8 +2320,8 @@ function renderGameRewards(member) {
   const nextBadge = gameBadges.find((badge) => badge.count > brainStars);
   const progress = document.createElement("span");
   progress.textContent = nextBadge
-    ? `${nextBadge.count - brainStars} more stars to ${nextBadge.name} + 10 screen mins`
-    : `${100 - (brainStars % 100)} more stars to the next +10 screen mins`;
+    ? `${nextBadge.count - brainStars} more brain stars to ${nextBadge.name} + 10 game mins`
+    : `${100 - (brainStars % 100)} more brain stars to the next +10 game mins`;
   heading.append(title, progress);
   const grid = document.createElement("div");
   grid.className = "badge-grid";
@@ -2321,11 +2338,11 @@ function renderGameRewards(member) {
     const label = document.createElement("strong");
     label.textContent = badge.name;
     const requirement = document.createElement("small");
-    requirement.textContent = `${badge.count} stars · +10 min`;
+    requirement.textContent = `${badge.count} brain stars · +10 min`;
     item.append(icon, label, requirement);
     grid.append(item);
   }
-  container.append(summary, heading, grid);
+  container.append(summary, choreProgress, heading, grid);
 }
 
 function getHealthyEntry(memberId) {
@@ -2451,7 +2468,7 @@ function awardHealthyQuestIfComplete(member, entry) {
   saveRewards();
   renderRewards();
   document.getElementById("healthy-feedback").textContent =
-    `${member.name} completed the Healthy Hero Quest and earned a bonus star!`;
+    `${member.name} completed the Healthy Hero Quest and earned a bonus reward star!`;
   showCelebration({
     icon: "🏆",
     title: `${member.name} is a Healthy Hero!`,
@@ -2704,7 +2721,7 @@ document.getElementById("answer-form").addEventListener("submit", (event) => {
     if (member.role === "child") {
       feedback.textContent = member.brainStars % 100 === 0
         ? `${member.name} earned a Brain Booster badge and 10 screen-time minutes!`
-        : `${member.name} solved it and earned a brain star!`;
+        : `${member.name} solved it and earned a reward star and a brain star!`;
     } else {
       feedback.textContent = `${member.name} solved it! Here's the next puzzle.`;
     }
