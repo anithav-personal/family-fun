@@ -111,8 +111,8 @@ function readFunState() {
   }
 }
 
-function funMessage(message, error = false) {
-  const element = document.getElementById("fun-feedback");
+function funMessage(message, error = false, targetId = "fun-feedback") {
+  const element = document.getElementById(targetId);
   element.textContent = message;
   element.classList.toggle("is-error", error);
 }
@@ -146,9 +146,9 @@ function addAdventureStep(memberId, title, kind) {
   if (chapter) addWallWin(memberId, `Family unlocked ${chapter.name}!`, "adventure");
 }
 
-function commitFunChange(change, message = "") {
+function commitFunChange(change, message = "", feedbackTarget = "fun-feedback") {
   if (funStorageBlocked) {
-    funMessage("Extra play storage could not be loaded safely. Recover a valid backup before saving new play progress.", true);
+    funMessage("Extra play storage could not be loaded safely. Recover a valid backup before saving new play progress.", true, feedbackTarget);
     return false;
   }
   const oldState = structuredClone(funState);
@@ -178,10 +178,10 @@ function commitFunChange(change, message = "") {
     }
     funMessage(rollbackFailed
       ? "Saving failed and browser storage could not be restored. Export a backup before reloading."
-      : "Could not save this action. No stars or progress were changed. Check browser storage and try again.", true);
+      : "Could not save this action. No stars or progress were changed. Check browser storage and try again.", true, feedbackTarget);
     return false;
   }
-  if (message) funMessage(message);
+  if (message) funMessage(message, false, feedbackTarget);
   renderRewards();
   renderGameRewards(getFunMember());
   return true;
@@ -346,6 +346,7 @@ function flipMemoryCard(memberId, index) {
 
 function renderArcade(member) {
   const game = document.getElementById("arcade-game").value;
+  currentArcadeChallenge = null;
   const changedProfile = arcadeProfileId !== (member?.id || "");
   if (changedProfile) {
     resetMemoryGame();
@@ -357,16 +358,23 @@ function renderArcade(member) {
   document.getElementById("arcade-game").disabled = !member;
   document.querySelectorAll("#arcade-form input, #arcade-form button, #memory-restart, #arcade-practice")
     .forEach((element) => { element.disabled = !member; });
-  document.getElementById("arcade-form").hidden = !member || game === "memory";
+  document.getElementById("number-pattern-game").hidden = !member || game !== "number";
+  document.getElementById("arcade-form").hidden = !member || game === "memory" || game === "number";
   document.getElementById("memory-game").hidden = !member || game !== "memory";
-  document.getElementById("arcade-practice").hidden = !member || game === "memory";
+  document.getElementById("arcade-practice").hidden = !member || game === "memory" || game === "number";
   const status = document.getElementById("arcade-status");
   if (!member) {
-    status.textContent = "Add and select a family profile in Settings to play.";
+    status.textContent = "Add a profile in Settings, then use the Playing as button above to choose who's playing.";
     return;
   }
   const completed = getFunProfile(member.id).arcade[toDateKey(new Date())] || [];
   status.textContent = `${ageDescription(member)}${member.age ? ` (age ${member.age})` : " (no age set; edit profile for a closer fit)"} \u00b7 ${completed.length} / ${arcadeGames.length} daily games completed${completed.includes(game) ? " \u00b7 Practice round" : ""}`;
+  if (game === "number") {
+    status.textContent += member.role === "child"
+      ? " \u00b7 Number patterns earn a star and a brain star for every solve."
+      : " \u00b7 Find the missing number. Keep solving to build your streak.";
+    return;
+  }
   if (game === "memory") {
     renderMemoryGame(member);
     return;
@@ -545,7 +553,7 @@ function buyPetItem(itemId) {
   const profile = getFunProfile(member.id);
   const owned = profile.owned.includes(item.id);
   if (!owned && member.stars < item.cost) {
-    funMessage("Not enough stars yet. Try a game or a quest!", true);
+    funMessage("Not enough stars yet. Try a game or a quest!", true, "pet-shop-feedback");
     return;
   }
   const wasEquipped = profile.equipped[item.slot] === item.id;
@@ -557,11 +565,18 @@ function buyPetItem(itemId) {
     }
     if (profile.equipped[item.slot] === item.id) delete profile.equipped[item.slot];
     else profile.equipped[item.slot] = item.id;
-  }, `${item.name} ${wasEquipped ? "removed" : "equipped"}!`);
+  }, `${item.name} ${wasEquipped ? "removed" : "equipped"}!`, "pet-shop-feedback");
 }
 
 function renderPetShop(member) {
   const shop = document.getElementById("pet-shop");
+  if (shop.dataset.memberId !== (member?.id || "")) {
+    funMessage("", false, "pet-shop-feedback");
+    shop.dataset.memberId = member?.id || "";
+  }
+  document.getElementById("pet-shop-wallet").textContent = member
+    ? `${member.stars} stars to spend${virtualPets[member.id] ? "" : " \u00b7 Create a Plant Pal above to shop."}`
+    : "Add a family member in Settings, then choose them using Playing as above.";
   shop.replaceChildren();
   const profile = member ? getFunProfile(member.id) : null;
   for (const item of petShopItems) {
@@ -706,7 +721,7 @@ function renderFunHub() {
   const member = getFunMember();
   document.getElementById("fun-wallet").textContent = member ? `${member.stars} stars to spend` : "";
   document.getElementById("fun-profile-note").textContent = member
-    ? `Playing as ${member.name}. Progress stays in this browser. Change the active family member in Settings to play for someone else.`
+    ? `Playing as ${member.name}. Progress stays in this browser. Use the Playing as button above to switch family members.`
     : "No profiles yet. Add family members in Settings to start playing.";
   document.querySelectorAll("#celebration-form input, #celebration-form button").forEach((control) => { control.disabled = !member; });
   renderAdventure();

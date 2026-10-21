@@ -5,10 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#f7f6f1">
     <title>Family Fun</title>
-    <link rel="stylesheet" href="styles.css?v=routines-1">
-    <link rel="stylesheet" href="fun.css?v=routines-1">
-    <script src="app.js?v=routines-1" defer></script>
-    <script src="fun.js?v=routines-1" defer></script>
+    <link rel="stylesheet" href="styles.css?v=playtime-1">
+    <link rel="stylesheet" href="fun.css?v=playtime-1">
+    <script src="app.js?v=playtime-1" defer></script>
+    <script src="fun.js?v=playtime-1" defer></script>
   </head>
   <body>
     <a class="skip-link" href="#section-guide">Skip to this section</a>
@@ -20,10 +20,24 @@
         </a>
         <div class="topbar-actions">
           <p class="topbar-note">A little more together, every day.</p>
-          <span id="active-person-badge" class="current-person">Family space</span>
+          <button id="active-person-badge" class="current-person" type="button"
+            aria-haspopup="dialog" aria-controls="profile-picker" aria-expanded="false">Choose who's playing</button>
           <button class="data-button" id="manage-profiles" type="button">Settings</button>
         </div>
       </header>
+      <dialog id="profile-picker" class="profile-picker" aria-labelledby="profile-picker-heading">
+        <div class="section-heading">
+          <h2 id="profile-picker-heading">Who's playing?</h2>
+          <button id="close-profile-picker" class="icon-button" type="button" aria-label="Close profile chooser">×</button>
+        </div>
+        <label class="profile-switcher profile-picker-field">
+          <span>Choose a family member</span>
+          <select id="active-profile" aria-label="Active family profile"></select>
+        </label>
+        <div id="active-profile-rewards"></div>
+        <p class="fun-note">Stars are available to spend. Game minutes are earned rewards, not a running timer.</p>
+        <button id="profile-picker-settings" class="data-button" type="button">Manage profiles in Settings</button>
+      </dialog>
       <p id="data-feedback" class="data-feedback" aria-live="polite"></p>
       <p id="alarm-banner" class="alarm-banner" aria-live="assertive" hidden></p>
 
@@ -97,24 +111,14 @@
             <p class="eyebrow">TODAY'S LITTLE CHALLENGE</p>
             <span class="game-icon" aria-hidden="true">✦</span>
           </div>
-          <h2 id="game-heading">Brain break</h2>
-          <p id="game-intro" class="game-intro">A quick puzzle for curious minds of every age.</p>
-          <div class="puzzle">
-            <span class="puzzle-label">NUMBER PATTERN</span>
-            <p id="puzzle-prompt" class="puzzle-prompt"></p>
-            <p id="puzzle-hint" class="puzzle-hint"></p>
-            <form id="answer-form" class="answer-form">
-              <label class="sr-only" for="answer">Your answer</label>
-              <input id="answer" name="answer" type="number" inputmode="numeric" placeholder="Your answer" required>
-              <button id="answer-button" type="submit">Check</button>
-            </form>
-            <p id="answer-feedback" class="answer-feedback" aria-live="polite"></p>
-          </div>
+          <h2 id="game-heading">Play Time</h2>
+          <p id="game-intro" class="game-intro">Brain games, pet care, and little family adventures.</p>
           <details class="fun-card brain-arcade" id="brain-arcade" open>
-            <summary>Daily brain arcade</summary>
-            <p class="fun-note">Play word scrambles, riddles, odd-one-out, visual patterns, memory pairs, and quick math. Difficulty follows your profile age. Kids earn one star and one brain star per game each day; replays are for practice.</p>
+            <summary>Brain arcade</summary>
+            <p class="fun-note">Choose number patterns, word scrambles, riddles, odd-one-out, visual patterns, memory pairs, or quick math. Difficulty follows your profile age. Kids earn a star and a brain star for each number pattern solved; the other six games award once per day, then become practice.</p>
             <label class="fun-field">Game
               <select id="arcade-game">
+                <option value="number">Number patterns</option>
                 <option value="word">Word scramble</option>
                 <option value="math">Quick math</option>
                 <option value="memory">Memory pairs</option>
@@ -124,6 +128,17 @@
               </select>
             </label>
             <p id="arcade-status"></p>
+            <div class="puzzle" id="number-pattern-game">
+              <span class="puzzle-label">NUMBER PATTERN</span>
+              <p id="puzzle-prompt" class="puzzle-prompt"></p>
+              <p id="puzzle-hint" class="puzzle-hint"></p>
+              <form id="answer-form" class="answer-form">
+                <label class="sr-only" for="answer">Your answer</label>
+                <input id="answer" name="answer" type="number" inputmode="numeric" placeholder="Your answer" required>
+                <button id="answer-button" type="submit">Check</button>
+              </form>
+              <p id="answer-feedback" class="answer-feedback" aria-live="polite"></p>
+            </div>
             <form id="arcade-form" class="fun-form">
               <p id="arcade-prompt"></p>
               <div id="arcade-options" class="arcade-options"></div>
@@ -138,13 +153,13 @@
               <button id="memory-restart" class="text-button" type="button">New practice round</button>
             </div>
             <p id="arcade-feedback" class="fun-feedback" role="status"></p>
+            <div id="game-rewards" class="game-rewards"></div>
           </details>
-          <div id="game-rewards" class="game-rewards"></div>
           <section class="healthy-quest" aria-labelledby="healthy-quest-heading">
             <div class="healthy-heading">
               <div>
                 <p class="eyebrow">HEALTHY HERO QUEST</p>
-                <h3 id="healthy-quest-heading">Balanced food &amp; water</h3>
+                <h3 id="healthy-quest-heading">Pet care, food &amp; water</h3>
               </div>
               <span aria-hidden="true">🌱</span>
             </div>
@@ -243,6 +258,13 @@
             <div id="plant-list" class="plant-list" aria-label="Healthy points logged today"></div>
             <div id="healthy-badges" class="healthy-badges"></div>
             <p id="healthy-feedback" class="answer-feedback" aria-live="polite"></p>
+            <details class="fun-card pet-shop-card">
+              <summary>Pet shop</summary>
+              <p class="fun-note">Feed and care for your Plant Pal here, then spend stars on hats, scenes, and toys. Owned items can be equipped for free.</p>
+              <p id="pet-shop-wallet" class="fun-note"></p>
+              <div id="pet-shop" class="shop-grid"></div>
+              <p id="pet-shop-feedback" class="fun-feedback" role="status"></p>
+            </details>
             <p class="healthy-note">Family game goals only—not personalized nutrition or medical guidance.</p>
           </section>
           <section class="fun-hub" aria-labelledby="fun-hub-heading">
@@ -278,11 +300,6 @@
                 <button id="quest-complete" class="primary-button" type="button" hidden>Mission complete!</button>
               </details>
               <details class="fun-card">
-                <summary>Pet shop</summary>
-                <p class="fun-note">Create a Plant Pal above, then spend stars on hats, scenes, and toys. Owned items can be equipped for free.</p>
-                <div id="pet-shop" class="shop-grid"></div>
-              </details>
-              <details class="fun-card">
                 <summary>Reward shop</summary>
                 <p class="fun-note">An adult defines the treats and star prices. Request a reward with your stars; an adult approves and marks it delivered. Canceling refunds stars.</p>
                 <p class="fun-note">Adult profiles are a household convention, not a password lock.</p>
@@ -312,7 +329,7 @@
               </details>
             </div>
           </section>
-          <p class="game-footer">Keep playing—every solved puzzle earns a brain star <span aria-hidden="true">♡</span></p>
+          <p class="game-footer">Play, care for your pet, and celebrate every little win <span aria-hidden="true">♡</span></p>
         </section>
 
         <aside class="card todo-card theme-panel" id="shared-checklist"
@@ -512,21 +529,17 @@
             <p class="eyebrow">MAKE IT YOURS</p>
             <h2 id="settings-heading" tabindex="-1">Family settings</h2>
           </div>
-          <p class="fun-note">Manage profiles, ages, points goals, play themes, and who is playing here.</p>
-          <label class="profile-switcher settings-profile-switcher">
-            <span>Active family member</span>
-            <select id="active-profile" aria-label="Active family profile"></select>
-          </label>
-          <div class="data-actions" aria-label="Appearance and data backup">
-            <button class="theme-toggle" id="theme-toggle" type="button" aria-pressed="false">
-              <span id="theme-icon" aria-hidden="true">☾</span>
-              <span id="theme-label">Night</span>
-            </button>
-            <button class="data-button" id="export-data" type="button">Export data</button>
-            <button class="data-button" id="import-data" type="button">Import data</button>
-            <input id="import-file" type="file" accept="application/json,.json" hidden>
-          </div>
           <span class="rewards-mark" aria-hidden="true">★</span>
+        </div>
+        <p class="fun-note">Manage profiles, ages, points goals, and play themes here. Use the Playing as button above to switch family members. Each profile highlights earned rewards and game time.</p>
+        <div class="data-actions" aria-label="Appearance and data backup">
+          <button class="theme-toggle" id="theme-toggle" type="button" aria-pressed="false">
+            <span id="theme-icon" aria-hidden="true">☾</span>
+            <span id="theme-label">Night</span>
+          </button>
+          <button class="data-button" id="export-data" type="button">Export data</button>
+          <button class="data-button" id="import-data" type="button">Import data</button>
+          <input id="import-file" type="file" accept="application/json,.json" hidden>
         </div>
         <div id="member-list" class="member-list"></div>
         <p id="empty-members" class="empty-state">Add your family members to set goals and assign chores or tasks.</p>

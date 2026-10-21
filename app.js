@@ -1546,6 +1546,30 @@ document.getElementById("open-plan-form").addEventListener("click", () => {
   assignmentForm.elements.title.focus({ preventScroll: true });
 });
 
+function createProfileRewardSummary(member) {
+  const summary = document.createElement("dl");
+  summary.className = "profile-reward-summary";
+  summary.setAttribute("aria-label", `${member.name}'s rewards and earned game time`);
+  for (const [label, value, unit] of [
+    ["Points earned", member.points, ""],
+    ["Stars available", member.stars, ""],
+    ["Brain stars earned", member.brainStars || 0, ""],
+    ["Game time earned", member.gameMinutes || 0, " min"],
+  ]) {
+    const tile = document.createElement("div");
+    tile.className = `profile-reward-tile${unit ? " profile-reward-time" : ""}`;
+    const title = document.createElement("dt");
+    title.textContent = label;
+    const amount = document.createElement("dd");
+    const number = document.createElement("strong");
+    number.textContent = value.toLocaleString();
+    amount.append(number, document.createTextNode(unit));
+    tile.append(title, amount);
+    summary.append(tile);
+  }
+  return summary;
+}
+
 function renderRewards() {
   const memberList = document.getElementById("member-list");
   memberList.replaceChildren();
@@ -1568,16 +1592,8 @@ function renderRewards() {
     const relationship = member.relationship || (member.role === "child" ? "Kid" : "Adult");
     role.textContent = member.age ? `${relationship} · ${member.age}` : relationship;
     identity.append(name, role);
-    const stars = document.createElement("span");
-    stars.className = "member-stars";
-    const gameMinutes = member.gameMinutes || 0;
-    stars.textContent = member.role === "child"
-      ? `★ ${member.stars} · 🎮 ${gameMinutes} min`
-      : `★ ${member.stars}`;
-    stars.setAttribute("aria-label", member.role === "child"
-      ? `${member.stars} stars and ${gameMinutes} screen-time minutes`
-      : `${member.stars} stars`);
-    heading.append(identity, stars);
+    heading.append(identity);
+    const rewards = createProfileRewardSummary(member);
 
     const score = document.createElement("p");
     score.className = "goal-score";
@@ -1643,7 +1659,7 @@ function renderRewards() {
         ? `${member.name}'s age updated. Game difficulty now matches their profile.`
         : `${member.name}'s age changed for this visit, but could not be saved. Check browser storage.`;
     });
-    card.append(heading, score, progress, goalForm, ageForm);
+    card.append(heading, rewards, score, progress, goalForm, ageForm);
     if (member.role === "child") {
       const themeLabel = document.createElement("label");
       themeLabel.className = "profile-theme-field";
@@ -1760,21 +1776,55 @@ function renderProfileSelector() {
     ? `Make today a good one, ${activeMember.name}.`
     : "Make today a good one.";
   document.getElementById("active-person-badge").textContent = activeMember
-    ? `Playing as ${activeMember.name}` : "Family space";
+    ? `Playing as ${activeMember.name}` : "Choose who's playing";
+  const rewards = document.getElementById("active-profile-rewards");
+  rewards.replaceChildren();
+  if (activeMember) rewards.append(createProfileRewardSummary(activeMember));
+  else {
+    const note = document.createElement("p");
+    note.className = "fun-note";
+    note.textContent = "No profiles yet. Add your family in Settings to start playing.";
+    rewards.append(note);
+  }
 }
+
+const profilePicker = document.getElementById("profile-picker");
+document.getElementById("active-person-badge").addEventListener("click", () => {
+  renderProfileSelector();
+  profilePicker.showModal();
+  document.getElementById("active-person-badge").setAttribute("aria-expanded", "true");
+  const selector = document.getElementById("active-profile");
+  (selector.disabled ? document.getElementById("close-profile-picker") : selector).focus();
+});
+document.getElementById("close-profile-picker").addEventListener("click", () => profilePicker.close());
+profilePicker.addEventListener("close", () => {
+  document.getElementById("active-person-badge").setAttribute("aria-expanded", String(profilePicker.open));
+});
+profilePicker.addEventListener("click", (event) => {
+  const bounds = profilePicker.getBoundingClientRect();
+  if (event.target === profilePicker &&
+      (event.clientX < bounds.left || event.clientX > bounds.right || event.clientY < bounds.top || event.clientY > bounds.bottom)) {
+    profilePicker.close();
+  }
+});
+document.getElementById("profile-picker-settings").addEventListener("click", () => {
+  profilePicker.close();
+  document.getElementById("manage-profiles").click();
+});
 
 document.getElementById("active-profile").addEventListener("change", (event) => {
   activeMemberId = event.currentTarget.value;
   try {
     localStorage.setItem("family-fun-active-profile", activeMemberId);
   } catch {
-    // The selected profile remains active for this page session.
+    setDataFeedback("Profile changed for this visit, but could not be saved. Check browser storage before closing the page.", true);
   }
   renderProfileSelector();
   document.getElementById("alert-member").value = activeMemberId;
   document.getElementById("routine-member").value = activeMemberId;
   renderRoutineChart();
   renderGameForProfile();
+  profilePicker.close();
 });
 
 document.getElementById("manage-profiles").addEventListener("click", () => {
@@ -2501,11 +2551,11 @@ function renderHealthyQuest(member) {
 function renderGameForProfile() {
   const member = members.find((candidate) => candidate.id === activeMemberId);
   document.getElementById("game-heading").textContent = member
-    ? `${member.name}'s brain break`
-    : "Brain break";
+    ? `${member.name}'s Play Time`
+    : "Play Time";
   document.getElementById("game-intro").textContent = member
-    ? `A quick puzzle picked for ${member.name}.`
-    : "Choose a family profile to play.";
+    ? `Brain games, pet care, and little adventures for ${member.name}.`
+    : "Use the Playing as button above to choose a family member.";
   activePuzzle = getPuzzleForProfile(member?.id || "family");
   document.getElementById("puzzle-prompt").textContent = activePuzzle.sequence;
   document.getElementById("puzzle-hint").textContent = activePuzzle.hint;
