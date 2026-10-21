@@ -696,23 +696,23 @@ html[data-theme="dark"] .app-shell :is(.member-stars, .assignment-reward) { colo
 .daily-routine .daily-period-heading { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 8px; padding: 22px 0 10px; border-bottom: 2px solid var(--border); }
 .daily-routine .daily-period-heading h4 { margin: 0; font-size: 17px; letter-spacing: 0; }
 .daily-period-count { color: var(--muted); font-size: 13px; }
-.daily-routine .routine-entry { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 16px; padding: 16px 2px; border: 0; border-bottom: 1px solid var(--border); border-radius: 0; background: transparent; }
-.daily-routine .routine-detail { gap: 5px; }
-.app-shell .daily-routine .routine-detail > .routine-task-title { padding: 0; border-radius: 0; background: none; color: var(--ink); font-size: 17px; font-weight: 700; line-height: 1.45; }
-.app-shell .daily-routine .routine-detail > .routine-time-note { margin-left: 8px; font-size: 13px; }
-.routine-secondary { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 12px; color: var(--muted); font-size: 13px; line-height: 1.5; }
-.app-shell .daily-routine .routine-reward-badge { margin: 0; padding: 2px 8px; font-size: 13px; font-weight: 600; }
+.daily-routine .routine-entry { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) auto auto 44px; align-items: center; gap: 12px; padding: 6px 0; border: 0; border-bottom: 1px solid var(--border); border-radius: 0; background: transparent; }
+.daily-routine .routine-detail { display: contents; }
+.app-shell .daily-routine .routine-detail > .routine-task-title { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; padding: 0; border-radius: 0; background: none; color: var(--ink); font-size: 16px; font-weight: 600; line-height: 1.45; }
+.app-shell .daily-routine .routine-detail > .routine-time-note { margin: 0; font-size: 12px; white-space: nowrap; }
+.app-shell .daily-routine .routine-reward-badge { align-self: center; margin: 0; padding: 2px 7px; font-size: 12px; font-weight: 600; white-space: nowrap; }
 .daily-routine .routine-star-coins { background: #faf1d7; color: #73551e; }
 .daily-routine .routine-game-minutes { background: #f0ebf7; color: #644785; }
-.app-shell .daily-routine .complete-button { min-height: 44px; min-width: 82px; padding: 8px 12px; border-radius: 10px; font-size: 13px; font-weight: 600; }
+.app-shell .daily-routine .complete-button { width: 44px; height: 44px; min-width: 44px; padding: 0; border-radius: 50%; font-size: 22px; line-height: 1; }
 .app-shell .daily-routine .routine-entry.is-complete .routine-task-title { color: var(--muted); text-decoration-color: var(--border); font-weight: 500; }
 .app-shell .daily-routine .routine-entry.is-complete .complete-button { border-color: transparent; background: transparent; }
 html[data-theme="dark"] .daily-routine .routine-star-coins { background: #44371e; color: #f3d993; }
 html[data-theme="dark"] .daily-routine .routine-game-minutes { background: #3b304d; color: #dcc9f2; }
 html[data-theme="dark"] .daily-routine .routine-entry { background: transparent; }
 @media (max-width: 390px) {
-  .daily-routine .routine-entry { gap: 10px; }
-  .app-shell .daily-routine .complete-button { min-width: 72px; padding: 8px; font-size: 12px; }
+  .daily-routine .routine-entry { gap: 6px; }
+  .app-shell .daily-routine .routine-detail > .routine-task-title { font-size: 14px; }
+  .app-shell .daily-routine .routine-reward-badge { padding: 2px 5px; }
 }
 @media (min-width: 700px) {
   .daily-routine .profile-reward-summary { grid-template-columns: repeat(3, minmax(0, 1fr)); }

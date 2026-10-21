@@ -156,8 +156,10 @@ included in the dinner spinner until a date is assigned.
 one earned game-time balance and reward stars. Today is selected by
 default; other dates can be viewed without allowing future tasks to be completed.
 Optional quests are separate and do not count toward daily checklist progress.
-The daily list uses simple divided rows with bold task names, scheduled times
-as quieter sub-bullets, compact coin/minute badges, and one-tap completion.
+The daily list uses single-line divided rows: task name, scheduled time,
+compact coin/minute badge, and a 44-pixel check button. Long names are
+ellipsized visually; the full name remains in the hover tooltip and accessible
+completion label. Checked items show a tick; future items show a disabled dash.
 Each time-of-day heading shows its own completion count. Untimed daily items
 omit repetitive "Any time" labels; Calendar keeps the full family details.
 Choose **Optional quest** when creating an assignment in Calendar.
