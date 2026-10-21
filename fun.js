@@ -43,7 +43,7 @@ let arcadeProfileId = "";
 let currentArcadeChallenge = null;
 
 function createDefaultFunState() {
-  return { version: 1, profiles: {}, bingo: {}, rewards: [], wishes: [], requests: [], wall: [], steps: 0 };
+  return { version: 1, profiles: {}, bingo: {}, rewards: [], wishes: [], journal: [], requests: [], wall: [], steps: 0 };
 }
 
 function isFunText(value, max = 200) {
@@ -64,6 +64,12 @@ function isValidFunState(state, family = members) {
       !object(state.bingo) || !Number.isSafeInteger(state.steps) || state.steps < 0 ||
       !Array.isArray(state.rewards) || !Array.isArray(state.requests) || !Array.isArray(state.wall)) return false;
   const wishes = state.wishes === undefined ? [] : state.wishes;
+  const journal = state.journal === undefined ? [] : state.journal;
+  if (!Array.isArray(journal) || !journal.every((entry) =>
+    object(entry) && memberExists(entry.memberId) && isFunDate(entry.date) &&
+    isFunText(entry.note, 2000) && entry.note.trim().length > 0 &&
+    typeof entry.rewarded === "boolean") ||
+    new Set(journal.map((entry) => JSON.stringify([entry.memberId, entry.date]))).size !== journal.length) return false;
   if (!Array.isArray(wishes) ||
       !wishes.every((wish) => object(wish) && isFunText(wish.id, 100) &&
         memberExists(wish.memberId) && isFunText(wish.title, 60) &&
@@ -918,6 +924,58 @@ function renderDinnerSpinner() {
       : `No meals planned for ${formatMealDate(date)}. Add a dated meal below.`;
 }
 
+function renderGratitudeJournal() {
+  const member = getFunMember();
+  const date = document.getElementById("daily-routine-date").value;
+  const form = document.getElementById("gratitude-form");
+  const entry = (funState.journal || []).find((item) => item.memberId === member?.id && item.date === date);
+  const key = JSON.stringify([member?.id || "", date]);
+  if (form.dataset.context !== key || form.dataset.savedNote !== (entry?.note || "")) {
+    form.elements.note.value = entry?.note || "";
+    document.getElementById("gratitude-feedback").textContent = "";
+  }
+  form.dataset.context = key;
+  form.dataset.savedNote = entry?.note || "";
+  const available = !!member && isValidDateKey(date) && date <= toDateKey(new Date());
+  form.elements.note.disabled = !available;
+  form.querySelector("button").disabled = !available;
+  form.querySelector("button").textContent = entry ? "Update my note" : "Save my grateful note";
+  document.getElementById("gratitude-person").textContent = member
+    ? `${member.name}'s night-time reflection · ${isValidDateKey(date) ? formatMealDate(date) : "Choose a date"}`
+    : "Choose who's playing to write your own grateful note.";
+  document.getElementById("gratitude-reward").textContent = !available
+    ? "Notes can be saved for today or an earlier date, not a future day."
+    : entry?.rewarded ? "\u2605 10 coins already earned for this note. Edits do not earn extra coins."
+      : member.role === "child" && date === toDateKey(new Date())
+        ? "\u2605 Save today's grateful note to earn 10 coins, once today."
+        : member.role === "child" ? "You can write about earlier days. The 10-coin reward is only for today's note."
+          : "A quiet moment to appreciate your day. Grown-up notes do not earn coins.";
+}
+
+document.getElementById("gratitude-form").addEventListener("submit", (event) => {
+  event.preventDefault();
+  const member = getFunMember();
+  const date = document.getElementById("daily-routine-date").value;
+  const note = event.currentTarget.elements.note.value.trim();
+  const today = toDateKey(new Date());
+  if (!member || !isValidDateKey(date) || date > today || !isFunText(note, 2000)) {
+    funMessage("Choose your profile and today or an earlier date, then write a grateful note of 1 to 2,000 characters.", true, "gratitude-feedback");
+    return;
+  }
+  const entry = (funState.journal || []).find((item) => item.memberId === member.id && item.date === date);
+  const award = member.role === "child" && date === today && !entry?.rewarded;
+  const saved = commitFunChange(() => {
+    funState.journal ||= [];
+    if (entry) {
+      entry.note = note;
+      if (award) entry.rewarded = true;
+    } else funState.journal.push({ memberId: member.id, date, note, rewarded: award });
+    if (award) member.stars += 10;
+  }, "", "gratitude-feedback", award);
+  if (saved) funMessage(award ? "Grateful note saved! +10 reward stars (coins) added to your piggy bank."
+    : "Your grateful note is saved. Thank you for reflecting on your day.", false, "gratitude-feedback");
+});
+
 function renderFunHub() {
   const member = getFunMember();
   document.getElementById("fun-wallet").textContent = member ? `${member.stars} reward stars to spend` : "";
@@ -931,6 +989,7 @@ function renderFunHub() {
   renderQuest(member);
   renderPetShop(member);
   renderRewardShop(member);
+  renderGratitudeJournal();
   renderWall();
   renderDinnerSpinner();
   if (member && virtualPets[member.id]) decoratePet(member);

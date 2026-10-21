@@ -164,6 +164,21 @@ transfers $1 in Greenlight separately, then marks it delivered. Canceling refund
 the reserved stars once. There is no banking connection or automatic transfer,
 and no card credentials are stored. The fixed default reward cannot be removed.
 
+### Nightly grateful journal
+
+Everyone has a dated grateful-note form in **Routine**, with a gentle bedtime
+reflection prompt. Kids earn **10 reward stars (coins)** for saving today's
+nonblank note, once per local calendar day. Editing or resubmitting it never
+awards the same bonus again. Adults can journal without earning coins.
+There is no strict evening-hour lock, so families can fit their own bedtime.
+Earlier dates can be revisited or written without earning backdated coins;
+future entries cannot be saved. Notes are limited to 2,000 characters.
+
+Journal entries and their once-only reward markers stay in browser storage and
+family backups. Older backups without journals still work. Notes appear only
+for the selected profile/date, but shared-device profiles are not private
+accounts. Successful coin awards use the piggy-bank earning animation.
+
 ### Wishlist & piggy-bank goals
 
 In **Rewards**, each person can add a wish and pick a playful icon. Children

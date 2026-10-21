@@ -145,6 +145,12 @@ html[data-theme="dark"][data-play-theme="cube"] .primary-button { background: #3
 .app-shell .bingo-cell { font-size: 14px; }
 
 .rewards-page { padding: 24px; }
+.gratitude-journal { margin-top: 28px; padding: 22px; border: 2px solid #ddccef; border-radius: 22px; background: linear-gradient(125deg, #faf4ff, #fff8e9); }
+.gratitude-journal h3 { margin-top: 8px; overflow-wrap: anywhere; }
+.gratitude-journal textarea { display: block; box-sizing: border-box; width: 100%; min-height: 120px; margin-top: 10px; padding: 14px; border: 2px solid #c5afd9; border-radius: 14px; background: #fff; color: var(--ink); font: inherit; line-height: 1.6; resize: vertical; }
+.gratitude-journal textarea:focus-visible { outline: 3px solid var(--green); outline-offset: 3px; }
+html[data-theme="dark"] .gratitude-journal { background: linear-gradient(125deg, #30243e, #352e22); border-color: #79618e; }
+html[data-theme="dark"] .gratitude-journal textarea { background: #202a25; border-color: #9175a7; }
 .rewards-page h2, .rewards-page h3, .dream-shortcut h3 { overflow-wrap: anywhere; }
 .reward-header-art { width: 110px; height: 100px; flex: none; }
 .dream-shortcut { display: flex; align-items: center; gap: 16px; margin: 20px 0; padding: 16px; border: 2px solid #d8c9f1; border-radius: 18px; background: #faf0ff; }
