@@ -2204,6 +2204,9 @@ function refreshRoutineDay() {
   if (document.getElementById("daily-routine-date").value === routineToday) {
     document.getElementById("daily-routine-date").value = current;
   }
+  if (document.getElementById("gratitude-date").value === routineToday) {
+    document.getElementById("gratitude-date").value = current;
+  }
   if (selectedDate === routineToday) {
     const previous = dateFromKey(routineToday);
     selectedDate = current;

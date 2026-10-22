@@ -33,6 +33,7 @@ const adventureChapters = [
 const arcadeGames = ["word", "math", "memory", "riddle", "odd", "pattern"];
 const wishIcons = { gift: "\u{1F381}", toy: "\u{1F9F8}", book: "\u{1F4DA}", adventure: "\u{1F680}", game: "\u{1F3AE}" };
 const greenlightReward = Object.freeze({ id: "greenlight-one-dollar", title: "$1 to Greenlight debit card", cost: 100 });
+const familyWallKinds = Object.freeze({ gratitude: "Gratefulness", "family-win": "Family win", kindness: "Kindness", manual: "Family win" });
 const funStorageKey = "family-fun-extra-fun";
 let funStorageBlocked = false;
 let funState = readFunState();
@@ -154,15 +155,8 @@ function funId() {
   return crypto.randomUUID();
 }
 
-function addWallWin(memberId, title, kind) {
-  funState.wall.unshift({ id: funId(), memberId, title: title.slice(0, 200), kind, date: toDateKey(new Date()) });
-}
-
-function addAdventureStep(memberId, title, kind) {
+function addAdventureStep() {
   funState.steps += 1;
-  addWallWin(memberId, title, kind);
-  const chapter = adventureChapters.find((item) => item.at === funState.steps);
-  if (chapter) addWallWin(memberId, `Family unlocked ${chapter.name}!`, "adventure");
 }
 
 function commitFunChange(change, message = "", feedbackTarget = "fun-feedback", celebrate = false) {
@@ -212,12 +206,9 @@ function commitFunChange(change, message = "", feedbackTarget = "fun-feedback", 
   return true;
 }
 
-function recordFunActivity(memberId, kind, title) {
-  if (!members.some((member) => member.id === memberId)) return;
-  commitFunChange(() => {
-    if (["brain", "chore", "healthy"].includes(kind)) addAdventureStep(memberId, title, kind);
-    else addWallWin(memberId, title, kind);
-  });
+function recordFunActivity(memberId, kind) {
+  if (!members.some((member) => member.id === memberId) || !["brain", "chore", "healthy"].includes(kind)) return;
+  commitFunChange(addAdventureStep);
 }
 
 function funElement(tag, text, className) {
@@ -451,10 +442,9 @@ function finishArcade(game) {
       member.brainStars = (member.brainStars || 0) + 1;
       if (Math.floor(member.brainStars / 100) > previousBadges) {
         member.gameMinutes = (member.gameMinutes || 0) + 10;
-        addWallWin(member.id, "Brain Booster badge and 10 screen-time minutes!", "badge");
       }
     }
-    addAdventureStep(member.id, `Completed ${document.querySelector(`#arcade-game option[value="${game}"]`).textContent}`, "arcade");
+    addAdventureStep();
   }, "", "fun-feedback", true);
   if (!success) {
     if (game === "memory") resetMemoryGame();
@@ -493,11 +483,10 @@ function completeBingo(index) {
   commitFunChange(() => {
     funState.bingo[week] = board;
     board.cells[index] = member.id;
-    addAdventureStep(member.id, `Bingo: ${bingoLabels(week)[index]}`, "bingo");
+    addAdventureStep();
     if (!board.claimed && hasBingo(board.cells)) {
       board.claimed = true;
       if (member.role === "child") member.stars += 1;
-      addWallWin(member.id, "Family bingo! A full line completed.", "badge");
     }
   }, "Bingo square completed! A first full line earns its completing child one reward star.", "fun-feedback", true);
 }
@@ -537,7 +526,7 @@ function changeQuest(complete) {
     if (complete) {
       quest.completed = true;
       if (member.role === "child") member.stars += 1;
-      addAdventureStep(member.id, "Daily mystery mission completed!", "quest");
+      addAdventureStep();
     }
   }, complete ? "Mission complete! Your adventure moves forward." : "Your mission is revealed. Have fun!", "fun-feedback", complete);
 }
@@ -586,7 +575,6 @@ function buyPetItem(itemId) {
     if (!owned) {
       member.stars -= item.cost;
       profile.owned.push(item.id);
-      addWallWin(member.id, `Bought ${item.name} for their pet`, "pet");
     }
     if (profile.equipped[item.slot] === item.id) delete profile.equipped[item.slot];
     else profile.equipped[item.slot] = item.id;
@@ -669,7 +657,6 @@ function changeRewardRequest(id, action) {
       request.status = "delivered";
       const profile = getFunProfile(owner.id);
       if (request.wishId && profile.goalWishId === request.wishId) delete profile.goalWishId;
-      addWallWin(owner.id, `Enjoyed a reward: ${request.title}`, "reward");
     }
   }, action === "cancel" ? "Request canceled and reward stars refunded." : `Reward ${request.status === "pending" ? "approved" : "delivered"}.`, "reward-feedback");
 }
@@ -887,22 +874,51 @@ function renderAdventure() {
   document.getElementById("adventure-story").textContent = adventureChapters[current].story;
 }
 
+function getFamilyWallPosts() {
+  return [
+    ...funState.wall.filter((win) => Object.hasOwn(familyWallKinds, win.kind))
+      .map((win) => ({ ...win, source: "wall" })),
+    ...(funState.journal || []).map((entry) => ({
+      memberId: entry.memberId, date: entry.date, title: entry.note, kind: "gratitude", source: "journal",
+    })).reverse(),
+  ].sort((a, b) => b.date.localeCompare(a.date));
+}
+
 function renderWall() {
   const wall = document.getElementById("celebration-wall");
+  if (wall.dataset.memberId !== (activeMemberId || "")) {
+    funMessage("", false, "wall-feedback");
+    document.getElementById("celebration-form").reset();
+    wall.dataset.memberId = activeMemberId || "";
+  }
   wall.replaceChildren();
-  if (!funState.wall.length) wall.append(funElement("li", "Your first little win belongs here. Play a game, finish a quest, or add a milestone."));
-  for (const win of funState.wall.slice(0, 40)) {
+  const posts = getFamilyWallPosts();
+  if (!posts.length) wall.append(funElement("li", "What made your family smile? Share something you're grateful for, a family win, or an act of kindness."));
+  for (const win of posts.slice(0, 40)) {
     const name = members.find((member) => member.id === win.memberId)?.name || "Family";
     const row = funElement("li");
-    row.append(funElement("strong", win.title), funElement("span", `${name} \u00b7 ${dateFromKey(win.date).toLocaleDateString()}`));
-    if (win.kind === "manual" && (isUnlockedParent(getFunMember()) || activeMemberId === win.memberId)) {
+    row.append(funElement("span", familyWallKinds[win.kind], "family-wall-category"),
+      funElement("strong", win.title), funElement("span", `${name} \u00b7 ${dateFromKey(win.date).toLocaleDateString()}`));
+    if (win.source === "journal") {
+      row.append(funElement("span", "From grateful journal"));
+      if (activeMemberId === win.memberId) row.append(funButton("Edit my note", () => {
+        document.getElementById("gratitude-date").value = win.date;
+        activateTheme("routine");
+        renderGratitudeJournal();
+        document.getElementById("gratitude-note").focus();
+      }));
+    } else if (isUnlockedParent(getFunMember()) || activeMemberId === win.memberId) {
       row.append(funButton("Remove", () => {
-        commitFunChange(() => { funState.wall = funState.wall.filter((item) => item.id !== win.id); }, "Milestone removed.");
+        if (!isUnlockedParent(getFunMember()) && activeMemberId !== win.memberId) {
+          funMessage("Choose your own profile or unlock a parent profile to remove this post.", true, "wall-feedback");
+          return;
+        }
+        commitFunChange(() => { funState.wall = funState.wall.filter((item) => item.id !== win.id); }, "Family post removed.", "wall-feedback");
       }));
     }
     wall.append(row);
   }
-  if (funState.wall.length > 40) wall.append(funElement("li", "Showing the latest 40 wins. All wins are included in your backup."));
+  if (posts.length > 40) wall.append(funElement("li", "Showing the latest 40 family posts. All posts are included in your backup."));
 }
 
 function getDinnerChoices() {
@@ -926,7 +942,11 @@ function renderDinnerSpinner() {
 
 function renderGratitudeJournal() {
   const member = getFunMember();
-  const date = document.getElementById("daily-routine-date").value;
+  const dateInput = document.getElementById("gratitude-date");
+  const today = toDateKey(new Date());
+  dateInput.max = today;
+  if (!dateInput.value) dateInput.value = today;
+  const date = dateInput.value;
   const form = document.getElementById("gratitude-form");
   const entry = (funState.journal || []).find((item) => item.memberId === member?.id && item.date === date);
   const key = JSON.stringify([member?.id || "", date]);
@@ -936,15 +956,16 @@ function renderGratitudeJournal() {
   }
   form.dataset.context = key;
   form.dataset.savedNote = entry?.note || "";
-  const available = !!member && isValidDateKey(date) && date <= toDateKey(new Date());
+  const available = !!member && isValidDateKey(date) && date <= today;
   form.elements.note.disabled = !available;
   form.querySelector("button").disabled = !available;
   form.querySelector("button").textContent = entry ? "Update my note" : "Save my grateful note";
   document.getElementById("gratitude-person").textContent = member
     ? `${member.name}'s night-time reflection · ${isValidDateKey(date) ? formatMealDate(date) : "Choose a date"}`
     : "Choose who's playing to write your own grateful note.";
-  document.getElementById("gratitude-reward").textContent = !available
-    ? "Notes can be saved for today or an earlier date, not a future day."
+  document.getElementById("gratitude-reward").textContent = !member
+    ? "Choose your profile with Playing as, then write your note. Parents can write too after unlocking their profile."
+    : !available ? "This is a future or invalid date. Choose Write today's note to start writing."
     : entry?.rewarded ? "\u2605 10 coins already earned for this note. Edits do not earn extra coins."
       : member.role === "child" && date === toDateKey(new Date())
         ? "\u2605 Save today's grateful note to earn 10 coins, once today."
@@ -952,10 +973,28 @@ function renderGratitudeJournal() {
           : "A quiet moment to appreciate your day. Grown-up notes do not earn coins.";
 }
 
+document.getElementById("gratitude-date").addEventListener("change", renderGratitudeJournal);
+document.getElementById("gratitude-start").addEventListener("click", () => {
+  document.getElementById("gratitude-date").value = toDateKey(new Date());
+  renderGratitudeJournal();
+  if (!getFunMember()) {
+    document.getElementById("active-person-badge").click();
+    return;
+  }
+  document.getElementById("gratitude-note").focus();
+});
+document.getElementById("view-family-wall").addEventListener("click", () => {
+  activateTheme("fun");
+  const wall = document.getElementById("family-wall");
+  wall.open = true;
+  wall.scrollIntoView({ block: "start" });
+  wall.querySelector("summary").focus();
+});
+
 document.getElementById("gratitude-form").addEventListener("submit", (event) => {
   event.preventDefault();
   const member = getFunMember();
-  const date = document.getElementById("daily-routine-date").value;
+  const date = document.getElementById("gratitude-date").value;
   const note = event.currentTarget.elements.note.value.trim();
   const today = toDateKey(new Date());
   if (!member || !isValidDateKey(date) || date > today || !isFunText(note, 2000)) {
@@ -972,8 +1011,8 @@ document.getElementById("gratitude-form").addEventListener("submit", (event) => 
     } else funState.journal.push({ memberId: member.id, date, note, rewarded: award });
     if (award) member.stars += 10;
   }, "", "gratitude-feedback", award);
-  if (saved) funMessage(award ? "Grateful note saved! +10 reward stars (coins) added to your piggy bank."
-    : "Your grateful note is saved. Thank you for reflecting on your day.", false, "gratitude-feedback");
+  if (saved) funMessage(award ? "Grateful note shared on the Family Gratitude Wall! +10 reward stars (coins) added to your piggy bank."
+    : "Your grateful note is saved and shared on the Family Gratitude Wall.", false, "gratitude-feedback");
 });
 
 function renderFunHub() {
@@ -982,7 +1021,7 @@ function renderFunHub() {
   document.getElementById("fun-profile-note").textContent = member
     ? `Playing as ${member.name}. Progress stays in this browser. Use the Playing as button above to switch family members.`
     : "No profiles yet. Add family members in Settings to start playing.";
-  document.querySelectorAll("#celebration-form input, #celebration-form button").forEach((control) => { control.disabled = !member; });
+  document.querySelectorAll("#celebration-form textarea, #celebration-form select, #celebration-form button").forEach((control) => { control.disabled = !member; });
   renderAdventure();
   renderArcade(member);
   renderBingo(member);
@@ -1057,11 +1096,14 @@ document.getElementById("celebration-form").addEventListener("submit", (event) =
   const member = getFunMember();
   const form = event.currentTarget;
   const title = form.elements.title.value.trim();
-  if (!member || !title || title.length > 100) {
-    funMessage("Choose a profile and enter a milestone of up to 100 characters.", true);
+  const kind = form.elements.kind.value;
+  if (!member || !title || title.length > 200 || !["gratitude", "family-win", "kindness"].includes(kind)) {
+    funMessage("Choose a profile, a sharing category, and a message of 1 to 200 characters.", true, "wall-feedback");
     return;
   }
-  if (commitFunChange(() => addWallWin(member.id, title, "manual"), "Your little win is on the wall!")) form.reset();
+  if (commitFunChange(() => {
+    funState.wall.unshift({ id: funId(), memberId: member.id, title, kind, date: toDateKey(new Date()) });
+  }, "Shared with your family! Thank you for spreading a little joy.", "wall-feedback")) form.reset();
 });
 document.getElementById("spin-dinner").addEventListener("click", () => {
   const choices = getDinnerChoices();

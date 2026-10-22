@@ -45,6 +45,12 @@
 .celebration-wall li { align-content: start; }
 .celebration-wall li strong { width: 100%; }
 .celebration-wall li span { color: var(--muted); font-size: 11px; }
+.family-wall-form textarea { box-sizing: border-box; width: 100%; min-height: 100px; padding: 12px; border: 1px solid var(--border); border-radius: 10px; background: white; color: var(--ink); font: inherit; line-height: 1.6; resize: vertical; }
+.family-wall-form textarea:focus-visible { outline: 3px solid var(--green); outline-offset: 3px; }
+.app-shell .celebration-wall .family-wall-category { flex: none; padding: 3px 9px; border-radius: 14px; background: var(--green-light); color: var(--green); font-size: 13px; font-weight: 700; }
+.celebration-wall li strong { white-space: pre-wrap; }
+.celebration-wall li { min-width: 0; }
+html[data-theme="dark"] .family-wall-form textarea { background: #18221d; }
 .adventure-map { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; padding: 0; list-style: none; }
 .adventure-map li { padding: 9px; border: 1px dashed var(--border); border-radius: 8px; font-size: 12px; }
 .adventure-map li[aria-current] { border: 1px solid #76b997; background: #e7f2ec; color: #26735d; font-weight: 700; }
