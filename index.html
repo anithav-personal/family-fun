@@ -5,12 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#f7f6f1">
     <title>Family Fun</title>
-    <link rel="stylesheet" href="styles.css?v=oneline-routine-1">
-    <link rel="stylesheet" href="fun.css?v=oneline-routine-1">
-    <script src="parent-lock.js?v=oneline-routine-1" defer></script>
-    <script src="earnings.js?v=oneline-routine-1" defer></script>
-    <script src="app.js?v=oneline-routine-1" defer></script>
-    <script src="fun.js?v=oneline-routine-1" defer></script>
+    <link rel="stylesheet" href="styles.css?v=family-wall-1">
+    <link rel="stylesheet" href="fun.css?v=family-wall-1">
+    <script src="parent-lock.js?v=family-wall-1" defer></script>
+    <script src="earnings.js?v=family-wall-1" defer></script>
+    <script src="app.js?v=family-wall-1" defer></script>
+    <script src="fun.js?v=family-wall-1" defer></script>
   </head>
   <body>
     <a class="skip-link" href="#section-guide">Skip to this section</a>
@@ -148,6 +148,11 @@
             <h3 id="gratitude-heading">&#127769; My grateful journal</h3>
             <p id="gratitude-person" class="fun-note"></p>
             <p id="gratitude-prompt">What made you smile today? Who helped you, or what are you grateful for?</p>
+            <div class="daily-routine-controls">
+              <label>Journal date <input id="gratitude-date" type="date" required></label>
+              <button id="gratitude-start" class="data-button" type="button">Write today's note</button>
+              <button id="view-family-wall" class="data-button" type="button">Family Gratitude Wall</button>
+            </div>
             <form id="gratitude-form">
               <label class="fun-field" for="gratitude-note">Tonight, I am grateful for...</label>
               <textarea id="gratitude-note" name="note" rows="4" maxlength="2000" placeholder="One little thing that made today special..." aria-describedby="gratitude-prompt gratitude-reward" required></textarea>
@@ -155,7 +160,7 @@
               <button class="primary-button" type="submit">Save my grateful note</button>
             </form>
             <p id="gratitude-feedback" class="fun-feedback" role="status"></p>
-            <p class="fun-note">Your note stays in this browser and your family backup. Use the Routine date above to revisit a night. Shared-device profiles are not private accounts.</p>
+            <p class="fun-note">All saved gratitude notes appear on the Family Gratitude Wall for everyone in this browser. Use Journal date to revisit a night. Notes stay in this browser and family backups, not on the public website.</p>
           </section>
           <section id="routine-rewards" aria-labelledby="routine-rewards-heading">
             <h3 id="routine-rewards-heading">Ready-to-redeem rewards</h3>
@@ -496,15 +501,24 @@
                 <p class="fun-note">Dream up a wish and fill your piggy bank in Rewards.</p>
                 <button id="open-rewards" class="data-button" type="button">Redeem reward stars</button>
               </div>
-              <details class="fun-card fun-wide">
-                <summary>Celebration wall</summary>
-                <p class="fun-note">Your family's milestones, badges, and little wins stay in this browser and your exported backup.</p>
-                <form id="celebration-form" class="fun-form">
-                  <label class="fun-field">Celebrate a win
-                    <input name="title" maxlength="100" placeholder="Learned something new!" required>
+              <details id="family-wall" class="fun-card fun-wide">
+                <summary>Family Gratitude Wall</summary>
+                <p class="fun-note">A place to share gratefulness, celebrate family wins, and notice kindness. Only what you choose to share appears here, not automatic task or game updates.</p>
+                <form id="celebration-form" class="fun-form family-wall-form">
+                  <label class="fun-field">I want to share...
+                    <select name="kind">
+                      <option value="gratitude">Gratefulness</option>
+                      <option value="family-win">A family win</option>
+                      <option value="kindness">An act of kindness</option>
+                    </select>
                   </label>
-                  <button class="primary-button" type="submit">Add to the wall</button>
+                  <label class="fun-field">My message to our family
+                    <textarea name="title" rows="3" maxlength="200" placeholder="I'm grateful for... We celebrated... Thank you for helping..." required></textarea>
+                  </label>
+                  <button class="primary-button" type="submit">Share with family</button>
                 </form>
+                <p id="wall-feedback" class="fun-feedback" role="status"></p>
+                <p class="fun-note">Everyone's grateful journal notes appear here automatically, alongside shared family wins and kindness. Posting directly here does not earn coins; kids earn their journal bonus only once per day. Everything stays in this browser and family backups.</p>
                 <ul id="celebration-wall" class="fun-list celebration-wall"></ul>
               </details>
             </div>

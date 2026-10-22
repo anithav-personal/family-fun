@@ -75,8 +75,18 @@ Play Time now includes:
 - **Dinner spinner:** in What's Cooking, choose a dinner date and randomly pick
   only from meals planned for that date, or pick a family helper. An adult
   should choose safe, age-appropriate kitchen jobs.
-- **Celebration wall:** automatically collect milestones and badges, or add
-  your own little wins. The latest 40 appear on screen; backups keep all wins.
+- **Family Gratitude Wall:** intentionally share gratefulness, family wins,
+  and acts of kindness, with a category and a message of up to 200 characters.
+  Routine completions, games, badges, pet purchases, adventure chapters, and
+  reward deliveries no longer create wall posts. Older automatic activity
+  records are hidden from the wall but retained in backups; existing manually
+  shared wins stay visible. The latest 40 family posts appear on screen;
+  backups keep all posts. You can remove your own direct posts, and unlocked
+  parents can remove any direct family post. Sharing does not award coins.
+  All saved grateful journal notes, including older entries, appear on the wall
+  automatically with their author and date. Journal notes are displayed directly
+  from the journal, so edits update the wall without duplicate posts or extra
+  rewards. Use **Edit my note** to update your journal entry.
 
 All play progress, purchases, requests, and milestones are saved locally and
 included in Export data / Import data. Older backups still import with empty
@@ -187,13 +197,19 @@ reflection prompt. Kids earn **10 reward stars (coins)** for saving today's
 nonblank note, once per local calendar day. Editing or resubmitting it never
 awards the same bonus again. Adults can journal without earning coins.
 There is no strict evening-hour lock, so families can fit their own bedtime.
+The journal has its own **Journal date**, independent of the Routine checklist
+date, so looking ahead at tasks does not disable today's journal.
+**Write today's note** resets to today and focuses the editor (or opens the
+profile chooser if no one is selected). Unlocked parents can write and save
+notes just like children, without earning coins.
 Earlier dates can be revisited or written without earning backdated coins;
 future entries cannot be saved. Notes are limited to 2,000 characters.
 
 Journal entries and their once-only reward markers stay in browser storage and
-family backups. Older backups without journals still work. Notes appear only
-for the selected profile/date, but shared-device profiles are not private
-accounts. Successful coin awards use the piggy-bank earning animation.
+family backups. Older backups without journals still work. The editor shows the
+selected profile/date; all saved notes are shared on the Family Gratitude Wall
+in the same browser. Nothing is published to the public website. Successful
+coin awards use the piggy-bank earning animation.
 
 ### Wishlist & piggy-bank goals
 
