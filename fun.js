@@ -962,10 +962,15 @@ function spinFamilyTime() {
   const choices = familyTimeActivities.filter((activity) => activity !== lastFamilyTimeActivity);
   const activity = choices[Math.floor(Math.random() * choices.length)];
   const button = document.getElementById("spin-family-time");
+  const wheelButton = document.getElementById("spin-family-wheel");
+  const card = document.getElementById("family-time-spinner");
   const result = document.getElementById("family-time-result");
   const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   familyTimeBusy = true;
   button.disabled = true;
+  wheelButton.disabled = true;
+  card.classList.add("is-spinning");
+  result.classList.remove("is-revealed");
   button.textContent = "Picking our next adventure...";
   result.setAttribute("aria-busy", "true");
   result.textContent = "A little together-time is on its way...";
@@ -974,15 +979,27 @@ function spinFamilyTime() {
   document.getElementById("family-time-wheel").style.transform = `rotate(${familyTimeRotation}deg)`;
   const finish = () => {
     lastFamilyTimeActivity = activity;
+    const confetti = funElement("div", "", "family-time-confetti");
+    confetti.setAttribute("aria-hidden", "true");
+    for (let index = 0; index < 8; index += 1) {
+      const piece = funElement("span");
+      piece.style.setProperty("--piece", index);
+      confetti.append(piece);
+    }
     result.replaceChildren(
+      confetti,
+      funElement("p", "\u2728 YOUR FAMILY MINI-ADVENTURE", "family-time-reveal-label"),
       funElement("strong", activity.title),
-      funElement("p", `${activity.minutes} minutes together`, "family-time-duration"),
+      funElement("p", `\u23F1 ${activity.minutes} minutes together`, "family-time-duration"),
       funElement("p", activity.instructions),
       funElement("p", `Set a ${activity.minutes}-minute timer, including setup, and wrap up when it rings.`, "fun-note"),
     );
     result.setAttribute("aria-busy", "false");
+    result.classList.add("is-revealed");
+    card.classList.remove("is-spinning");
     button.disabled = false;
-    button.textContent = "Spin again";
+    wheelButton.disabled = false;
+    button.textContent = "\u{1F3B2} One more idea!";
     familyTimeBusy = false;
   };
   if (reducedMotion) finish();
@@ -1174,6 +1191,7 @@ document.getElementById("spin-dinner").addEventListener("click", () => {
     : "Add a meal for the selected date first.";
 });
 document.getElementById("spin-family-time").addEventListener("click", spinFamilyTime);
+document.getElementById("spin-family-wheel").addEventListener("click", spinFamilyTime);
 document.getElementById("routine-family-time").addEventListener("click", () => {
   activateTheme("fun");
   document.getElementById("family-time-spinner").scrollIntoView({ block: "start" });

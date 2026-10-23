@@ -5,12 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#f7f6f1">
     <title>Family Fun</title>
-    <link rel="stylesheet" href="styles.css?v=family-time-1">
-    <link rel="stylesheet" href="fun.css?v=family-time-1">
-    <script src="parent-lock.js?v=family-time-1" defer></script>
-    <script src="earnings.js?v=family-time-1" defer></script>
-    <script src="app.js?v=family-time-1" defer></script>
-    <script src="fun.js?v=family-time-1" defer></script>
+    <link rel="stylesheet" href="styles.css?v=playful-family-time-1">
+    <link rel="stylesheet" href="fun.css?v=playful-family-time-1">
+    <script src="parent-lock.js?v=playful-family-time-1" defer></script>
+    <script src="earnings.js?v=playful-family-time-1" defer></script>
+    <script src="app.js?v=playful-family-time-1" defer></script>
+    <script src="fun.js?v=playful-family-time-1" defer></script>
   </head>
   <body>
     <a class="skip-link" href="#section-guide">Skip to this section</a>
@@ -477,26 +477,29 @@
             <p id="fun-feedback" class="fun-feedback" role="status"></p>
             <div class="fun-grid">
               <section id="family-time-spinner" class="fun-card fun-wide family-time-spinner" aria-labelledby="family-time-heading">
-                <div class="family-time-dial" aria-hidden="true">
-                  <div class="family-time-wheel-clip">
+                <div class="family-time-dial">
+                  <div class="family-time-wheel-clip" aria-hidden="true">
                     <div id="family-time-wheel" class="family-time-wheel">
-                      <span style="--x: 66%; --y: 23%">Laugh</span>
-                      <span style="--x: 81%; --y: 50%">Create</span>
-                      <span style="--x: 66%; --y: 77%">Imagine</span>
-                      <span style="--x: 34%; --y: 77%">Share</span>
-                      <span style="--x: 19%; --y: 50%">Team up</span>
-                      <span style="--x: 34%; --y: 23%">Connect</span>
+                      <span style="--x: 66%; --y: 23%"><b>&#128518;</b>Laugh</span>
+                      <span style="--x: 81%; --y: 50%"><b>&#127912;</b>Create</span>
+                      <span style="--x: 66%; --y: 77%"><b>&#128640;</b>Imagine</span>
+                      <span style="--x: 34%; --y: 77%"><b>&#128172;</b>Share</span>
+                      <span style="--x: 19%; --y: 50%"><b>&#129309;</b>Team up</span>
+                      <span style="--x: 34%; --y: 23%"><b>&#128155;</b>Connect</span>
                     </div>
                   </div>
-                  <span class="family-time-center">Us</span>
+                  <button id="spin-family-wheel" class="family-time-center" type="button" aria-label="Spin the Family Time wheel" aria-controls="family-time-result"><span aria-hidden="true">&#10024;</span>Spin</button>
                 </div>
                 <div class="family-time-copy">
                   <p class="eyebrow">LESS SCROLLING. MORE US.</p>
                   <h3 id="family-time-heading">Family Time spinner</h3>
+                  <p class="family-time-badges"><span>&#9201; 20 minutes or less</span><span>&#128155; Everyone belongs</span></p>
                   <p class="fun-note">A little laughter, a little teamwork, a little closer. Pick something playful to do together in 20 minutes or less.</p>
-                  <button id="spin-family-time" class="primary-button" type="button" aria-controls="family-time-result">Spin for family time</button>
+                  <button id="spin-family-time" class="primary-button family-time-spin-button" type="button" aria-controls="family-time-result">&#127922; Surprise us!</button>
                   <div id="family-time-result" class="family-time-result" role="status" aria-atomic="true">
-                    <p>Gather your people and give it a spin. What will we try together?</p>
+                    <p class="family-time-reveal-label">YOUR NEXT LITTLE ADVENTURE</p>
+                    <strong>Big smiles start with one spin.</strong>
+                    <p>Tap the wheel or hit Surprise us! Then gather your people and try something together.</p>
                   </div>
                   <p class="fun-note">Everyone gets a turn, and passing is always okay. Put devices aside after picking. No scores, coins, or automatic wall posts: just time together.</p>
                 </div>

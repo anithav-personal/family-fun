@@ -50,8 +50,13 @@ Play Time now includes:
 - **Family Time spinner:** spin a colorful wheel for one of 12 playful,
   connecting activities lasting 10–20 minutes, including setup. Try silly
   family awards, pass-the-doodle, a shared story, memory guessing, kindness
-  notes, and more. Each pick includes a time limit and simple instructions;
-  set a timer and wrap up when it rings. Everyone gets a turn, passing is
+  notes, and more. Each pick includes a time limit and simple instructions.
+  Tap the wheel's **Spin** center or **Surprise us!** to pick an activity.
+  Colorful icons, a ticking pointer, a sparkling center button, tactile buttons,
+  and a mini-adventure reveal with a brief confetti burst make choosing part of
+  the fun; **One more idea!** picks again. All animations are short and disabled
+  for reduced-motion preferences.
+  Set a timer and wrap up when it rings. Everyone gets a turn, passing is
   welcome, and there are no scores or prizes. Consecutive spins never repeat
   the same activity. Find it at the top of **More ways to play**, or use
   **Pick some family time** in Routine. It works without a selected profile,
