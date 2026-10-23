@@ -761,3 +761,36 @@ html[data-theme="dark"] .profile-reward-time dd { color: #e5d5ff; }
   .profile-picker { padding: 16px; }
   .profile-reward-tile { padding: 10px; }
 }
+.goal-ending { box-sizing: border-box; width: min(660px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); padding: 24px; border: 4px solid #a384c9; border-radius: 4px; background: linear-gradient(#18122d, #302143); color: #fff5de; text-align: center; font-family: "Courier New", monospace; overflow: auto; overflow-wrap: anywhere; box-shadow: 0 0 0 4px #3c2a50, 0 24px 80px #0009; }
+.goal-ending::backdrop { background: #0d0919dd; }
+.goal-ending-skip { display: flex; justify-content: flex-end; }
+.goal-ending button { min-height: 44px; padding: 10px 16px; border: 2px solid #bba5d7; border-radius: 2px; background: #3a2b51; color: #fff5de; box-shadow: 3px 3px 0 #0c0718; font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
+.goal-ending button:hover { background: #554073; }
+.goal-ending button:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 #0c0718; }
+.goal-ending button:focus-visible { outline: 3px solid #ffdf87; outline-offset: 4px; }
+.goal-ending-scene { position: relative; margin: 0 auto; max-width: 540px; overflow: hidden; }
+.goal-ending-scene svg { display: block; width: 100%; height: auto; }
+.goal-ending-kicker { margin: 8px 0; color: #e2beff; font-size: 13px; font-weight: 700; letter-spacing: 3px; }
+.goal-ending h2 { margin: 12px 0; color: #ffe191; font-size: clamp(24px, 5vw, 34px); line-height: 1.3; }
+.goal-ending #goal-ending-summary { margin: 0; color: #f3eaff; font-size: 17px; line-height: 1.5; }
+.goal-ending-credits { margin: 18px 0; color: #c9e8d5; font-size: 14px; line-height: 1.6; }
+.goal-ending-credits p { margin: 7px 0; }
+.goal-ending-actions { margin-top: 20px; }
+.goal-ending-pixels { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+.goal-ending-pixels span { position: absolute; left: 50%; top: 45%; width: 8px; height: 8px; background: #eac6ff; opacity: 0; }
+.goal-ending-pixels span:nth-child(3n) { background: #ffdb7b; }
+.goal-ending-pixels span:nth-child(3n + 1) { background: #96e5bf; }
+@media (prefers-reduced-motion: no-preference) {
+  .goal-ending.is-playing .goal-ending-island { animation: goal-island-float 3s ease-in-out 2; }
+  .goal-ending.is-playing .goal-ending-portal { animation: goal-portal-glow 2s ease-in-out 3; }
+  .goal-ending.is-playing .goal-ending-pixels span { animation: goal-pixel-burst 1.5s ease-out both; animation-delay: calc(var(--pixel) * .22s); }
+  .goal-ending.is-playing .goal-ending-credits p { animation: goal-credit-rise .8s ease-out both; animation-delay: .5s; }
+  .goal-ending.is-playing .goal-ending-credits p + p { animation-delay: 1.2s; }
+  @keyframes goal-island-float { 50% { transform: translateY(-6px); } }
+  @keyframes goal-portal-glow { 50% { opacity: .55; transform: translateY(-3px); } }
+  @keyframes goal-pixel-burst { 0% { opacity: 0; transform: translate(0, 0) scale(.5); } 15% { opacity: 1; } 100% { opacity: 0; transform: translate(var(--dx), var(--dy)) rotate(90deg); } }
+  @keyframes goal-credit-rise { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+}
+@media (max-width: 390px) {
+  .goal-ending { padding: 16px; }
+}
