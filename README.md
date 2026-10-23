@@ -228,6 +228,19 @@ coin awards use the piggy-bank earning animation.
 
 ### Wishlist & piggy-bank goals
 
+Earning coins that take your balance from below a selected wishlist goal to its
+price or above triggers an original block-world victory ending: a glowing
+voxel portal, floating island, pixel fireworks, and short closing credits with
+your name and wish. It is original artwork and text, not Minecraft assets or
+the game's End Poem. The scene closes after eight seconds; **Skip animation**,
+**Continue adventure**, or Escape dismisses it sooner. Reduced-motion users get
+the same static victory scene. Existing reward sound preferences still apply.
+Selecting an already-funded goal, repricing a wish, importing a backup,
+reloading, refunds, and spending do not trigger it. Pending or approved wishes
+are excluded. Spending below a goal and earning back to its price can celebrate
+that new crossing again. This display awards no extra coins, redeems nothing,
+and creates no automatic wall post.
+
 In **Rewards**, each person can add a wish and pick a playful icon. Children
 cannot price their wishes: an adult profile sets or updates the reward-star
 price (1–10,000). Adults see the whole family's wishlist; children see their own.

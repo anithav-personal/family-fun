@@ -1112,6 +1112,7 @@ function importData(data) {
   }
   unlockedParentId = "";
   parentSetupUnlocked = false;
+  closeGoalCelebration();
   events = data.events;
   members = data.members;
   assignments = data.assignments;
@@ -1982,6 +1983,7 @@ function applyProfileSelection(memberId) {
     parentSetupUnlocked = false;
   }
   activeMemberId = memberId;
+  closeGoalCelebration();
   document.getElementById("earnings-celebration").hidden = true;
   try {
     localStorage.setItem("family-fun-active-profile", activeMemberId);

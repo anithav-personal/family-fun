@@ -5,12 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#f7f6f1">
     <title>Family Fun</title>
-    <link rel="stylesheet" href="styles.css?v=playful-family-time-1">
-    <link rel="stylesheet" href="fun.css?v=playful-family-time-1">
-    <script src="parent-lock.js?v=playful-family-time-1" defer></script>
-    <script src="earnings.js?v=playful-family-time-1" defer></script>
-    <script src="app.js?v=playful-family-time-1" defer></script>
-    <script src="fun.js?v=playful-family-time-1" defer></script>
+    <link rel="stylesheet" href="styles.css?v=block-goal-ending-1">
+    <link rel="stylesheet" href="fun.css?v=block-goal-ending-1">
+    <script src="parent-lock.js?v=block-goal-ending-1" defer></script>
+    <script src="earnings.js?v=block-goal-ending-1" defer></script>
+    <script src="app.js?v=block-goal-ending-1" defer></script>
+    <script src="fun.js?v=block-goal-ending-1" defer></script>
   </head>
   <body>
     <a class="skip-link" href="#section-guide">Skip to this section</a>
@@ -914,6 +914,44 @@
           <div id="routine-days" class="routine-days"></div>
         </div>
       </section>
+      <dialog id="goal-ending" class="goal-ending" aria-labelledby="goal-ending-title" aria-describedby="goal-ending-summary">
+        <form method="dialog" class="goal-ending-skip">
+          <button type="submit" autofocus>Skip animation</button>
+        </form>
+        <div class="goal-ending-scene" aria-hidden="true">
+          <svg viewBox="0 0 600 250" role="presentation" shape-rendering="crispEdges">
+            <path fill="#d8c5ff" d="M60 40h7v7h-7zM124 90h5v5h-5zM186 24h6v6h-6zM415 28h7v7h-7zM481 82h6v6h-6zM538 38h5v5h-5z"/>
+            <g class="goal-ending-island">
+              <path fill="#76658e" d="M170 177h260v22h-30v19h-45v19H245v-19h-45v-19h-30z"/>
+              <path fill="#a392bd" d="M170 163h260v22H170z"/>
+              <path fill="#c1afd6" d="M190 163h42v9h-42zM268 163h22v9h-22zM351 163h58v9h-58z"/>
+              <path fill="#58496c" d="M219 190h27v28h-27zM275 204h38v33h-38zM362 185h25v24h-25z"/>
+              <path fill="#7651a3" d="M250 40h100v123H250z"/>
+              <path fill="#c0a0ed" d="M250 40h100v16H250zM250 40h16v123h-16z"/>
+              <path fill="#4d326e" d="M334 56h16v107h-16z"/>
+              <path fill="#9b6acf" d="M266 56h68v107h-68z"/>
+              <g class="goal-ending-portal">
+                <path fill="#e1b6ff" d="M276 68h48v83h-48z"/>
+                <path fill="#b180ef" d="M286 80h28v59h-28z"/>
+                <path fill="#f8e5ff" d="M295 92h10v35h-10z"/>
+              </g>
+              <path fill="#f3d16c" d="M209 121h20v12h12v20h-12v12h-20v-12h-12v-20h12zM380 114h15v9h9v15h-9v9h-15v-9h-9v-15h9z"/>
+              <path fill="#fff1a6" d="M211 132h16v16h-16zM381 124h12v12h-12z"/>
+            </g>
+          </svg>
+          <div id="goal-ending-pixels" class="goal-ending-pixels"></div>
+        </div>
+        <p class="goal-ending-kicker">CHAPTER COMPLETE</p>
+        <h2 id="goal-ending-title">Quest complete!</h2>
+        <p id="goal-ending-summary"></p>
+        <div class="goal-ending-credits">
+          <p>You built this, one small win at a time.</p>
+          <p>Your next adventure is waiting.</p>
+        </div>
+        <form method="dialog" class="goal-ending-actions">
+          <button type="submit">Continue adventure &#10140;</button>
+        </form>
+      </dialog>
       <div id="celebration" class="celebration" role="status" aria-live="polite" hidden>
         <div id="celebration-confetti" class="celebration-confetti" aria-hidden="true"></div>
         <div class="celebration-card">

@@ -53,6 +53,7 @@ function updateParentControls() {
 }
 
 function lockParentAccess() {
+  closeGoalCelebration();
   unlockedParentId = "";
   parentSetupUnlocked = false;
   renderRewards();

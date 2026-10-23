@@ -1,4 +1,5 @@
 let earningsTimeout;
+let goalEndingTimeout;
 const rewardSoundKey = "family-fun-reward-sounds";
 let rewardSoundsEnabled = false;
 let rewardSoundGeneration = 0;
@@ -161,4 +162,45 @@ function celebrateEarnings(memberId, stars = 0, gameMinutes = 0) {
   popup.hidden = false;
   void playEarningSound(stars, gameMinutes);
   earningsTimeout = setTimeout(() => { popup.hidden = true; popup.replaceChildren(); }, 4200);
+  if (stars > 0) celebrateWishGoal(member, member.stars - stars);
 }
+
+function celebrateWishGoal(member, previousStars) {
+  if (typeof getWishGoal !== "function") return false;
+  const wish = getWishGoal(member);
+  if (!wish || !wish.cost || previousStars >= wish.cost || member.stars < wish.cost ||
+      funState.requests.some((request) => request.memberId === member.id &&
+        request.wishId === wish.id && ["pending", "approved"].includes(request.status))) return false;
+  const dialog = document.getElementById("goal-ending");
+  const pixels = document.getElementById("goal-ending-pixels");
+  clearTimeout(goalEndingTimeout);
+  document.getElementById("goal-ending-title").textContent = `${member.name}, quest complete!`;
+  document.getElementById("goal-ending-summary").textContent =
+    `You saved enough for "${wish.title}"! ${wish.cost.toLocaleString()} reward coins.`;
+  pixels.replaceChildren();
+  for (let index = 0; index < 18; index += 1) {
+    const pixel = document.createElement("span");
+    pixel.style.setProperty("--pixel", index);
+    pixel.style.setProperty("--dx", `${(index % 6 - 2.5) * 42}px`);
+    pixel.style.setProperty("--dy", `${-55 - index % 3 * 30}px`);
+    pixels.append(pixel);
+  }
+  dialog.classList.remove("is-playing");
+  if (!dialog.open) dialog.showModal();
+  void dialog.offsetWidth;
+  dialog.classList.add("is-playing");
+  goalEndingTimeout = window.setTimeout(closeGoalCelebration, 8000);
+  return true;
+}
+
+function closeGoalCelebration() {
+  clearTimeout(goalEndingTimeout);
+  const dialog = document.getElementById("goal-ending");
+  if (dialog.open) dialog.close();
+  dialog.classList.remove("is-playing");
+  document.getElementById("goal-ending-pixels").replaceChildren();
+}
+
+document.getElementById("goal-ending").addEventListener("close", () => {
+  if (!document.getElementById("goal-ending").open) closeGoalCelebration();
+});
