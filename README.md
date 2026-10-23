@@ -47,6 +47,16 @@ logos, or branded assets are used.
 
 Play Time now includes:
 
+- **Family Time spinner:** spin a colorful wheel for one of 12 playful,
+  connecting activities lasting 10–20 minutes, including setup. Try silly
+  family awards, pass-the-doodle, a shared story, memory guessing, kindness
+  notes, and more. Each pick includes a time limit and simple instructions;
+  set a timer and wrap up when it rings. Everyone gets a turn, passing is
+  welcome, and there are no scores or prizes. Consecutive spins never repeat
+  the same activity. Find it at the top of **More ways to play**, or use
+  **Pick some family time** in Routine. It works without a selected profile,
+  respects reduced-motion preferences, and never changes balances, saves
+  family data, or adds automatic wall posts.
 - **Brain arcade:** choose number patterns, word scrambles, riddles, odd-one-out,
   visual patterns, memory pairs, or quick math from one game selector. Number
   patterns and the shared game-progress summary are inside the arcade.

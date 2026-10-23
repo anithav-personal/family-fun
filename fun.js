@@ -22,6 +22,35 @@ const mysteryQuests = [
   "Draw an imaginary animal and give it a funny name.",
   "Help put away five things, then give yourself a high five.",
 ];
+const familyTimeActivities = [
+  { category: 0, title: "Silly family awards", minutes: 10,
+    instructions: "Invent a warm, funny award for every person: Most Creative Idea, Best Silly Voice, or Kindness Champion. Take turns presenting them with a dramatic speech. Celebrate everyone, with no teasing!" },
+  { category: 0, title: "Team charades", minutes: 12,
+    instructions: "Pair up to act out an animal, a family memory, or something you love doing together. Everyone else guesses, then swap teams. Seated gestures work too. No scores: the funny guesses are the best part!" },
+  { category: 1, title: "Pass-the-doodle", minutes: 15,
+    instructions: "Start a drawing on paper, then pass it to the next person every minute. Each person adds a surprise. At the end, give your shared creation a silly name and tell its story together." },
+  { category: 1, title: "Our family mascot", minutes: 15,
+    instructions: "Draw or build a little mascot using paper or blocks you already have. Everyone adds one feature or special power that represents someone in the family. Give it a name and invent its family cheer!" },
+  { category: 2, title: "The wonderfully silly story", minutes: 10,
+    instructions: "Begin with 'One day, our family found a tiny door...' Go around adding one sentence each. Bring every family member into the adventure. Finish with a happy ending that you invent together." },
+  { category: 2, title: "Living-room radio show", minutes: 12,
+    instructions: "Make a tiny radio show together: one person introduces the family, another tells a joke, and others hum a tune or add gentle sound effects. Swap roles and finish with a jingle about your family." },
+  { category: 3, title: "Guess that family memory", minutes: 20,
+    instructions: "Take turns giving three clues about a happy moment you shared. Guess together, then let the storyteller share their favorite detail. Ask each other what made that moment special. Everyone can help with the clues." },
+  { category: 3, title: "Our imaginary clubhouse", minutes: 10,
+    instructions: "Design your dream family clubhouse out loud. Each person adds one room, one silly rule, and one thing you would love to do there together. Ask someone why they picked their idea, then combine everyone's plans." },
+  { category: 4, title: "Teach me your tiny talent", minutes: 15,
+    instructions: "Everyone teaches the family one small thing: a doodle, a hand-clap rhythm, a funny voice, or a favorite word. Try each other's ideas together and tell your teacher one thing you enjoyed." },
+  { category: 4, title: "The family news desk", minutes: 10,
+    instructions: "Pair up as reporters and interview each other: 'What made you smile?' and 'What should our family try next?' Take turns sharing your partner's good news in your funniest friendly newsreader voice." },
+  { category: 5, title: "A little kindness, just for you", minutes: 15,
+    instructions: "Make each other tiny thank-you notes or drawings, naming something kind the person actually did. Read or show them together. Make sure every family member receives one; spoken thank-yous count too." },
+  { category: 5, title: "Pass the appreciation", minutes: 10,
+    instructions: "Pass a soft toy, or pretend to pass a glowing star. Take turns finishing 'I loved it when we...' or 'Thank you for...' about someone here. Invite everyone to share a favorite thing about being this family." },
+];
+let lastFamilyTimeActivity = null;
+let familyTimeRotation = 0;
+let familyTimeBusy = false;
 const adventureChapters = [
   { at: 0, name: "Home base", story: "A tiny map arrives. Your family packs kindness, curiosity, and a little courage." },
   { at: 5, name: "Giggle Grove", story: "The giggling trees welcome your team. A friendly fox points toward a sparkling creek." },
@@ -928,6 +957,38 @@ function getDinnerChoices() {
     : [];
 }
 
+function spinFamilyTime() {
+  if (familyTimeBusy) return;
+  const choices = familyTimeActivities.filter((activity) => activity !== lastFamilyTimeActivity);
+  const activity = choices[Math.floor(Math.random() * choices.length)];
+  const button = document.getElementById("spin-family-time");
+  const result = document.getElementById("family-time-result");
+  const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  familyTimeBusy = true;
+  button.disabled = true;
+  button.textContent = "Picking our next adventure...";
+  result.setAttribute("aria-busy", "true");
+  result.textContent = "A little together-time is on its way...";
+  const target = 360 - (activity.category * 60 + 30);
+  familyTimeRotation += 1080 + ((target - familyTimeRotation % 360 + 360) % 360);
+  document.getElementById("family-time-wheel").style.transform = `rotate(${familyTimeRotation}deg)`;
+  const finish = () => {
+    lastFamilyTimeActivity = activity;
+    result.replaceChildren(
+      funElement("strong", activity.title),
+      funElement("p", `${activity.minutes} minutes together`, "family-time-duration"),
+      funElement("p", activity.instructions),
+      funElement("p", `Set a ${activity.minutes}-minute timer, including setup, and wrap up when it rings.`, "fun-note"),
+    );
+    result.setAttribute("aria-busy", "false");
+    button.disabled = false;
+    button.textContent = "Spin again";
+    familyTimeBusy = false;
+  };
+  if (reducedMotion) finish();
+  else window.setTimeout(finish, 1300);
+}
+
 function renderDinnerSpinner() {
   const date = document.getElementById("spinner-date").value;
   const choices = getDinnerChoices();
@@ -1020,7 +1081,7 @@ function renderFunHub() {
   document.getElementById("fun-wallet").textContent = member ? `${member.stars} reward stars to spend` : "";
   document.getElementById("fun-profile-note").textContent = member
     ? `Playing as ${member.name}. Progress stays in this browser. Use the Playing as button above to switch family members.`
-    : "No profiles yet. Add family members in Settings to start playing.";
+    : "Family Time needs no profile. Add family members in Settings for personal games and rewards.";
   document.querySelectorAll("#celebration-form textarea, #celebration-form select, #celebration-form button").forEach((control) => { control.disabled = !member; });
   renderAdventure();
   renderArcade(member);
@@ -1111,6 +1172,12 @@ document.getElementById("spin-dinner").addEventListener("click", () => {
   document.getElementById("spinner-result").textContent = choices.length
     ? `Dinner for ${formatMealDate(date)}: ${choices[Math.floor(Math.random() * choices.length)]}!`
     : "Add a meal for the selected date first.";
+});
+document.getElementById("spin-family-time").addEventListener("click", spinFamilyTime);
+document.getElementById("routine-family-time").addEventListener("click", () => {
+  activateTheme("fun");
+  document.getElementById("family-time-spinner").scrollIntoView({ block: "start" });
+  document.getElementById("spin-family-time").focus();
 });
 document.getElementById("spin-helper").addEventListener("click", () => {
   document.getElementById("spinner-result").textContent = members.length
