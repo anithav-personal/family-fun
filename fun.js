@@ -73,7 +73,7 @@ let arcadeProfileId = "";
 let currentArcadeChallenge = null;
 
 function createDefaultFunState() {
-  return { version: 1, profiles: {}, bingo: {}, rewards: [], wishes: [], journal: [], requests: [], wall: [], steps: 0 };
+  return { version: 1, profiles: {}, bingo: {}, rewards: [], wishes: [], journal: [], academicQuest: [], movieNights: [], requests: [], wall: [], steps: 0 };
 }
 
 function isFunText(value, max = 200) {
@@ -95,6 +95,21 @@ function isValidFunState(state, family = members) {
       !Array.isArray(state.rewards) || !Array.isArray(state.requests) || !Array.isArray(state.wall)) return false;
   const wishes = state.wishes === undefined ? [] : state.wishes;
   const journal = state.journal === undefined ? [] : state.journal;
+  const academicQuest = state.academicQuest === undefined ? [] : state.academicQuest;
+  const movieNights = state.movieNights === undefined ? [] : state.movieNights;
+  if (!Array.isArray(academicQuest) || !academicQuest.every((entry) =>
+    object(entry) && memberExists(entry.memberId) && isFunDate(entry.date) &&
+    [undefined, true].includes(entry.homework) && [undefined, true].includes(entry.handWorkout) &&
+    (entry.homework === true || entry.handWorkout === true)) ||
+    new Set(academicQuest.map((entry) => JSON.stringify([entry.memberId, entry.date]))).size !== academicQuest.length) return false;
+  if (!Array.isArray(movieNights) || !movieNights.every((night) =>
+    object(night) && isFunDate(night.week) && dateFromKey(night.week).getDay() === 1 &&
+    isFunDate(night.date) && getBingoWeek(dateFromKey(night.date)) === night.week &&
+    Array.isArray(night.memberIds) && night.memberIds.length > 0 &&
+    night.memberIds.every(memberExists) && new Set(night.memberIds).size === night.memberIds.length &&
+    (night.status === "requested" ? night.enjoyedOn === undefined
+      : night.status === "enjoyed" && isFunDate(night.enjoyedOn) && night.enjoyedOn >= night.date)) ||
+    new Set(movieNights.map((night) => night.week)).size !== movieNights.length) return false;
   if (!Array.isArray(journal) || !journal.every((entry) =>
     object(entry) && memberExists(entry.memberId) && isFunDate(entry.date) &&
     isFunText(entry.note, 2000) && entry.note.trim().length > 0 &&
@@ -108,6 +123,7 @@ function isValidFunState(state, family = members) {
       !uniqueIds(wishes)) return false;
   if (!Object.entries(state.profiles).every(([id, profile]) =>
     memberExists(id) && object(profile) && Array.isArray(profile.owned) &&
+    (profile.academicHandDays === undefined || [0, 5].includes(profile.academicHandDays)) &&
     (profile.goalWishId === undefined || wishes.some((wish) =>
       wish.id === profile.goalWishId && wish.memberId === id && wish.cost !== undefined)) &&
     profile.owned.every((item) => validIds.has(item)) &&
@@ -486,11 +502,189 @@ function finishArcade(game) {
   showCelebration({ icon: "\u{1F9E0}", title: `${member.name} solved it!`, quote: "A little practice makes a big difference.", record: false });
 }
 
-function getBingoWeek() {
-  const monday = new Date();
+function getBingoWeek(date = new Date()) {
+  const monday = new Date(date);
   monday.setHours(0, 0, 0, 0);
   monday.setDate(monday.getDate() - (monday.getDay() + 6) % 7);
   return toDateKey(monday);
+}
+
+function getWeeklyAcademicQuest(today = toDateKey(new Date())) {
+  const week = getBingoWeek(dateFromKey(today));
+  const dates = Array.from({ length: 7 }, (_, index) => {
+    const date = dateFromKey(week);
+    date.setDate(date.getDate() + index);
+    return toDateKey(date);
+  });
+  const children = members.filter((member) => member.role === "child").map((member) => {
+    const goals = [
+      { kind: "journal", label: "Grateful journal", target: 5, dates: [] },
+      { kind: "homework", label: "Homework", target: 4, dates: [] },
+    ];
+    if (funState.profiles[member.id]?.academicHandDays === 5) {
+      goals.push({ kind: "handWorkout", label: "Hand workouts", target: 5, dates: [] });
+    }
+    for (const date of dates.filter((day) => day <= today)) {
+      const log = (funState.academicQuest || []).find((entry) => entry.memberId === member.id && entry.date === date);
+      const completed = getAssignmentsForDate(date, member.id).filter((assignment) => isAssignmentComplete(assignment, date));
+      for (const goal of goals) {
+        const done = goal.kind === "journal"
+          ? (funState.journal || []).some((entry) => entry.memberId === member.id && entry.date === date && entry.note.trim())
+          : log?.[goal.kind] || completed.some((assignment) => (goal.kind === "homework"
+            ? /\bhomework\b/i : /\bhand[\s-]+workouts?\b/i).test(assignment.title));
+        if (done) goal.dates.push(date);
+      }
+    }
+    return { member, goals, ready: goals.every((goal) => goal.dates.length >= goal.target) };
+  });
+  return { week, dates, children, ready: children.length > 0 && children.every((child) => child.ready) };
+}
+
+function setAcademicHandGoal(memberId, target) {
+  if (!isUnlockedParent(getFunMember()) || ![0, 5].includes(target) ||
+      !members.some((member) => member.id === memberId && member.role === "child")) {
+    funMessage("Unlock a parent profile to change weekly quest requirements.", true, "weekly-quest-feedback");
+    return;
+  }
+  commitFunChange(() => {
+    getFunProfile(memberId).academicHandDays = target;
+  }, "Weekly hand-workout goal saved. Existing daily records are kept.", "weekly-quest-feedback");
+}
+
+function logAcademicDay(memberId, kind) {
+  const actor = getFunMember();
+  const quest = getWeeklyAcademicQuest();
+  const child = quest.children.find((item) => item.member.id === memberId);
+  const goal = child?.goals.find((item) => item.kind === kind && kind !== "journal");
+  if (!actor || (!isUnlockedParent(actor) && actor.id !== memberId) || !goal) {
+    funMessage("Choose your own child profile, or unlock a parent profile, to log this activity.", true, "weekly-quest-feedback");
+    return;
+  }
+  const date = toDateKey(new Date());
+  if (goal.dates.includes(date)) {
+    funMessage("Today already counts toward this goal. Each activity counts once per day.", false, "weekly-quest-feedback");
+    return;
+  }
+  commitFunChange(() => {
+    funState.academicQuest ||= [];
+    let entry = funState.academicQuest.find((item) => item.memberId === memberId && item.date === date);
+    if (!entry) {
+      entry = { memberId, date };
+      funState.academicQuest.push(entry);
+    }
+    entry[kind] = true;
+  }, `${child.member.name}'s ${goal.label.toLowerCase()} logged for today. Weekly logs do not award extra coins.`, "weekly-quest-feedback");
+}
+
+function requestMovieNight() {
+  const actor = getFunMember();
+  const quest = getWeeklyAcademicQuest();
+  if (!actor || (actor.role !== "child" && !isUnlockedParent(actor)) || !quest.ready) {
+    funMessage("Every child's weekly quest must be complete before requesting family movie night.", true, "weekly-quest-feedback");
+    return;
+  }
+  if ((funState.movieNights || []).some((night) => night.week === quest.week)) {
+    funMessage("This week's movie night has already been earned and requested.", false, "weekly-quest-feedback");
+    return;
+  }
+  if (commitFunChange(() => {
+    funState.movieNights ||= [];
+    funState.movieNights.unshift({
+      week: quest.week, date: toDateKey(new Date()),
+      memberIds: quest.children.map((child) => child.member.id), status: "requested",
+    });
+  }, "Popcorn movie night earned together! Ask a parent to choose a film and a time. No coins spent.", "weekly-quest-feedback")) {
+    showGoalEnding("Family quest complete!", "You earned popcorn movie night together! A week of learning, gratitude, and effort.");
+  }
+}
+
+function enjoyMovieNight(week) {
+  const night = (funState.movieNights || []).find((item) => item.week === week);
+  if (!isUnlockedParent(getFunMember())) {
+    funMessage("Unlock a parent profile to mark movie night enjoyed.", true, "weekly-quest-feedback");
+    return;
+  }
+  if (!night || night.status !== "requested") return;
+  commitFunChange(() => {
+    night.status = "enjoyed";
+    night.enjoyedOn = toDateKey(new Date());
+  }, "Movie night enjoyed! Keep making happy family memories.", "weekly-quest-feedback");
+}
+
+function renderWeeklyAcademicQuest() {
+  const actor = getFunMember();
+  const adult = isUnlockedParent(actor);
+  const quest = getWeeklyAcademicQuest();
+  const today = toDateKey(new Date());
+  const panel = document.getElementById("weekly-academic-quest");
+  if (panel.dataset.memberId !== (actor?.id || "")) {
+    funMessage("", false, "weekly-quest-feedback");
+    panel.dataset.memberId = actor?.id || "";
+  }
+  document.getElementById("weekly-quest-week").textContent =
+    `${formatMealDate(quest.week)} - ${formatMealDate(quest.dates[6])} · Monday to Sunday`;
+  const list = document.getElementById("weekly-academic-goals");
+  list.replaceChildren();
+  if (!quest.children.length) list.append(funElement("p", "Add child profiles in Settings to start your family's weekly quest.", "fun-note"));
+  for (const { member, goals, ready } of quest.children) {
+    const card = funElement("article", undefined, "weekly-child-quest");
+    card.append(funElement("h4", `${member.name}${ready ? " \u2713 Quest complete!" : "'s quest"}`));
+    for (const goal of goals) {
+      const row = funElement("div", undefined, "weekly-goal-row");
+      row.append(funElement("span", goal.label),
+        funElement("strong", `${goal.dates.length}/7 days · goal ${goal.target}`));
+      const progress = document.createElement("progress");
+      progress.max = goal.target;
+      progress.value = Math.min(goal.target, goal.dates.length);
+      progress.setAttribute("aria-label", `${member.name}: ${goal.label}`);
+      progress.setAttribute("aria-valuetext", `${goal.dates.length} of 7 days; ${goal.target} days needed this week`);
+      row.append(progress);
+      if (goal.kind === "journal" && actor?.id === member.id) {
+        row.append(funButton("Write today's note", () => document.getElementById("gratitude-start").click()));
+      } else if (goal.kind !== "journal" && (adult || actor?.id === member.id)) {
+        const done = goal.dates.includes(today);
+        const button = funButton(done ? "\u2713 Today counted" : `Log today's ${goal.label.toLowerCase()}`,
+          () => logAcademicDay(member.id, goal.kind), done);
+        button.setAttribute("aria-label", `${member.name}: ${done ? "today already counted for" : "log today's"} ${goal.label.toLowerCase()}`);
+        row.append(button);
+      }
+      card.append(row);
+    }
+    if (adult) {
+      const label = funElement("label", "Hand-workout goal for this child", "fun-field weekly-hand-setting");
+      const select = document.createElement("select");
+      select.setAttribute("aria-label", `${member.name}: weekly hand-workout requirement`);
+      for (const [value, text] of [[0, "Not required"], [5, "5 of 7 days"]]) {
+        const option = funElement("option", text);
+        option.value = value;
+        select.append(option);
+      }
+      select.value = funState.profiles[member.id]?.academicHandDays || 0;
+      select.addEventListener("change", () => setAcademicHandGoal(member.id, Number(select.value)));
+      label.append(select);
+      card.append(label);
+    }
+    list.append(card);
+  }
+  const earned = (funState.movieNights || []).find((night) => night.week === quest.week);
+  document.getElementById("weekly-movie-status").textContent = earned
+    ? earned.status === "enjoyed" ? "This week's movie night was enjoyed together!" : "Movie night earned! Ask a parent to pick the film and time."
+    : quest.ready ? "Popcorn movie night unlocked! You did it together!"
+      : "Cheer each other on! Everyone finishes their quest to unlock one family popcorn movie night.";
+  const button = document.getElementById("weekly-movie-request");
+  button.disabled = !actor || (actor.role !== "child" && !adult) || !quest.ready || !!earned;
+  button.textContent = earned ? "This week's reward earned" : "Claim popcorn movie night";
+  const history = document.getElementById("weekly-movie-history");
+  history.replaceChildren();
+  const nights = funState.movieNights || [];
+  const recent = nights.filter((night) => night.status === "enjoyed")
+    .sort((a, b) => b.week.localeCompare(a.week)).slice(0, 4);
+  for (const night of [...nights.filter((item) => item.status === "requested"), ...recent]) {
+    const row = funElement("li");
+    row.append(funElement("span", `Week of ${formatMealDate(night.week)}: ${night.status === "enjoyed" ? "movie night enjoyed" : "earned, waiting for family movie time"}`));
+    if (adult && night.status === "requested") row.append(funButton("Mark movie night enjoyed", () => enjoyMovieNight(night.week)));
+    history.append(row);
+  }
 }
 
 function bingoLabels(week) {
@@ -788,11 +982,30 @@ function renderWishlist(member) {
   }
 }
 
-function renderRewardGoal(member) {
+function getRewardGoalState(member) {
   const wish = getWishGoal(member);
   const pending = wish && funState.requests.find((request) => request.wishId === wish.id &&
     request.memberId === member.id && ["pending", "approved"].includes(request.status));
-  const percent = wish ? pending ? 100 : Math.min(100, Math.floor(member.stars / wish.cost * 100)) : 0;
+  const percent = wish ? pending ? 100 : Math.min(member.stars, wish.cost) * 100 / wish.cost : 0;
+  const label = percent > 0 && percent < 1 ? "<1%" : `${Math.floor(percent)}%`;
+  return { wish, pending, percent, label };
+}
+
+function renderPiggySavings(art, member) {
+  const { wish, pending, percent, label } = getRewardGoalState(member);
+  const height = 124 * percent / 100;
+  const fill = art.querySelector("[data-piggy-fill]");
+  fill.setAttribute("height", height);
+  fill.setAttribute("y", 188 - height);
+  art.querySelector("[data-piggy-percent]").textContent = label;
+  art.setAttribute("aria-label", pending
+    ? `Piggy bank fully funded: ${pending.cost.toLocaleString()} reward coins reserved for ${wish.title}.`
+    : wish ? `Piggy bank ${label} full: ${Math.min(member.stars, wish.cost).toLocaleString()} of ${wish.cost.toLocaleString()} reward coins saved for ${wish.title}.`
+      : "Empty piggy bank. Choose a priced wish to see your saved coins fill it.");
+}
+
+function renderRewardGoal(member) {
+  const { wish, pending, percent, label } = getRewardGoalState(member);
   document.getElementById("reward-goal-title").textContent = wish ? wish.title : "Big dreams start with little wins!";
   document.getElementById("reward-goal-description").textContent = pending
     ? `${pending.cost} reward stars reserved. ${pending.status === "approved" ? "Approved! Your reward is on its way." : "Waiting for a grown-up to approve."}`
@@ -801,13 +1014,11 @@ function renderRewardGoal(member) {
   document.getElementById("reward-goal-balance").textContent = member
     ? `${member.stars.toLocaleString()} reward stars available${wish && !pending ? ` / ${wish.cost.toLocaleString()} for this wish` : ""}`
     : "Choose who's playing to start your wish jar.";
-  document.getElementById("reward-goal-percent").textContent = `${percent}%`;
+  document.getElementById("reward-goal-percent").textContent = label;
   const progress = document.getElementById("reward-goal-progress");
   progress.value = percent;
-  progress.setAttribute("aria-valuetext", pending ? "Goal funded; reward requested" : `${percent}% of your saving goal`);
-  const height = 124 * percent / 100;
-  document.getElementById("piggy-fill").setAttribute("height", height);
-  document.getElementById("piggy-fill").setAttribute("y", 188 - height);
+  progress.setAttribute("aria-valuetext", pending ? "Goal funded; reward requested" : `${label} of your saving goal`);
+  renderPiggySavings(document.querySelector(".piggy-art"), member);
   const redeem = document.getElementById("reward-goal-redeem");
   redeem.hidden = !wish;
   redeem.disabled = !wish || !!pending || member.stars < wish.cost;
@@ -816,7 +1027,7 @@ function renderRewardGoal(member) {
       : "My piggy is ready - redeem!";
   const note = document.getElementById("routine-goal-note");
   note.textContent = pending ? `Your wish "${wish.title}" is requested!`
-    : wish ? `${wish.title} · ${percent}% saved · ${Math.max(0, wish.cost - member.stars)} reward stars to go`
+    : wish ? `${wish.title} · ${label} saved · ${Math.max(0, wish.cost - member.stars)} reward stars to go`
       : "Add a dream to your wishlist and choose your next saving goal.";
 }
 
@@ -1106,6 +1317,7 @@ function renderFunHub() {
   renderQuest(member);
   renderPetShop(member);
   renderRewardShop(member);
+  renderWeeklyAcademicQuest();
   renderGratitudeJournal();
   renderWall();
   renderDinnerSpinner();
@@ -1169,6 +1381,7 @@ document.getElementById("reward-goal-redeem").addEventListener("click", () => {
   const wish = getWishGoal(getFunMember());
   if (wish) requestReward(wish.id, true);
 });
+document.getElementById("weekly-movie-request").addEventListener("click", requestMovieNight);
 document.getElementById("celebration-form").addEventListener("submit", (event) => {
   event.preventDefault();
   const member = getFunMember();
