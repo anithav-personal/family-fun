@@ -38,6 +38,27 @@
 .shop-item { display: flex; min-width: 0; flex-direction: column; gap: 9px; padding: 12px; border: 1px solid var(--border); border-radius: 9px; overflow-wrap: anywhere; }
 .shop-item span { color: var(--muted); font-size: 11px; }
 .shop-item .text-button { margin-top: auto; }
+.app-shell .weekly-academic-quest { margin: 24px 0; padding: 22px; border: 2px solid #dfc58c; border-radius: 20px; background: linear-gradient(125deg, #fff9e7, #fff4e9); }
+.weekly-academic-quest h3 { margin: 0; overflow-wrap: anywhere; }
+.weekly-academic-goals { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); gap: 14px; margin-top: 18px; }
+.weekly-child-quest { min-width: 0; padding: 16px; border: 1px solid var(--border); border-radius: 14px; background: #fffdf8; overflow-wrap: anywhere; }
+.weekly-child-quest h4 { margin: 0 0 12px; font-size: 16px; }
+.weekly-goal-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: center; margin: 12px 0; font-size: 13px; }
+.weekly-goal-row strong { font-size: 11px; }
+.weekly-goal-row progress, .weekly-goal-row button { grid-column: 1 / -1; width: 100%; min-width: 0; }
+.weekly-goal-row button, .weekly-academic-quest > button { min-height: 44px; white-space: normal; }
+.weekly-goal-row button:disabled { opacity: .7; cursor: default; }
+.weekly-hand-setting { padding-top: 12px; border-top: 1px solid var(--border); }
+.weekly-movie-status { color: var(--green); font-weight: 700; line-height: 1.6; }
+.weekly-academic-quest button:focus-visible, .weekly-hand-setting select:focus-visible { outline: 3px solid var(--green); outline-offset: 3px; }
+html[data-theme="dark"] .app-shell .weekly-academic-quest { background: linear-gradient(125deg, #352d1e, #302624); border-color: #8e7749; }
+html[data-theme="dark"] .weekly-child-quest { background: #202a25; }
+html[data-theme="dark"] .weekly-hand-setting select { background: #18221d; }
+@media (max-width: 390px) {
+  .app-shell .weekly-academic-quest { padding: 14px; }
+  .weekly-child-quest { padding: 12px; }
+  .weekly-goal-row { grid-template-columns: minmax(0, 1fr); }
+}
 .fun-list { display: grid; gap: 9px; margin: 0; padding: 0; list-style: none; }
 .fun-list li { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 10px; border: 1px solid var(--border); border-radius: 8px; overflow-wrap: anywhere; line-height: 1.5; }
 .fun-list li > span:first-child { flex: 1 1 140px; }

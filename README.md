@@ -226,15 +226,52 @@ selected profile/date; all saved notes are shared on the Family Gratitude Wall
 in the same browser. Nothing is published to the public website. Successful
 coin awards use the piggy-bank earning animation.
 
+### Weekly popcorn movie-night quest
+
+In **Routine**, work together toward one shared family popcorn movie night
+each local Monday–Sunday. Every child needs grateful journal entries on
+**5 of 7 distinct days** and homework on **4 of 7 distinct days**. An unlocked
+parent can enable **5 of 7 days of hand workouts** for a particular child using
+that child's hand-workout selector in the quest. This requirement is private
+profile data, not a name or identity hard-coded into the public website.
+
+Saved nonblank journals count automatically. Completed dated routines whose
+titles contain **Homework** or **Hand workouts** also count. Recurring routines
+count their actual completed dates; undated legacy completions, future dates,
+and days outside the current week do not count. Multiple matching routines,
+journal edits, and a routine plus a manual log never count twice on one day.
+Use **Log today's homework / hand workouts** for an activity completed outside
+the app. Children can log only their own activities; unlocked parents can log
+for a child. These logs grant weekly credit, not additional coins or game time.
+Routine and journal earnings keep their existing rewards.
+
+When every child qualifies, **Claim popcorn movie night** saves one shared
+reward for that week and plays the block-world victory ending. It costs no
+coins and creates no automatic wall post. A parent chooses the film and time
+outside the app, then marks the movie night enjoyed. Progress starts a new week
+on Monday without removing journals, completed routines, or earned movie nights.
+Unenjoyed rewards remain visible across weeks, along with the four most recent
+enjoyed nights. Reloading or importing data does not replay the ending.
+Requirements, daily logs, and claimed movie nights persist in browser storage
+and private backups; older backups without them still import.
+
 ### Wishlist & piggy-bank goals
 
 Earning coins that take your balance from below a selected wishlist goal to its
-price or above triggers an original block-world victory ending: a glowing
-voxel portal, floating island, pixel fireworks, and short closing credits with
-your name and wish. It is original artwork and text, not Minecraft assets or
-the game's End Poem. The scene closes after eight seconds; **Skip animation**,
+price or above triggers an original block-world boss victory ending: a
+wing-flapping dragon, a deep guardian, and a three-headed shadow boss appear
+in sequence as Ender Dragon, Warden, and Wither challenges. A blocky mace swings
+at each one with small pixel impacts; they fade into light without gore.
+The dragon rises and dissolves into purple rays, and green reward orbs fall
+as the portal lights up. Short closing credits show your name and wish.
+The green orbs are decorative,
+not an extra currency or reward. It is original artwork and text, not Minecraft assets or
+the game's End Poem. The scene closes after twelve seconds; **Skip animation**,
 **Continue adventure**, or Escape dismisses it sooner. Reduced-motion users get
-the same static victory scene. Existing reward sound preferences still apply.
+the same victory scene with all three bosses shown side by side, without mace
+swings or moving effects. All motion is finite and ends
+before the dialog closes; there are no rapid flashes. Existing reward sound
+preferences still apply.
 Selecting an already-funded goal, repricing a wish, importing a backup,
 reloading, refunds, and spending do not trigger it. Pending or approved wishes
 are excluded. Spending below a goal and earning back to its price can celebrate
@@ -249,7 +286,12 @@ Children can choose a different priced wish as their current goal.
 
 An original illustrated piggy bank fills from the current **available reward-star
 balance**, capped at 100%, with an accessible progress bar and the remaining
-stars needed. Picking a goal is free, not a second savings account. Spending
+stars needed. Faint coins inside the piggy brighten gold from the bottom up
+in proportion to savings, with the percentage shown on its belly. Partial
+coins follow the exact fill level, including balances below 1%; the percentage
+reads **<1%** for those small beginnings. The earning popup shows the earning
+person's own goal fill, even when a parent completed their task.
+Picking a goal is free, not a second savings account. Spending
 stars on pets or another reward lowers the piggy's progress. Brain stars and
 game time are not redeemable currency.
 

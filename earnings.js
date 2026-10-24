@@ -135,6 +135,7 @@ function celebrateEarnings(memberId, stars = 0, gameMinutes = 0) {
     art.setAttribute("aria-hidden", "true");
     if (kind === "stars") {
       const bank = document.querySelector(".piggy-art").cloneNode(true);
+      renderPiggySavings(bank, member);
       bank.setAttribute("class", "earnings-bank");
       bank.removeAttribute("aria-label");
       for (const element of bank.querySelectorAll("[id]")) element.id = `earning-${element.id}`;
@@ -171,15 +172,20 @@ function celebrateWishGoal(member, previousStars) {
   if (!wish || !wish.cost || previousStars >= wish.cost || member.stars < wish.cost ||
       funState.requests.some((request) => request.memberId === member.id &&
         request.wishId === wish.id && ["pending", "approved"].includes(request.status))) return false;
+  return showGoalEnding(`${member.name}, quest complete!`,
+    `You saved enough for "${wish.title}"! ${wish.cost.toLocaleString()} reward coins.`);
+}
+
+function showGoalEnding(title, summary) {
   const dialog = document.getElementById("goal-ending");
   const pixels = document.getElementById("goal-ending-pixels");
   clearTimeout(goalEndingTimeout);
-  document.getElementById("goal-ending-title").textContent = `${member.name}, quest complete!`;
-  document.getElementById("goal-ending-summary").textContent =
-    `You saved enough for "${wish.title}"! ${wish.cost.toLocaleString()} reward coins.`;
+  document.getElementById("goal-ending-title").textContent = title;
+  document.getElementById("goal-ending-summary").textContent = summary;
   pixels.replaceChildren();
   for (let index = 0; index < 18; index += 1) {
     const pixel = document.createElement("span");
+    if (index >= 10) pixel.className = "goal-ending-orb";
     pixel.style.setProperty("--pixel", index);
     pixel.style.setProperty("--dx", `${(index % 6 - 2.5) * 42}px`);
     pixel.style.setProperty("--dy", `${-55 - index % 3 * 30}px`);
@@ -189,7 +195,7 @@ function celebrateWishGoal(member, previousStars) {
   if (!dialog.open) dialog.showModal();
   void dialog.offsetWidth;
   dialog.classList.add("is-playing");
-  goalEndingTimeout = window.setTimeout(closeGoalCelebration, 8000);
+  goalEndingTimeout = window.setTimeout(closeGoalCelebration, 12000);
   return true;
 }
 

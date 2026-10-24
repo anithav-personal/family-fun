@@ -5,12 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#f7f6f1">
     <title>Family Fun</title>
-    <link rel="stylesheet" href="styles.css?v=block-goal-ending-1">
-    <link rel="stylesheet" href="fun.css?v=block-goal-ending-1">
-    <script src="parent-lock.js?v=block-goal-ending-1" defer></script>
-    <script src="earnings.js?v=block-goal-ending-1" defer></script>
-    <script src="app.js?v=block-goal-ending-1" defer></script>
-    <script src="fun.js?v=block-goal-ending-1" defer></script>
+    <link rel="stylesheet" href="styles.css?v=weekly-piggy-1">
+    <link rel="stylesheet" href="fun.css?v=weekly-piggy-1">
+    <script src="parent-lock.js?v=weekly-piggy-1" defer></script>
+    <script src="earnings.js?v=weekly-piggy-1" defer></script>
+    <script src="app.js?v=weekly-piggy-1" defer></script>
+    <script src="fun.js?v=weekly-piggy-1" defer></script>
   </head>
   <body>
     <a class="skip-link" href="#section-guide">Skip to this section</a>
@@ -144,6 +144,18 @@
             <p class="fun-note">Choose an extra challenge when you want to. These do not count toward finishing your daily checklist.</p>
             <ul id="daily-optional-list" class="routine-list"></ul>
           </section>
+          <section id="weekly-academic-quest" class="weekly-academic-quest" aria-labelledby="weekly-quest-heading">
+            <p class="eyebrow">LEARN TOGETHER. CELEBRATE TOGETHER.</p>
+            <h3 id="weekly-quest-heading">&#127871; Popcorn Movie Night Quest</h3>
+            <p id="weekly-quest-week" class="fun-note"></p>
+            <p class="fun-note">Each child: grateful journal on 5 of 7 days and homework on 4 of 7 days. Parents can add a 5-day hand-workout goal for the child who needs it.</p>
+            <div id="weekly-academic-goals" class="weekly-academic-goals"></div>
+            <p id="weekly-movie-status" class="weekly-movie-status" role="status"></p>
+            <button id="weekly-movie-request" class="primary-button" type="button" disabled>Claim popcorn movie night</button>
+            <p id="weekly-quest-feedback" class="fun-feedback" role="status"></p>
+            <p class="fun-note">Saved journal notes and completed routines named Homework or Hand workouts count automatically. If you did the activity outside the app, log it here. One credit per activity per day; logs earn no extra coins. The shared movie night costs no coins and can be earned once per week.</p>
+            <ul id="weekly-movie-history" class="fun-list" aria-label="Family movie nights earned"></ul>
+          </section>
           <section class="gratitude-journal" aria-labelledby="gratitude-heading">
             <p class="eyebrow">A LITTLE GRATITUDE BEFORE GOODNIGHT</p>
             <h3 id="gratitude-heading">&#127769; My grateful journal</h3>
@@ -182,10 +194,16 @@
             <svg class="piggy-art" viewBox="0 0 280 230" role="img" aria-label="A cheerful piggy bank filling up as you save reward stars">
               <defs>
                 <clipPath id="piggy-body-clip"><ellipse cx="126" cy="126" rx="84" ry="62"/></clipPath>
+                <clipPath id="piggy-savings-clip"><rect id="piggy-fill" data-piggy-fill x="35" y="188" width="185" height="0"/></clipPath>
                 <radialGradient id="piggy-halo" cx="40%" cy="30%" r="75%"><stop stop-color="#fffafd"/><stop offset="1" stop-color="#e9dcff"/></radialGradient>
                 <radialGradient id="piggy-pink" cx="35%" cy="20%" r="85%"><stop stop-color="#fff0f7"/><stop offset=".55" stop-color="#ffd0e3"/><stop offset="1" stop-color="#f4a6c8"/></radialGradient>
                 <linearGradient id="piggy-snout" x2="0" y2="1"><stop stop-color="#ffc8df"/><stop offset="1" stop-color="#f696bb"/></linearGradient>
                 <linearGradient id="piggy-gold" x2="0" y2="1"><stop stop-color="#ffe983"/><stop offset=".45" stop-color="#ffd457"/><stop offset="1" stop-color="#f4b63c"/></linearGradient>
+                <pattern id="piggy-coins" width="28" height="24" patternUnits="userSpaceOnUse">
+                  <circle cx="14" cy="12" r="10" fill="url(#piggy-gold)" stroke="#aa711a" stroke-width="1.5"/>
+                  <circle cx="14" cy="12" r="7" fill="none" stroke="#fff3b1"/>
+                  <path d="m14 6 1.8 3.7 4.1.6-3 2.9.7 4.1-3.6-1.9-3.6 1.9.7-4.1-3-2.9 4.1-.6z" fill="#946015"/>
+                </pattern>
               </defs>
               <circle cx="140" cy="115" r="103" fill="url(#piggy-halo)"/>
               <ellipse cx="137" cy="208" rx="88" ry="8" fill="#8163a0" opacity=".13"/>
@@ -194,8 +212,16 @@
               <path d="m78 173-4 23q-1 7 6 7h12q5 0 6-6l3-18m48 0 4 18q1 6 6 6h12q7 0 6-7l-5-23" fill="#efa7c6" stroke="#a35a7c" stroke-width="3" stroke-linejoin="round"/>
               <path d="m81 198h12m66 0h12" stroke="#d57da5" stroke-width="2" stroke-linecap="round"/>
               <ellipse cx="126" cy="126" rx="84" ry="62" fill="url(#piggy-pink)"/>
-              <g clip-path="url(#piggy-body-clip)"><rect id="piggy-fill" x="35" y="188" width="185" height="0" fill="url(#piggy-gold)"/></g>
+              <g clip-path="url(#piggy-body-clip)">
+                <rect x="42" y="64" width="168" height="124" fill="url(#piggy-coins)" opacity=".16"/>
+                <g clip-path="url(#piggy-savings-clip)">
+                  <rect x="42" y="64" width="168" height="124" fill="#ffe39a"/>
+                  <rect x="42" y="64" width="168" height="124" fill="url(#piggy-coins)"/>
+                </g>
+              </g>
               <ellipse cx="126" cy="126" rx="84" ry="62" fill="none" stroke="#a35a7c" stroke-width="3"/>
+              <rect x="84" y="111" width="65" height="31" rx="15.5" fill="#fff9e9" stroke="#bd862b" stroke-width="1.5"/>
+              <text data-piggy-percent x="116.5" y="132" text-anchor="middle" fill="#704411" font-family="sans-serif" font-size="17" font-weight="800">0%</text>
               <path d="M60 109q12-29 42-31" fill="none" stroke="#fffafd" stroke-width="7" stroke-linecap="round" opacity=".65"/>
               <ellipse cx="72" cy="123" rx="4" ry="6" fill="white" opacity=".45"/>
               <path d="M163 80q-1-19 7-29 4-5 9 0l18 19q3 4-3 6l-23 9" fill="url(#piggy-snout)" stroke="#a35a7c" stroke-width="3" stroke-linejoin="round"/>
@@ -919,9 +945,12 @@
           <button type="submit" autofocus>Skip animation</button>
         </form>
         <div class="goal-ending-scene" aria-hidden="true">
-          <svg viewBox="0 0 600 250" role="presentation" shape-rendering="crispEdges">
+          <svg viewBox="0 0 600 300" role="presentation" shape-rendering="crispEdges">
             <path fill="#d8c5ff" d="M60 40h7v7h-7zM124 90h5v5h-5zM186 24h6v6h-6zM415 28h7v7h-7zM481 82h6v6h-6zM538 38h5v5h-5z"/>
-            <g class="goal-ending-island">
+            <path fill="#362a48" stroke="#746085" stroke-width="2" d="M92 131h24v112H92zM476 152h25v91h-25z"/>
+            <path fill="#b58ee3" d="M88 121h32v10H88zM472 142h33v10h-33z"/>
+            <g transform="translate(0 50)">
+              <g class="goal-ending-island">
               <path fill="#76658e" d="M170 177h260v22h-30v19h-45v19H245v-19h-45v-19h-30z"/>
               <path fill="#a392bd" d="M170 163h260v22H170z"/>
               <path fill="#c1afd6" d="M190 163h42v9h-42zM268 163h22v9h-22zM351 163h58v9h-58z"/>
@@ -937,11 +966,60 @@
               </g>
               <path fill="#f3d16c" d="M209 121h20v12h12v20h-12v12h-20v-12h-12v-20h12zM380 114h15v9h9v15h-9v9h-15v-9h-9v-15h9z"/>
               <path fill="#fff1a6" d="M211 132h16v16h-16zM381 124h12v12h-12z"/>
+              </g>
+            </g>
+            <g class="goal-ending-rays" fill="#d7a8ff">
+              <path d="M300 87 238 0h34zM300 87 359 0h34zM300 87 465 35l-20 35zM300 87 568 115l-25 32zM300 87 35 146l-18-35zM300 87 131 21l-23 31zM300 87 247 245h34zM300 87 359 241h-33z"/>
+            </g>
+            <g class="goal-ending-dragon">
+              <g class="goal-dragon-left-wing">
+                <path fill="#3b2b50" stroke="#a58bbf" stroke-width="2" d="M283 91 246 52 173 43 203 70 169 69 206 91 249 111 283 114z"/>
+                <path fill="#70518d" d="m271 96-31-30-46-14 29 27 29 23z"/>
+                <path fill="#a184bd" d="m253 101-16-35 5-2 20 40z"/>
+              </g>
+              <g class="goal-dragon-right-wing">
+                <path fill="#3b2b50" stroke="#a58bbf" stroke-width="2" d="M317 91 354 52 427 43 397 70 431 69 394 91 351 111 317 114z"/>
+                <path fill="#70518d" d="m329 96 31-30 46-14-29 27-29 23z"/>
+                <path fill="#a184bd" d="m347 101 16-35-5-2-20 40z"/>
+              </g>
+              <path fill="#2c203d" stroke="#a58bbf" stroke-width="2" d="M291 113h17v18h-7v15h-12v13h-21v-7h12v-17h11z"/>
+              <path fill="#443157" stroke="#bba0d5" stroke-width="2" d="M280 78h39v47h-39zM309 64h31v29h-31zM331 78h22v16h-22z"/>
+              <path fill="#bda5d1" d="M309 57h6v10h-6zM330 57h6v10h-6zM282 126h9v7h-9zM309 126h9v7h-9z"/>
+              <path fill="#edb2ff" d="M322 73h7v5h-7zM341 82h7v4h-7z"/>
+              <path fill="#85619d" d="M287 87h9v29h-9zM302 90h9v26h-9z"/>
+            </g>
+            <g class="goal-ending-warden">
+              <path fill="#18444a" stroke="#76b9b3" stroke-width="2" d="M279 60h42v31h-42zM272 94h56v43h-56zM251 97h17v45h-17zM332 97h17v45h-17zM278 138h17v27h-17zM305 138h17v27h-17z"/>
+              <path fill="#5eddd0" d="M266 59h12v17h-12zM256 45h10v21h-10zM322 59h12v17h-12zM334 45h10v21h-10z"/>
+              <path fill="#3a8d90" d="M287 73h26v9h-26zM280 99h40v29h-40z"/>
+              <path fill="#edca8a" d="M284 101h32v5h-32zM288 111h24v5h-24zM284 121h32v5h-32z"/>
+              <path fill="#a0f4de" d="M296 107h8v13h-8z"/>
+            </g>
+            <g class="goal-ending-wither">
+              <path fill="#31364b" stroke="#a7afc7" stroke-width="2" d="M244 63h28v29h-28zM285 49h30v32h-30zM328 63h28v29h-28zM252 89h96v13h-96zM289 102h22v37h-22z"/>
+              <path fill="#5b647f" d="M247 66h22v5h-22zM288 52h24v5h-24zM331 66h22v5h-22zM294 139h12v14h-12zM280 141h8v16h-8zM313 141h8v16h-8z"/>
+              <path fill="#bce6ff" d="M249 75h6v6h-6zM261 75h6v6h-6zM290 62h6v6h-6zM303 62h6v6h-6zM333 75h6v6h-6zM345 75h6v6h-6zM296 110h8v18h-8z"/>
+              <path fill="#929db9" d="M253 84h10v3h-10zM295 73h10v3h-10zM337 84h10v3h-10z"/>
+            </g>
+            <g class="goal-ending-impact" fill="#ffe7aa">
+              <path d="M296 74h8v13h-8zM296 114h8v13h-8zM274 96h13v8h-13zM314 96h13v8h-13zM281 81h7v7h-7zM313 113h7v7h-7zM281 113h7v7h-7zM313 81h7v7h-7z"/>
+            </g>
+            <g class="goal-ending-mace">
+              <path fill="#9a6845" stroke="#e0b58c" stroke-width="2" d="M404 65h12v135h-12z"/>
+              <path fill="#d7ad77" d="M404 93h12v6h-12zM404 116h12v6h-12zM404 139h12v6h-12zM404 162h12v6h-12z"/>
+              <path fill="#aebdcd" stroke="#eff5ff" stroke-width="2" d="M386 26h48v44h-48zM374 38h12v18h-12zM434 38h12v18h-12z"/>
+              <path fill="#e0ebf7" d="M389 29h42v10h-42z"/>
+              <path fill="#5a718d" d="M389 59h42v8h-42z"/>
+            </g>
+            <g class="goal-ending-boss-labels" fill="#e6d1ff" text-anchor="middle">
+              <text class="goal-boss-dragon-label" x="300" y="18">ENDER DRAGON CHALLENGE</text>
+              <text class="goal-boss-warden-label" x="300" y="18">WARDEN CHALLENGE</text>
+              <text class="goal-boss-wither-label" x="300" y="18">WITHER CHALLENGE</text>
             </g>
           </svg>
           <div id="goal-ending-pixels" class="goal-ending-pixels"></div>
         </div>
-        <p class="goal-ending-kicker">CHAPTER COMPLETE</p>
+        <p class="goal-ending-kicker">THREE BOSSES. ONE BIG WIN.</p>
         <h2 id="goal-ending-title">Quest complete!</h2>
         <p id="goal-ending-summary"></p>
         <div class="goal-ending-credits">
